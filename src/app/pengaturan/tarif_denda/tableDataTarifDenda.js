@@ -1,0 +1,56 @@
+'use client';
+
+export const tableDataTarifDenda = {
+  columns: [
+    { label: 'No.' },
+    { label: 'Kendaraan' },
+    { label: 'Tarif Denda Tiket' },
+    { label: 'Tarif Denda STNK' },
+    { label: 'Denda Untuk Member?' },
+    { label: 'Status' },
+    { label: 'Updated' },
+    { label: 'Aksi' },
+  ],
+  rows: [
+    {
+      no: '1',
+      kendaraan: 'Mobil',
+      tarifDendaTiket: 'Rp. 50,000',
+      tarifDendaSTNK: 'Rp. 100,000',
+      dendaUntukMember: true,
+      status: true,
+      updated: 'Administrator 03-11-2022 23:59',
+      aksi: 'Non Aktifkan',
+    },
+    {
+      no: '2',
+      kendaraan: 'Motor',
+      tarifDendaTiket: 'Rp. 20,000',
+      tarifDendaSTNK: 'Rp. 50,000',
+      dendaUntukMember: false,
+      status: true,
+      updated: 'Administrator 03-11-2022 23:59',
+      aksi: 'Non Aktifkan',
+    },
+    {
+      no: '3',
+      kendaraan: 'Truk/Box',
+      tarifDendaTiket: 'Rp. 70,000',
+      tarifDendaSTNK: 'Rp. 150,000',
+      dendaUntukMember: true,
+      status: false,
+      updated: 'Administrator 03-11-2022 23:59',
+      aksi: 'Aktifkan',
+    },
+    {
+      no: '4',
+      kendaraan: 'Taxi',
+      tarifDendaTiket: 'Rp. 10,000',
+      tarifDendaSTNK: 'Rp. 30,000',
+      dendaUntukMember: true,
+      status: true,
+      updated: 'Master 08-03-2023 13:49',
+      aksi: 'Non Aktifkan',
+    },
+  ],
+};

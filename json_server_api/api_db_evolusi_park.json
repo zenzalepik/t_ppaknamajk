@@ -1,0 +1,59 @@
+{
+  "users": [
+    {
+      "email": "test@example.com",
+      "password": "$2b$10$HlObfzFqFE/4//ZRWiOFoeSiuiTZWNpXyS7ZvGBy8NzS/CmRp1iQK",
+      "role": "user",
+      "id": 2
+    },
+    {
+      "email": "budi@example.com",
+      "password": "$2a$12$jJsagq9I4q/UsNP3p.shou.kobBdw5Y3fQNnvgyLqraeqPqyMc7X6",
+      "id": 3
+    },
+    {
+      "email": "",
+      "password": "",
+      "id": 4
+    },
+    {
+      "email": "",
+      "password": "",
+      "id": 5
+    },
+    {
+      "email": "test@example.com",
+      "password": "$2b$10$Xj6rPE9E2sjpl9ot25yfPOFwUv8ItigJnBhdyZMqBndj8YF9Hool2",
+      "role": "user",
+      "id": 6
+    },
+    {
+      "email": "test@example.com",
+      "password": "$2b$10$FsoYePDjc27LkcykjibnkeJ6Fm6JKjlyqrNLXTyCvg498iDsVR16C",
+      "role": "user",
+      "id": 7
+    },
+    {
+      "email": "tes3t@example.com",
+      "password": "$2b$10$18g.4f8A899bi0WFnmA8eOE23zPybaq8RQxI7A5OJCc1Z.h3PtEsK",
+      "role": "user",
+      "id": 8
+    },
+    {
+      "email": "admin@admin.com",
+      "password": "$2a$12$jJsagq9I4q/UsNP3p.shou.kobBdw5Y3fQNnvgyLqraeqPqyMc7X6",
+      "id": 9
+    }
+  ],
+  "profile": {
+    "id": 1,
+    "namaLengkap": "Budi Santoso",
+    "nomorHandphone": "081234567890",
+    "jenisKelamin": "laki-laki",
+    "alamatLengkap": "Jl. Merdeka No. 123, Jakarta Pusat, DKI Jakarta",
+    "username": "Administrator",
+    "password": "admin123",
+    "levelPengguna": "Admin",
+    "email": "admin@admin.com"
+  }
+}
