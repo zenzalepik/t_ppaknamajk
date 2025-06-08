@@ -1,32 +1,77 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import EvoModal from '@/components/EvoModal';
 import EvoForm from '@/components/EvoForm';
 import EvoInText from '@/components/evosist_elements/EvoInText';
 import EvoNotifCard from '@/components/EvoNotifCard';
+import { fetchApiPengaturanTarifParkirUpdate } from '../api/fetchApiPengaturanTarifParkirUpdate';
+import { useQueryClient } from '@tanstack/react-query';
 
 const EditTarifParkirForm = ({
   isOpen,
   onClose,
   onSubmit,
-  tipeKendaraan = 'Mobil',
+  initialData = null,
 }) => {
-  const [formData, setFormData] = useState({
-    tipeKendaraan: tipeKendaraan,
-    gracePeriode: "",
-    tarifGracePeriode: "",
-    rotasiPertama: "",
-    tarifRotasiPertama: "",
-    rotasiKedua: "",
-    tarifRotasiKedua: "",
-    rotasiSeterusnya: "",
-    tarifRotasiSeterusnya: "",
-    tarifMaksimal: "",
-  });
-
-
   const [errors, setErrors] = useState({});
   const [notifMessage, setNotifMessage] = useState('');
   const [notifType, setNotifType] = useState('success');
+  const queryClient = useQueryClient();
+
+  const [formData, setFormData] = useState({
+    id: '',
+    tipeKendaraan: '',
+    kendaraan_id: '',
+    grace_period: '',
+    tarif_grace_period: '',
+    rotasi_pertama: '',
+    tarif_rotasi_pertama: '',
+    rotasi_kedua: '',
+    tarif_rotasi_kedua: '',
+    rotasi_ketiga: '',
+    tarif_rotasi_ketiga: '', //Rotasi Seterusnya
+    tarif_maksimal: '',
+  });
+
+  // ✅ Fungsi untuk mereset pilihan saat modal ditutup
+  const handleCloseModal = () => {
+    setFormData((prev) => ({
+      ...prev, // Menyimpan data yang sudah ada
+      id: '',
+      tipeKendaraan: '',
+      kendaraan_id: '',
+      grace_period: '',
+      tarif_grace_period: '',
+      rotasi_pertama: '',
+      tarif_rotasi_pertama: '',
+      rotasi_kedua: '',
+      tarif_rotasi_kedua: '',
+      rotasi_ketiga: '',
+      tarif_rotasi_ketiga: '', //Rotasi Seterusnya
+      tarif_maksimal: '',
+    }));
+    setErrors({});
+    setNotifMessage('');
+    onClose();
+  };
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        id: initialData.id || '',
+        tipeKendaraan: initialData.tipeKendaraan || '-',
+        kendaraan_id: initialData.kendaraan_id || '',
+        grace_period: initialData.grace_period || '',
+        tarif_grace_period: initialData.tarif_grace_period || '',
+        rotasi_pertama: initialData.rotasi_pertama || '',
+        tarif_rotasi_pertama: initialData.tarif_rotasi_pertama || '',
+        rotasi_kedua: initialData.rotasi_kedua || '',
+        tarif_rotasi_kedua: initialData.tarif_rotasi_kedua || '',
+        rotasi_ketiga: initialData.rotasi_ketiga || '',
+        tarif_rotasi_ketiga: initialData.tarif_rotasi_ketiga || '',
+        tarif_maksimal: initialData.tarif_maksimal || '',
+      });
+    }
+  }, [initialData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -40,30 +85,40 @@ const EditTarifParkirForm = ({
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const newErrors = {};
     Object.keys(formData).forEach((key) => {
-      if (formData[key].trim() === "") {
-        newErrors[key] = `${key.replace(/([A-Z])/g, " $1")} wajib diisi`;
+      if (formData[key] === '') {
+        newErrors[key] = `${key.replace(/([A-Z])/g, ' $1')} wajib diisi`;
       }
     });
 
     setErrors(newErrors);
 
-    if (Object.values(newErrors).some((err) => err !== "")) {
-      setNotifMessage("Formulir tidak boleh kosong.");
-      setNotifType("error");
+    if (Object.values(newErrors).some((err) => err !== '')) {
+      setNotifMessage('Formulir tidak boleh kosong.');
+      setNotifType('error');
       return;
     }
 
-    onSubmit?.(formData);
+    // onSubmit?.(formData);
+    // console.log(formData);
 
-    setNotifMessage("Tarif Parkir berhasil disimpan!");
-    setNotifType("success");
+    try {
+      await fetchApiPengaturanTarifParkirUpdate(formData);
 
-    setTimeout(() => onClose(), 2000);
+      queryClient.invalidateQueries(['masterDataPerusahaan']); // Refresh tabel setelah tambah data
+
+      setNotifMessage('Tarif Parkir berhasil disimpan!');
+      setNotifType('success');
+
+      setTimeout(() => handleCloseModal(), 500);
+    } catch (error) {
+      setNotifMessage(error.message);
+      setNotifType('error');
+    }
   };
 
   return (
@@ -77,39 +132,44 @@ const EditTarifParkirForm = ({
         />
       )}
 
-      <EvoModal isOpen={isOpen} onClose={onClose} title="Edit Tarif Parkir">
+      <EvoModal
+        isOpen={isOpen}
+        onClose={handleCloseModal}
+        title="Edit Tarif Parkir"
+      >
         <EvoForm
           onSubmit={handleSubmit}
           submitText="Simpan"
           cancelText="Batal"
-          onCancel={onClose}
+          onCancel={handleCloseModal}
         >
           <div className="border-2 border-primary rounded-[20px] p-4">
             <div className="text-card mb-1">Tipe Kendaraan</div>
-            <div className="text-title_small">{tipeKendaraan}</div>
+            <div className="text-title_small">{formData.tipeKendaraan}</div>
+            {/* <div className="text-title_small">{formData.tipeKendaraan + ' - ' +formData.kendaraan_id}</div> */}
           </div>
 
           <div className="flex gap-3 relative">
             <div className="w-[50%] flex gap-2 relative">
               <div className="w-[50%]">
                 <EvoInText
-                  name="gracePeriode"
+                  name="grace_period"
                   label="Grace Periode"
                   placeholder="0"
-                  value={formData.gracePeriode}
+                  value={formData.grace_period}
                   onChange={handleChange}
-                  error={errors.gracePeriode}
+                  error={errors.grace_period}
                 />
               </div>
               <div className="w-[50px] mt-8 text-black/[0.8]">menit</div>
             </div>
             <EvoInText
-              name="tarifGracePeriode"
+              name="tarif_grace_period"
               label="Tarif dalam Grace Periode"
               placeholder="Rp. 0"
-              value={formData.tarifGracePeriode}
+              value={formData.tarif_grace_period}
               onChange={handleChange}
-              error={errors.tarifGracePeriode}
+              error={errors.tarif_grace_period}
             />
           </div>
 
@@ -117,23 +177,23 @@ const EditTarifParkirForm = ({
             <div className="w-[50%] flex gap-2 ">
               <div className="w-[50%]">
                 <EvoInText
-                  name=""
+                  name="rotasi_pertama"
                   label="Rotasi Pertama"
                   placeholder="0"
-                  value={formData.rotasiPertama}
+                  value={formData.rotasi_pertama}
                   onChange={handleChange}
-                  error={errors.rotasiPertama}
+                  error={errors.rotasi_pertama}
                 />
               </div>
               <div className="w-[50px] mt-8 text-black/[0.8]">jam</div>
             </div>
             <EvoInText
-              name="tarifRotasiPertama"
+              name="tarif_rotasi_pertama"
               label="Tarif Rotasi Pertama"
               placeholder="Rp. 0"
-              value={formData.tarifRotasiPertama}
+              value={formData.tarif_rotasi_pertama}
               onChange={handleChange}
-              error={errors.tarifRotasiPertama}
+              error={errors.tarif_rotasi_pertama}
             />
           </div>
 
@@ -141,23 +201,23 @@ const EditTarifParkirForm = ({
             <div className="w-[50%] flex gap-2 ">
               <div className="w-[50%]">
                 <EvoInText
-                  name="rotasiKedua"
+                  name="rotasi_kedua"
                   label="Rotasi Kedua"
                   placeholder="0"
-                  value={formData.rotasiKedua}
+                  value={formData.rotasi_kedua}
                   onChange={handleChange}
-                  error={errors.rotasiKedua}
+                  error={errors.rotasi_kedua}
                 />
               </div>
               <div className="w-[50px] mt-8 text-black/[0.8]">jam</div>
             </div>
             <EvoInText
-              name="tarifRotasiKedua"
+              name="tarif_rotasi_kedua"
               label="Tarif Rotasi Kedua"
               placeholder="Rp. 0"
-              value={formData.tarifRotasiKedua}
+              value={formData.tarif_rotasi_kedua}
               onChange={handleChange}
-              error={errors.tarifRotasiKedua}
+              error={errors.tarif_rotasi_kedua}
             />
           </div>
 
@@ -165,33 +225,33 @@ const EditTarifParkirForm = ({
             <div className="w-[50%] flex gap-2 relative">
               <div className="w-[50%]">
                 <EvoInText
-                  name="rotasiSeterusnya"
+                  name="rotasi_ketiga"
                   label="Rotasi Seterusnya"
                   placeholder="0"
-                  value={formData.rotasiSeterusnya}
+                  value={formData.rotasi_ketiga}
                   onChange={handleChange}
-                  error={errors.rotasiSeterusnya}
+                  error={errors.rotasi_ketiga}
                 />
               </div>
               <div className="w-[50px] mt-8 text-black/[0.8]">jam</div>
             </div>
             <EvoInText
-              name="tarifRotasiSeterusnya"
+              name="tarif_rotasi_ketiga"
               label="Tarif Rotasi Seterusnya"
               placeholder="Rp. 0"
-              value={formData.tarifRotasiSeterusnya}
+              value={formData.tarif_rotasi_ketiga}
               onChange={handleChange}
-              error={errors.tarifRotasiSeterusnya}
+              error={errors.tarif_rotasi_ketiga}
             />
           </div>
 
           <EvoInText
-            name="tarifMaksimal"
+            name="tarif_maksimal"
             label="Tarif Maksimal"
             placeholder="Rp. 0"
-            value={formData.tarifMaksimal}
+            value={formData.tarif_maksimal}
             onChange={handleChange}
-            error={errors.tarifMaksimal}
+            error={errors.tarif_maksimal}
           />
         </EvoForm>
       </EvoModal>

@@ -130,7 +130,7 @@ export default function DataShiftSection() {
       nama: row.nama_shift || '-',
       kontak: row.awal_shift || '-',
       perusahaan: row.akhir_shift || '-',
-      status: StatusLabel.status(row.akses_tiket),
+      status: StatusLabel.status(row.status),
 
      
       added: row.createdAt ? new Date(row.createdAt).toLocaleString() : '-',
@@ -140,7 +140,7 @@ export default function DataShiftSection() {
           rowId={row.id}
           onEdit={() => handleEdit(row.id)}
           onDelete={() => handleDelete(row.id)}
-          isActive={true}
+          isActive={row.status || false}
           onAktifkan={() => console.log('Aktifkan', row.id)}
           onNonAktifkan={() => console.log('NonAktifkan', row.id)}
         />

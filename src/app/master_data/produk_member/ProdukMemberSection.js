@@ -30,6 +30,7 @@ import EvoErrorDiv from '@/components/EvoErrorDiv';
 import { getUserId } from '@/utils/db';
 import EvoNotifCard from '@/components/EvoNotifCard';
 import { fetchApiMasterDataProdukMemberDelete } from './api/fetchApiMasterDataProdukMemberDelete';
+import EvoEmpty from "@/components/EvoEmpty";
 
 const titleSection = 'Produk Member';
 
@@ -138,7 +139,7 @@ export default function ProdukMemberSection() {
       .map(({ value, inclusive }) => {
         return value
           ? `${value} (${inclusive ? 'Inclusive' : 'Exclusive'})`
-          : 'Tanggal tidak tersedia';
+          :  <EvoEmpty />;
       })
       .join(' - ');
   };
@@ -150,7 +151,7 @@ export default function ProdukMemberSection() {
     masterDataProdukMember?.data?.map((row, index) => ({
       no: index + 1,
 
-      nama: row.nama || '-',
+      nama: <b>{row.nama}</b> || <EvoEmpty />,
       rentangTanggal: formatPeriode(row.periode),
       kendaraan: (
         <ul className="list-disc pl-4">
@@ -168,11 +169,11 @@ export default function ProdukMemberSection() {
           })}
         </ul>
       ),
-      maxKendaraan: row.max_kendaraan + ' kendaraan',
-      tarif: `Rp ${row.tarif.toLocaleString()}`,
-      biayaKartu: `Rp ${row.biaya_kartu.toLocaleString()}`,
-      biayaGantiNopol: `Rp ${row.biaya_ganti_nopol.toLocaleString()}`,
-      status: StatusLabel.status(row.status),
+      maxKendaraan: (row.max_kendaraan + ' kendaraan') || <EvoEmpty />,
+      tarif: (`Rp ${row.tarif.toLocaleString()}`) || <EvoEmpty />,
+      biayaKartu: (`Rp ${row.biaya_kartu.toLocaleString()}`) || <EvoEmpty />,
+      biayaGantiNopol: (`Rp ${row.biaya_ganti_nopol.toLocaleString()}`) || <EvoEmpty />,
+      status: (StatusLabel.status(row.status)) || <EvoEmpty />,
       added: row.createdAt ? new Date(row.createdAt).toLocaleString() : '-',
       updated: row.updatedAt ? new Date(row.updatedAt).toLocaleString() : '-',
       aksi: (

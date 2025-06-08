@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useEffect , useState, useRef } from 'react';
 import { RiCalendarEventLine } from '@remixicon/react';
 
 export default function EvoInDatePicker({
@@ -18,6 +18,11 @@ export default function EvoInDatePicker({
 
   const [selectedDate, setSelectedDate] = useState(value || '');
 
+  // Sinkronisasi perubahan value dari parent
+  useEffect(() => {
+    setSelectedDate(value || '');
+  }, [value]);
+
   const handleDateChange = (e) => {
     setSelectedDate(e.target.value);
     onChange?.(e.target.value);
@@ -30,6 +35,7 @@ export default function EvoInDatePicker({
   // Format tanggal
   const getFormattedDate = (dateString) => {
     if (!dateString) return '';
+    // console.log(dateString);
     const options = { day: 'numeric', month: 'long', year: 'numeric' };
     return new Date(dateString).toLocaleDateString('id-ID', options);
   };

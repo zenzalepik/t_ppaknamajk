@@ -6,7 +6,7 @@ import EvoTitleSection from '@/components/EvoTitleSection';
 import EvoCardSection from '@/components/evosist_elements/EvoCardSection';
 import EvoTable from '@/components/evosist_elements/EvoTable';
 import { RiAddLargeLine, RiSearchLine, RiUser3Line } from '@remixicon/react';
-import AddTarifDendaForm from './forms/AddForm';
+import EditTarifDendaForm from './forms/EditForm';
 import * as Popover from '@radix-ui/react-popover';
 import { exportExcel } from '@/helpers/exportExcel';
 import { exportPDF } from '@/helpers/exportPDF';
@@ -36,6 +36,7 @@ export default function TarifDendaSection() {
   const queryClient = useQueryClient();
   const [notifMessage, setNotifMessage] = useState('');
   const [notifType, setNotifType] = useState('success');
+  const [selectedData, setSelectedData] = useState(null);
 
   const {
     data: pengaturanTarifDenda,
@@ -44,7 +45,7 @@ export default function TarifDendaSection() {
   } = useQuery({
     queryKey: ['pengaturanTarifDenda', currentPage],
     queryFn: () =>
-          fetchApiPengaturanTarifDenda({
+      fetchApiPengaturanTarifDenda({
         limit: 5,
         page: currentPage,
         offset: (currentPage - 1) * 5,
@@ -67,6 +68,23 @@ export default function TarifDendaSection() {
   const handleEdit = (id) => {
     console.log('Tombol Edit diklik untuk ID:', id);
     // Logika untuk melakukan edit (misalnya membuka form modal)
+
+    const dataDipilih = pengaturanTarifDenda?.data?.find(
+      (item) => item.id === id
+    );
+    if (dataDipilih) {
+      // console.log(dataDipilih);
+      setSelectedData({
+        id: dataDipilih.id,
+        tipeKendaraan: dataDipilih.kendaraan?.nama_kendaraan || '',
+        kendaraan_id: dataDipilih.kendaraan_id,
+        denda_tiket: String(dataDipilih.denda_tiket) || '',
+        denda_stnk: String(dataDipilih.denda_stnk) || '',
+        denda_member: dataDipilih.denda_member || false,
+        status: dataDipilih.status || false,
+      });
+      setModalOpen(true);
+    }
   };
 
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
@@ -74,7 +92,7 @@ export default function TarifDendaSection() {
   // const handleDelete = async(id) => {
   //   console.log('Hapus ID:', id);
   //       await fetchApiMasterDataPerusahaanDelete(id, setNotifMessage, setNotifType);
-    
+
   //       // ✅ Pastikan data diperbarui secara real-time
   //       queryClient.invalidateQueries(['masterDataPerusahaan']);
   //   // logic delete
@@ -128,63 +146,67 @@ export default function TarifDendaSection() {
 
   const dataApi = pengaturanTarifDenda || {};
 
-  const rows =pengaturanTarifDenda?.data?.length > 0
-      ?
-    pengaturanTarifDenda?.data?.map((row, index) => ({
-      no: index + 1,
-      kendaraan: (
-        <b>
-          {row.kendaraan
-            ? `${row.kendaraan.nama_kendaraan} (${row.kendaraan.tipe_kendaraan})`
-            : 'Tidak ditemukan'}
-        </b>
-      ),
-      tarifDendaTiket:
-        row.denda_tiket != null
-          ? `Rp ${row.denda_tiket.toLocaleString()}`
-          : '-',
-      tarifDendaSTNK:
-        row.denda_stnk != null ? `Rp ${row.denda_stnk.toLocaleString()}` : '-',
-      dendaUntukMember: StatusLabel.isDendaMember(row.denda_member),
-      status: StatusLabel.status(row.status),
-      // status:  StatusLabel.status(true),
-      updated: row.updatedAt ? new Date(row.updatedAt).toLocaleString() : '-',
-      // added: row.createdAt ? new Date(row.createdAt).toLocaleString() : '-',
-      aksi: (
-        <EvoActionButtons
-          rowId={row.id}
-          onEdit={() => handleEdit(row.id)}
-          isActive={row.status}
-          onAktifkan={() => console.log('Aktifkan', row.id)}
-          onNonAktifkan={() => console.log('NonAktifkan', row.id)}
-        />
-      ),
-    })) : [];
+  const rows =
+    pengaturanTarifDenda?.data?.length > 0
+      ? pengaturanTarifDenda?.data?.map((row, index) => ({
+          no: index + 1,
+          kendaraan: (
+            <b>
+              {row.kendaraan
+                ? `${row.kendaraan.nama_kendaraan} (${row.kendaraan.tipe_kendaraan})`
+                : 'Tidak ditemukan'}
+            </b>
+          ),
+          tarifDendaTiket:
+            row.denda_tiket != null
+              ? `Rp ${row.denda_tiket.toLocaleString()}`
+              : '-',
+          tarifDendaSTNK:
+            row.denda_stnk != null
+              ? `Rp ${row.denda_stnk.toLocaleString()}`
+              : '-',
+          dendaUntukMember: StatusLabel.isDendaMember(row.denda_member),
+          status: StatusLabel.status(row.status),
+          // status:  StatusLabel.status(true),
+          updated: row.updatedAt
+            ? new Date(row.updatedAt).toLocaleString()
+            : '-',
+          // added: row.createdAt ? new Date(row.createdAt).toLocaleString() : '-',
+          aksi: (
+            <EvoActionButtons
+              rowId={row.id}
+              onEdit={() => handleEdit(row.id)}
+              isActive={row.status}
+              onAktifkan={() => console.log('Aktifkan', row.id)}
+              onNonAktifkan={() => console.log('NonAktifkan', row.id)}
+            />
+          ),
+        }))
+      : [];
 
   return (
     <EvoCardSection>
       <EvoTitleSection
         title={titleSection}
         handleChange={handleChange}
-        buttonText={`Tambah ${titleSection}`}
-        onButtonClick={handleTambah}
         icon={<RiAddLargeLine size={16} />}
         onExportPDF={() => exportPDF('tableToPrint', titleSection)}
         onExportExcel={() => exportExcel('tableToPrint', titleSection)}
         onPrint={() => exportPrint('tableToPrint', titleSection)}
       />
 
-      <AddTarifDendaForm
+      <EditTarifDendaForm
         isOpen={modalOpen}
         onClose={handleTutup}
         onSubmit={handleSubmitData}
+        initialData={selectedData}
       />
       <EvoTable
         id="tableToPrint"
         tableData={tableDataTarifDenda}
-          currentPage={currentPage}
-          totalPages={dataApi?.totalPages}
-          onPageChange={handlePageChange}
+        currentPage={currentPage}
+        totalPages={dataApi?.totalPages}
+        onPageChange={handlePageChange}
         rows={rows}
       />
     </EvoCardSection>

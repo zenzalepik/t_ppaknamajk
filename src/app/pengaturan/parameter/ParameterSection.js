@@ -24,11 +24,7 @@ import { getUserId } from '@/utils/db';
 const titleSection = 'Parameter';
 
 export default function ParameterSection() {
-
-
   const [modalOpen, setModalOpen] = useState(false);
-
-  const handleTambah = () => setModalOpen(true);
   const handleTutup = () => setModalOpen(false);
   const handleUbah = () => setModalOpen(true);
   const [userId, setUserId] = useState(null);
@@ -36,6 +32,7 @@ export default function ParameterSection() {
   const queryClient = useQueryClient();
   const [notifMessage, setNotifMessage] = useState('');
   const [notifType, setNotifType] = useState('success');
+  const [selectedData, setSelectedData] = useState(null);
 
   const {
     data: pengaturanParameter,
@@ -43,7 +40,8 @@ export default function ParameterSection() {
     isLoading,
   } = useQuery({
     queryKey: ['pengaturanParameter', currentPage],
-    queryFn: () =>fetchApiPengaturanParameter({
+    queryFn: () =>
+      fetchApiPengaturanParameter({
         limit: 5,
         page: currentPage,
         offset: (currentPage - 1) * 5,
@@ -52,8 +50,6 @@ export default function ParameterSection() {
       }),
     // retry: false,
   });
-
-  
 
   const handlePageChange = (page) => {
     setCurrentPage(page); // trigger TanStack React Query re-fetch dengan page baru
@@ -67,8 +63,17 @@ export default function ParameterSection() {
   // Fungsi untuk edit data
   const handleEdit = (id) => {
     console.log('Tombol Edit diklik untuk ID:', id);
-    // Logika untuk melakukan edit (misalnya membuka form modal)
-    handleTambah();
+    const dataDipilih = pengaturanParameter?.data?.find(
+      (item) => item.id === id
+    );
+    if (dataDipilih) {
+      setSelectedData({
+        id: dataDipilih.id,
+        nama: dataDipilih.nama || '',
+        nilai: dataDipilih.nilai || '',
+      });
+      setModalOpen(true);
+    }
   };
 
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
@@ -121,12 +126,11 @@ export default function ParameterSection() {
   }
   const dataApi = pengaturanParameter || {};
 
-
   const rows =
     pengaturanParameter?.data?.length > 0
       ? pengaturanParameter.data.map((row, index) => ({
           no: index + 1,
-          nama: row.nama,
+          nama: <b>{row.nama}</b>,
           nilai: row.nilai,
           keterangan: row.keterangan,
           updated: new Date(row.updatedAt).toLocaleString(),
@@ -147,8 +151,6 @@ export default function ParameterSection() {
         // monthNames={monthNames}
         // years={years}
         handleChange={handleChange}
-        // buttonText={`Tambah ${titleSection}`}
-        onButtonClick={handleTambah}
         icon={<RiAddLargeLine size={16} />}
         onExportPDF={() => exportPDF('tableToPrint', titleSection)}
         onExportExcel={() => exportExcel('tableToPrint', titleSection)}
@@ -163,13 +165,14 @@ export default function ParameterSection() {
         isOpen={modalOpen}
         onClose={handleTutup}
         onSubmit={handleSubmitData}
+        initialData={selectedData}
       />
       <EvoTable
         id="tableToPrint"
         tableData={tableDataParameter}
-          currentPage={currentPage}
-          totalPages={dataApi?.totalPages}
-          onPageChange={handlePageChange}
+        currentPage={currentPage}
+        totalPages={dataApi?.totalPages}
+        onPageChange={handlePageChange}
         rows={rows}
       />
     </EvoCardSection>

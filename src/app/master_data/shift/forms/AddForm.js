@@ -1,35 +1,72 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import EvoModal from '@/components/EvoModal';
 import EvoForm from '@/components/EvoForm';
 import EvoInText from '@/components/evosist_elements/EvoInText';
 import EvoInTimePicker from '@/components/evosist_elements/EvoInTimePicker';
 import EvoNotifCard from '@/components/EvoNotifCard';
+import { fetchApiMasterDataDataShiftCreate } from '../api/fetchApiMasterDataDataShiftCreate';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { getUserId } from '@/utils/db';
 
 const AddShiftForm = ({ isOpen, onClose, onSubmit }) => {
-  const [formData, setFormData] = useState({
-    namaShift: '',
-    awalShift: '',
-    akhirShift: '',
-  });
-
   const [errors, setErrors] = useState({});
   const [notifMessage, setNotifMessage] = useState('');
   const [notifType, setNotifType] = useState('success');
+
+  const queryClient = useQueryClient();
+
+  const [formData, setFormData] = useState({
+    nama_shift: '',
+    awal_shift: '',
+    akhir_shift: '',
+    status: false,
+    user_id: null,
+  });
+
+  useEffect(() => {
+  console.log("Form Data Updated:", formData);
+}, [formData]);
+
+
+  // ✅ Fungsi untuk mereset pilihan saat modal ditutup
+  const handleCloseModal = () => {
+    setFormData((prev) => ({
+    ...prev, // Menyimpan data yang sudah ada
+    nama_shift: '',
+    awal_shift: '',
+    akhir_shift: ''
+  }));
+    setErrors({});
+    setNotifMessage('');
+    onClose();
+  };
+
+  // Ambil user_id secara async
+  useEffect(() => {
+    const fetchUserId = async () => {
+      const id = await getUserId();
+      setFormData((prev) => ({ ...prev, user_id: id }));
+    };
+    fetchUserId();
+  }, []);
 
   const handleChange = (name, value) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: '' })); // Bersihkan error saat pengguna mulai mengisi
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const newErrors = {
-      namaShift: formData.namaShift.trim() === '' ? 'Nama Shift wajib diisi' : '',
-      awalShift: formData.awalShift.trim() === '' ? 'Awal Shift wajib dipilih' : '',
-      akhirShift: formData.akhirShift.trim() === '' ? 'Akhir Shift wajib dipilih' : '',
+      nama_shift:
+        formData.nama_shift.trim() === '' ? 'Nama Shift wajib diisi' : '',
+      awal_shift:
+        formData.awal_shift.trim() === '' ? 'Awal Shift wajib dipilih' : '',
+      akhir_shift:
+        formData.akhir_shift.trim() === '' ? 'Akhir Shift wajib dipilih' : '',
     };
 
     setErrors(newErrors);
@@ -40,41 +77,76 @@ const AddShiftForm = ({ isOpen, onClose, onSubmit }) => {
       return;
     }
 
-    onSubmit?.(formData);
+    // onSubmit?.(formData);
+    try {
+      // console.log(formData);
+      await fetchApiMasterDataDataShiftCreate(formData);
 
-    setNotifMessage('Data Shift berhasil disimpan!');
-    setNotifType('success');
+      queryClient.invalidateQueries(['masterDataDataShift']); // Refresh tabel setelah tambah data
 
-    setTimeout(() => onClose(), 2000);
+      setNotifMessage('Data Shift berhasil disimpan!');
+      setNotifType('success');
+
+      setTimeout(() => handleCloseModal(), 500);
+    } catch (error) {
+      setNotifMessage(error.message);
+      setNotifType('error');
+    }
   };
 
   return (
     <>
-      {notifMessage && <EvoNotifCard message={notifMessage} onClose={() => setNotifMessage('')} type={notifType} autoClose={true} />}
+      {notifMessage && (
+        <EvoNotifCard
+          message={notifMessage}
+          onClose={() => setNotifMessage('')}
+          type={notifType}
+          autoClose={true}
+        />
+      )}
 
-      <EvoModal isOpen={isOpen} onClose={onClose} title="Tambah Shift">
-        <EvoForm onSubmit={handleSubmit} submitText="Simpan" cancelText="Batal" onCancel={onClose}>
+      <EvoModal isOpen={isOpen} onClose={handleCloseModal} title="Tambah Shift">
+        <EvoForm
+          onSubmit={handleSubmit}
+          submitText="Simpan"
+          cancelText="Batal"
+          onCancel={handleCloseModal}
+        >
           <EvoInText
-            name="namaShift"
+            name="nama_shift"
             label="Nama Shift"
             placeholder="Masukkan nama shift"
-            value={formData.namaShift}
-            onChange={(e) => handleChange('namaShift', e.target.value)}
-            error={errors.namaShift}
+            value={formData.nama_shift}
+            onChange={(e) => handleChange('nama_shift', e.target.value)}
+            error={errors.nama_shift}
           />
-          <EvoInTimePicker
-            name="awalShift"
+          {/* <EvoInTimePicker
+            name="awal_shift"
             label="Awal Shift"
-            value={formData.awalShift}
-            onChange={(e) => handleChange('awalShift', e.target.value)}
-            error={errors.awalShift}
+            value={formData.awal_shift}
+            onChange={(e) => handleChange('awal_shift', e.target.value)}
+            error={errors.awal_shift}
           />
           <EvoInTimePicker
-            name="akhirShift"
+            name="akhir_shift"
             label="Akhir Shift"
-            value={formData.akhirShift}
-            onChange={(e) => handleChange('akhirShift', e.target.value)}
-            error={errors.akhirShift}
+            value={formData.akhir_shift}
+            onChange={(e) => handleChange('akhir_shift', e.target.value)}
+            error={errors.akhir_shift}
+          /> */}
+          <EvoInTimePicker
+            name="awal_shift"
+            label="Awal Shift"
+            value={formData.awal_shift}
+            onChange={(val) => handleChange('awal_shift', val)}
+            error={errors.awal_shift}
+          />
+          <EvoInTimePicker
+            name="akhir_shift"
+            label="Akhir Shift"
+            value={formData.akhir_shift}
+            onChange={(val) => handleChange('akhir_shift', val)}
+            error={errors.akhir_shift}
           />
         </EvoForm>
       </EvoModal>

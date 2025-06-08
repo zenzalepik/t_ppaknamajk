@@ -1,7 +1,7 @@
 //TarifParkirSection.js
 'use client';
 
-import React, { useEffect , useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import EvoTitleSection from '@/components/EvoTitleSection';
 import EvoCardSection from '@/components/evosist_elements/EvoCardSection';
 import EvoTable from '@/components/evosist_elements/EvoTable';
@@ -24,7 +24,6 @@ const titleSection = 'Tarif Parkir';
 
 export default function TarifParkirSection() {
   const [modalOpen, setModalOpen] = useState(false);
-  const handleTambah = () => setModalOpen(true);
   const handleTutup = () => setModalOpen(false);
   const handleUbah = () => setModalOpen(true);
   const [userId, setUserId] = useState(null);
@@ -32,16 +31,7 @@ export default function TarifParkirSection() {
   const queryClient = useQueryClient();
   const [notifMessage, setNotifMessage] = useState('');
   const [notifType, setNotifType] = useState('success');
-
-  // useEffect(() => {
-  //   const fetchUserId = async () => {
-  //     const id = await getUserId();
-  //     console.log('User ID yang terautentikasi:', id);
-  //     setUserId(id);
-  //   };
-
-  //   fetchUserId();
-  // }, []);
+  const [selectedData, setSelectedData] = useState(null);
 
   const {
     data: pengaturanTarifParkir,
@@ -71,21 +61,30 @@ export default function TarifParkirSection() {
 
   // Fungsi untuk edit data
   const handleEdit = (id) => {
-    console.log('Tombol Edit diklik untuk ID:', id);
-    // Logika untuk melakukan edit (misalnya membuka form modal)
+    // console.log('Tombol Edit diklik untuk ID:', id);
+    const dataDipilih = pengaturanTarifParkir?.data?.find(
+      (item) => item.id === id
+    );
+    if (dataDipilih) {
+      setSelectedData({
+        id: dataDipilih.id,
+        tipeKendaraan: dataDipilih.kendaraan?.nama_kendaraan || '',
+        kendaraan_id: dataDipilih.kendaraan_id,
+        grace_period: String(dataDipilih.grace_period),
+        tarif_grace_period: String(dataDipilih.tarif_grace_period || '0'),
+        rotasi_pertama: String(dataDipilih.rotasi_pertama || ''),
+        tarif_rotasi_pertama: String(dataDipilih.tarif_rotasi_pertama || ''),
+        rotasi_kedua: String(dataDipilih.rotasi_kedua || ''),
+        tarif_rotasi_kedua: String(dataDipilih.tarif_rotasi_kedua || ''),
+        rotasi_ketiga: String(dataDipilih.rotasi_ketiga || ''),
+        tarif_rotasi_ketiga: String(dataDipilih.tarif_rotasi_ketiga || ''),
+        tarif_maksimal: String(dataDipilih.tarif_maksimal || ''),
+      });
+      setModalOpen(true);
+    }
   };
 
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
-
-  // const handleDelete = async (id) => {
-  //   console.log('Hapus ID:', id);
-
-  //   await fetchApiMasterDataPerusahaanDelete(id, setNotifMessage, setNotifType);
-
-  //   // ✅ Pastikan data diperbarui secara real-time
-  //   queryClient.invalidateQueries(['masterDataPerusahaan']);
-  //   // logic delete
-  // };
 
   const cancelDelete = () => {
     setConfirmDeleteId(null);
@@ -142,15 +141,15 @@ export default function TarifParkirSection() {
             </b>
           ),
           toleransiWaktu: row.grace_period + ' menit',
-          rotasiPertama:
+          tarifRotasiPertama:
             row.tarif_rotasi_pertama != null
               ? `Rp ${row.tarif_rotasi_pertama.toLocaleString()}`
               : '-',
-          rotasiKedua:
+          tarifRotasiKedua:
             row.tarif_rotasi_kedua != null
               ? `Rp ${row.tarif_rotasi_kedua.toLocaleString()}`
               : '-',
-          rotasiSeterusnya:
+          tarifRotasiKetiga:
             row.tarif_rotasi_ketiga != null
               ? `Rp ${row.tarif_rotasi_ketiga.toLocaleString()}`
               : '-',
@@ -175,26 +174,17 @@ export default function TarifParkirSection() {
     <EvoCardSection>
       <EvoTitleSection
         title={titleSection}
-        // radioItems={radioItems}
-        // monthNames={monthNames}
-        // years={years}
         handleChange={handleChange}
-        buttonText={`Tambah ${titleSection}`}
-        onButtonClick={handleTambah}
         icon={<RiAddLargeLine size={16} />}
         onExportPDF={() => exportPDF('tableToPrint', titleSection)}
         onExportExcel={() => exportExcel('tableToPrint', titleSection)}
         onPrint={() => exportPrint('tableToPrint', titleSection)}
       />
-      {/* <EvoSearchTabel
-        placeholder="Temukan loker impian kamu..."
-        buttonText="Pencarian"
-        onSearch={handleSearch}
-      /> */}
       <EditTarifParkirForm
         isOpen={modalOpen}
         onClose={handleTutup}
         onSubmit={handleSubmitData}
+        initialData={selectedData}
       />
       <EvoTable
         id="tableToPrint"

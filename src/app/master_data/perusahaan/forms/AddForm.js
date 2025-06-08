@@ -30,13 +30,12 @@ const AddDataPerusahaanForm = ({ isOpen, onClose, onSubmit }) => {
   // ✅ Fungsi untuk mereset pilihan saat modal ditutup
   const handleCloseModal = () => {
     setSelectedJenisPerusahaan('');
-    setFormData({
+    setFormData((prev) => ({
+      ...prev, // Menyimpan data yang sudah ada
       nama: '',
       jenis_perusahaan: '',
       kontak: '',
-      status: false,
-      user_id: '',
-    });
+    }));
     setErrors({});
     setNotifMessage('');
     onClose();
@@ -56,6 +55,10 @@ const AddDataPerusahaanForm = ({ isOpen, onClose, onSubmit }) => {
     user_id: null,
   });
 
+  useEffect(() => {
+    console.log('Form Data Updated:', formData);
+  }, [formData]);
+
   // Ambil user_id secara async
   useEffect(() => {
     const fetchUserId = async () => {
@@ -64,7 +67,6 @@ const AddDataPerusahaanForm = ({ isOpen, onClose, onSubmit }) => {
     };
     fetchUserId();
   }, []);
-
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -104,7 +106,7 @@ const AddDataPerusahaanForm = ({ isOpen, onClose, onSubmit }) => {
       setNotifMessage('Data Perusahaan berhasil disimpan!');
       setNotifType('success');
 
-      setTimeout(() => onClose(), 500);
+      setTimeout(() => handleCloseModal(), 500);
     } catch (error) {
       setNotifMessage(error.message);
       setNotifType('error');

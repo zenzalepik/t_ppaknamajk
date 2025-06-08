@@ -20,8 +20,8 @@ const strings = {
     //   profile: 'Profil Pengguna',
   },
   userName:'Administrator',
-  //apiUrl:'http://localhost:4000',
-  apiUrl:'https://evolusipark-backend.onrender.com',
+  apiUrl:'http://localhost:4000',
+  // apiUrl:'https://evolusipark-backend.onrender.com',
 };
 
 export default strings;

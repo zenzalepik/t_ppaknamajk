@@ -28,6 +28,7 @@ const titleSection = 'Global';
 export default function GlobalSection() {
   const [modalOperatorOpen, setModalOperatorOpen] = useState(false);
   const [modalLokasiOpen, setModalLokasiOpen] = useState(false);
+    const [selectedData, setSelectedData] = useState(null);
 
   const {
     data: pengaturanGlobal,
@@ -45,29 +46,6 @@ export default function GlobalSection() {
   const handleModalLokasiEdit = () => setModalLokasiOpen(true);
   const handleModalLokasiTutup = () => setModalLokasiOpen(false);
 
-  // Fungsi untuk edit data
-  const handleEditOperator = (id) => {
-    console.log('Tombol Edit diklik untuk ID:', id);
-    // Logika untuk melakukan edit (misalnya membuka form modal)
-    handleModalOperatorEdit();
-  };
-
-  const handleEditLokasi = (id) => {
-    console.log('Tombol Edit diklik untuk ID:', id);
-    // Logika untuk melakukan edit (misalnya membuka form modal)
-    handleModalLokasiEdit();
-  };
-
-  const handleSubmitDataOperator = (data) => {
-    console.log('Data baru:', data);
-    // Kirim ke API atau setState
-  };
-
-  const handleSubmitDataLokasi = (data) => {
-    console.log('Data baru:', data);
-    // Kirim ke API atau setState
-  };
-
   if (isLoading)
     return (
       <div className="h-full flex flex-col gap-2 justify-center items-center text-center text-primary">
@@ -80,8 +58,54 @@ export default function GlobalSection() {
     return <EvoErrorDiv errorHandlerText={getErrorMessage(error)} />; // ✅ Pastikan error ditampilkan di UI
   }
 
-  console.log('pengaturanGlobal', pengaturanGlobal);
+  // console.log('pengaturanGlobal', pengaturanGlobal);
   const dataGlobal = pengaturanGlobal.data[0] || {};
+
+
+  const handleEditOperator = (id) => {
+    // console.log('Tombol Edit diklik untuk ID:', id);
+    // const dataDipilih = pengaturanGlobal.find((item) => item.id === id);
+    console.log(dataGlobal);
+    if (dataGlobal) {
+      setSelectedData({
+        id: dataGlobal.id,
+        nama_operator: dataGlobal.nama_operator || '',
+        email_operator: dataGlobal.email_operator || '',
+        no_telp_operator: dataGlobal.no_telp_operator || '',
+        no_fax_operator: dataGlobal.no_fax_operator || '',
+        alamat_operator: dataGlobal.alamat_operator || '',
+      });
+      handleModalOperatorEdit();
+      // handleModalOperatorEdit(true);
+    }
+  };
+
+  const handleEditLokasi = (id) => {
+    // console.log('Tombol Edit diklik untuk ID:', id);
+    console.log(dataGlobal);
+    if (dataGlobal) {
+      setSelectedData({
+        id: dataGlobal.id,
+        nama_lokasi: dataGlobal.nama_lokasi || '',
+        email_lokasi: dataGlobal.email_lokasi || '',
+        no_telp_lokasi: dataGlobal.no_telp_lokasi || '',
+        no_fax_lokasi: dataGlobal.no_fax_lokasi || '',
+        alamat_lokasi: dataGlobal.alamat_lokasi || '',
+      });
+      handleModalLokasiEdit();
+      // handleModalOperatorEdit(true);
+    }
+  };
+
+  const handleSubmitDataOperator = (data) => {
+    // console.log('Data baru:', data);
+    // Kirim ke API atau setState
+  };
+
+  const handleSubmitDataLokasi = (data) => {
+    // console.log('Data baru:', data);
+    // Kirim ke API atau setState
+  };
 
   return (
     <EvoCardSection>
@@ -106,11 +130,13 @@ export default function GlobalSection() {
         isOpen={modalOperatorOpen}
         onClose={handleModalOperatorTutup}
         onSubmit={handleSubmitDataOperator}
+        initialData={selectedData}
       />
       <EditLokasiForm
         isOpen={modalLokasiOpen}
         onClose={handleModalLokasiTutup}
         onSubmit={handleSubmitDataLokasi}
+        initialData={selectedData}
       />
       <div className="flex gap-6">
         <div className="flex flex-col w-full">
@@ -142,7 +168,7 @@ export default function GlobalSection() {
           <EvoButton
             buttonText="Ubah Data Operator"
             className="!w-fit px-4 py-3"
-            onClick={handleEditOperator}
+            onClick={() => handleEditOperator(dataGlobal.id)}
           />
         </div>
 
@@ -177,7 +203,7 @@ export default function GlobalSection() {
           <EvoButton
             buttonText="Ubah Data Lokasi"
             className="!w-fit px-4 py-3"
-            onClick={handleEditLokasi}
+            onClick={()=>handleEditLokasi(dataGlobal.id)}
           />
         </div>
       </div>

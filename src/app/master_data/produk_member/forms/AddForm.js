@@ -38,6 +38,7 @@ const AddProdukMemberForm = ({ isOpen, onClose, onSubmit }) => {
     nama: '',
     periode_mulai: '',
     periode_akhir: '',
+    periode:[],
     // periode_value: '',
     // periode_unit: '',
     list_id_kendaraan: [],
@@ -66,6 +67,7 @@ const AddProdukMemberForm = ({ isOpen, onClose, onSubmit }) => {
       kontak: '',
       status: false,
       user_id: '',
+      periode: []
     });
     setErrors({});
     setNotifMessage('');
@@ -85,6 +87,7 @@ const AddProdukMemberForm = ({ isOpen, onClose, onSubmit }) => {
       ...prev,
       periode_mulai: startDate,
       periode_akhir: endDate,
+      periode: [String(startDate), String(endDate)],
     }));
   }, [startDate, endDate]);
 
@@ -206,7 +209,7 @@ const AddProdukMemberForm = ({ isOpen, onClose, onSubmit }) => {
 
     try {
       console.log(formData);
-      await fetchApiMasterDataPerusahaanCreate(formData);
+      await fetchApiMasterDataProdukMemberCreate(formData);
 
       queryClient.invalidateQueries(['masterDataPerusahaan']); // Refresh tabel setelah tambah data
 
@@ -326,12 +329,12 @@ const AddProdukMemberForm = ({ isOpen, onClose, onSubmit }) => {
             error={errors.kendaraan}
           />
 
-          <div className="mt-4 p-3 bg-gray-100 rounded text-sm text-gray-700">
+          {/* <div className="mt-4 p-3 bg-gray-100 rounded text-sm text-gray-700">
             <strong>ID Kendaraan Terpilih:</strong>{' '}
             {formData.list_id_kendaraan.length > 0
               ? formData.list_id_kendaraan.join(', ')
               : 'Belum ada kendaraan dipilih.'}
-          </div>
+          </div> */}
         </EvoForm>
       </EvoModal>
     </>

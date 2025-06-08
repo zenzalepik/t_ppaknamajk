@@ -19,6 +19,6 @@ export const fetchApiPengaturanParameter = async ({
 
   return await fetchWithAuth({
     method: 'get',
-    endpoint: `/setting/parameter?${queryParams.toString()}`,
+    endpoint: `/setting/parameter/parameter?${queryParams.toString()}`,
   });
 };
