@@ -4,29 +4,79 @@ import EvoForm from '@/components/EvoForm';
 import EvoInText from '@/components/evosist_elements/EvoInText';
 import EvoNotifCard from '@/components/EvoNotifCard';
 import EvoInDropdown from '@/components/evosist_elements/EvoInDropdown';
+import { fetchApiMasterDataDataKendaraan } from '@/app/master_data/data_kendaraan/api/fetchApiMasterDataDataKendaraan';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import Spinner from '@/components/Spinner';
+import EvoErrorDiv from '@/components/EvoErrorDiv';
 
 const KendaraanForm = ({
   isOpen,
   onClose,
   onSubmit,
   editData,
-  dropdownOptions = {}, // Expects: { jenisKendaraan: [...] }
+  dataKendaraan = {}, // Expects: { kendaraan_id: [...] }
+  dataJenisKendaraan = { data: [] },
   existingData = [],
+  parentData = {},
+  addFormParentData = {},
 }) => {
-  const [formData, setFormData] = useState({
-    nomorPolisi: '',
-    jenisKendaraan: '',
-  });
-
   const [errors, setErrors] = useState({});
   const [notifMessage, setNotifMessage] = useState('');
   const [notifType, setNotifType] = useState('success');
+
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const {
+    data: masterDataDataKendaraan,
+    errorDataKendaraan,
+    isLoadingDataKendaraan,
+  } = useQuery({
+    queryKey: ['masterDataDataKendaraan', currentPage],
+    queryFn: () =>
+      fetchApiMasterDataDataKendaraan({
+        limit: 905,
+        page: currentPage,
+        offset: (currentPage - 1) * 5,
+        sortBy: 'id',
+        sortOrder: 'desc',
+      }),
+    // retry: false,
+  });
+
+  const {
+    data: dataTipeKendaraan,
+    error: errorTipeKendaraan,
+    isLoading: isLoadingTipeKendaraan,
+  } = useQuery({
+    queryKey: ['pengaturanTipeKendaraan'],
+    queryFn: () => fetchApiPengaturanParameterTipeKendaraan(),
+  });
+
+  const [formData, setFormData] = useState({
+    nomor_polisi: '',
+    kendaraan_id: '',
+  });
+
+  // ✅ Fungsi untuk mereset pilihan saat modal ditutup
+  const handleCloseModal = () => {
+    setFormData((prev) => ({
+      ...prev,
+      nomor_polisi: '',
+      kendaraan_id: '',
+    }));
+    setErrors({});
+    setNotifMessage('');
+    onClose();
+  };
 
   useEffect(() => {
     if (editData) {
       setFormData(editData);
     } else {
-      setFormData({ nomorPolisi: '', jenisKendaraan: '' });
+      setFormData({
+        nomor_polisi: '',
+        kendaraan_id: '',
+      });
     }
   }, [editData]);
 
@@ -54,10 +104,10 @@ const KendaraanForm = ({
     e.preventDefault();
 
     const newErrors = {
-      nomorPolisi:
-        formData.nomorPolisi.trim() === '' ? 'Nomor Polisi wajib diisi' : '',
-      jenisKendaraan:
-        formData.jenisKendaraan === '' ? 'Jenis Kendaraan wajib diisi' : '',
+      nomor_polisi:
+        formData.nomor_polisi === '' ? 'Nomor Polisi wajib diisi' : '',
+      kendaraan_id:
+        formData.kendaraan_id === '' ? 'Jenis Kendaraan wajib diisi' : '',
     };
 
     setErrors(newErrors);
@@ -70,8 +120,9 @@ const KendaraanForm = ({
 
     const isDuplicate = existingData.some(
       (item) =>
-        item.nomorPolisi.toLowerCase() === formData.nomorPolisi.toLowerCase() &&
-        (!editData || item.nomorPolisi !== editData.nomorPolisi)
+        item.nomor_polisi.toLowerCase() ===
+          formData.nomor_polisi.toLowerCase() &&
+        (!editData || item.nomor_polisi !== editData.nomor_polisi)
     );
 
     if (isDuplicate) {
@@ -79,9 +130,6 @@ const KendaraanForm = ({
       setNotifType('error');
       return;
     }
-
-     // ✅ Print data ke console
-  console.log('Data yang akan dikirim:', formData);
 
     onSubmit?.(formData);
 
@@ -92,8 +140,22 @@ const KendaraanForm = ({
     );
     setNotifType('success');
 
-    setTimeout(() => onClose(), 1000);
+    setTimeout(() => handleCloseModal(), 1000);
   };
+
+  if (isLoadingDataKendaraan)
+    return (
+      <div className="h-full flex flex-col gap-2 justify-center items-center text-center text-primary">
+        <Spinner size={32} color="border-black" />
+        Loading...
+      </div>
+    );
+
+  if (errorDataKendaraan) {
+    return (
+      <EvoErrorDiv errorHandlerText={getErrorMessage(errorDataKendaraan)} />
+    ); // ✅ Pastikan error ditampilkan di UI
+  }
 
   return (
     <>
@@ -108,37 +170,75 @@ const KendaraanForm = ({
 
       <EvoModal
         isOpen={isOpen}
-        onClose={onClose}
+        onClose={handleCloseModal}
         title={editData ? 'Edit Kendaraan' : 'Tambah Kendaraan'}
       >
         <EvoForm
           onSubmit={handleSubmit}
           submitText="Simpan"
           cancelText="Batal"
-          onCancel={onClose}
+          onCancel={handleCloseModal}
           noform={true}
         >
           <EvoInText
-            name="nomorPolisi"
+            name="nomor_polisi"
             label="Nomor Polisi"
             placeholder="Masukkan nomor polisi"
-            value={formData.nomorPolisi}
+            value={formData.nomor_polisi}
             onChange={handleChange}
-            error={errors.nomorPolisi}
+            error={errors.nomor_polisi}
           />
           <EvoInDropdown
-            name="jenisKendaraan"
+            name="kendaraan_id"
             label="Jenis Kendaraan"
-            options={dropdownOptions.jenisKendaraan || []}
-            value={formData.jenisKendaraan}
-            // onChange={(value) =>
-            //   setFormData((prev) => ({ ...prev, jenisKendaraan: value }))
-            // }
-              onChange={handleChange} // Gunakan handler yang sama seperti input lain
+            // options={(dataKendaraan?.data || []).map((item) => {
+            //   const tipe = dataJenisKendaraan?.data.find(
+            //     (tipe) => tipe.id === item.tipe_kendaraan_id
+            //   );
+            //   return {
+            //     ...item,
+            //     label: `${item.nama_kendaraan} (${
+            //       tipe?.tipe_kendaraan || 'Tidak Diketahui'
+            //     })`,
+            //     value: `${item.id || 0}`,
+            //   };
+            // })}
+            // value={formData.kendaraan_id}
+            // onChange={(value) => {
+            //   setFormData((prev) => ({ ...prev, kendaraan_id: value }));
+            // }}
+            options={(addFormParentData?.list_id_kendaraan?.length > 0
+              ? addFormParentData?.list_id_kendaraan || []
+              : parentData?.json?.produk_member?.list_id_kendaraan || []
+            ).map((id) => {
+              const kendaraan = masterDataDataKendaraan?.data?.find(
+                (item) => item.id === Number(id) // cocokkan angka
+              );
 
-            error={errors.jenisKendaraan}
+              return {
+                label: kendaraan
+                  ? `${kendaraan.nama_kendaraan} (${
+                      kendaraan.tipe_kendaraan?.tipe_kendaraan || 'Tanpa Tipe'
+                    })`
+                  : `ID ${id} (Tidak Ditemukan)`,
+                value: id, // tetap string, supaya cocok dengan formData
+              };
+            })}
+            value={formData.kendaraan_id}
+            onChange={(value) => {
+              setFormData((prev) => ({ ...prev, kendaraan_id: value }));
+            }}
+            error={errors.kendaraan_id}
             placeholder="Pilih Jenis Kendaraan"
           />
+          {/* <>
+            {JSON.stringify(parentData?.json?.produk_member?.list_id_kendaraan)}{' '}
+            ++++ {JSON.stringify(addFormParentData?.list_id_kendaraan)}
+          </> */}
+          {/* <br />
+          {parentData?.json?.produk_member?.list_id_kendaraan +
+            '++++' +
+            addFormParentData?.list_id_kendaraan} */}
         </EvoForm>
       </EvoModal>
     </>

@@ -19,7 +19,7 @@ export default function MasterDataDataPengguna() {
     };
 
     checkAuth();
-  }, []);
+  }, [router]);
 
   return (
     <EvoLayout pageTitle="Master Data">

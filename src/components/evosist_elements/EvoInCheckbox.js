@@ -51,7 +51,7 @@ const EvoInCheckbox = ({
             key={index}
             className={`${
               type === 'hak akses'
-                ? 'px-2 py-1 rounded-[12px] border-2 ' +
+                ? 'px-2 py-1 rounded-[12px] cursor-pointer border-2 ' +
                   getBorderColor(answer.value, answer)
                 : ''
             } flex items-center mb-1 ${horizontal ? 'w-fit' : 'w-full'} ${
@@ -74,7 +74,7 @@ const EvoInCheckbox = ({
               value={answer.value}
               checked={answer.checked}
               onChange={(e) => onChange(e, answer)}
-              className={`h-5 w-5 border-2 rounded-lg focus:outline-none  ${
+              className={`cursor-pointer h-5 w-5 border-2 rounded-lg focus:outline-none  ${
                 type === 'hak akses' ? 'accent-white' : 'accent-primary'
               } checked:${getBgColor(
                 answer.value,
@@ -84,7 +84,7 @@ const EvoInCheckbox = ({
             />
             <label
               htmlFor={name}
-              className={`ml-2 text-sm ${
+              className={`ml-2 cursor-pointer text-sm ${
                 type === 'hak akses'
                   ? answer.checked
                     ? 'text-white'

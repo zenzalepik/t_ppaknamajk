@@ -20,8 +20,12 @@ const strings = {
     //   profile: 'Profil Pengguna',
   },
   userName:'Administrator',
-  apiUrl:'http://localhost:4000',
-  // apiUrl:'https://evolusipark-backend.onrender.com',
+  // apiUrl:'http://localhost:4000',
+  apiUrlDummy: 'http://localhost:3001',
+  apiUrl:'https://evolusipark-backend.onrender.com',
+   options: {
+    paymentTypes: ['Cash', 'Prepaid', 'Transfer Bank', 'E-Wallet', 'Member'],
+  },
 };
 
 export default strings;

@@ -1,0 +1,35 @@
+!include "MUI2.nsh"
+!define APPNAME "EvoPark"
+!define APPDIR "$PROGRAMFILES64\EvoPark"
+
+SetCompressor /SOLID lzma
+
+Name "${APPNAME} Installer"
+OutFile "EvoParkInstaller.exe"
+InstallDir "${APPDIR}"
+InstallDirRegKey HKCU "Software\EvoPark" "InstallPath"
+RequestExecutionLevel admin
+
+!insertmacro MUI_PAGE_WELCOME
+!insertmacro MUI_PAGE_DIRECTORY
+!insertmacro MUI_PAGE_INSTFILES
+!insertmacro MUI_PAGE_FINISH
+
+!insertmacro MUI_LANGUAGE "English"
+
+Section "Install"
+  SetOutPath "$INSTDIR"
+  File /r "src\setup.ps1"
+  File "${NSISDIR}\Contrib\Graphics\Icons\modern-install.ico"
+  
+  WriteUninstaller "$INSTDIR\Uninstall.exe"
+
+  ExecWait 'powershell -ExecutionPolicy Bypass -NoProfile -File "$INSTDIR\setup.ps1"'
+SectionEnd
+
+Section "Uninstall"
+  Delete "$INSTDIR\setup.ps1"
+  Delete "$INSTDIR\Uninstall.exe"
+  RMDir /r "$INSTDIR"
+  DeleteRegKey HKCU "Software\EvoPark"
+SectionEnd

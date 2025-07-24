@@ -109,9 +109,7 @@ const AddPengaduanForm = ({ isOpen, onClose, onSubmit }) => {
 
     const newErrors = {
       judul_permasalahan:
-        formData.judul_permasalahan === ''
-          ? 'Judul masalah wajib diisi'
-          : '',
+        formData.judul_permasalahan === '' ? 'Judul masalah wajib diisi' : '',
       kategori_permasalahan:
         formData.kategori_permasalahan === ''
           ? 'Kategori masalah wajib dipilih'
@@ -122,9 +120,7 @@ const AddPengaduanForm = ({ isOpen, onClose, onSubmit }) => {
           ? 'Alat/Perangkat wajib dipilih'
           : '',
       penyebab_permasalahan:
-        formData.penyebab_permasalahan === ''
-          ? 'Penyebab wajib diisi'
-          : '',
+        formData.penyebab_permasalahan === '' ? 'Penyebab wajib diisi' : '',
       keterangan_permasalahan:
         formData.keterangan_permasalahan === ''
           ? 'Keterangan Permasalahan wajib diisi'
@@ -196,7 +192,7 @@ const AddPengaduanForm = ({ isOpen, onClose, onSubmit }) => {
       <EvoModal
         isOpen={isOpen}
         onClose={handleCloseModal}
-        title="Kirim Pengaduan Masalah"
+        title="Kirim Pengaduan Gangguan"
       >
         <EvoForm
           onSubmit={handleSubmit}
@@ -223,13 +219,17 @@ const AddPengaduanForm = ({ isOpen, onClose, onSubmit }) => {
               { label: 'Operasional', value: 'Operasional' },
               { label: 'Lain-lain', value: 'Lain-lain' },
             ]}
-            // value={selectedOptions.kategori_permasalahan}
             value={formData.kategori_permasalahan}
-            // onChange={handleDropdownChange}
-            onChange={(e) =>
+            // onChange={(e) =>
+            //   setFormData((prev) => ({
+            //     ...prev,
+            //     kategori_permasalahan: e.target.value,
+            //   }))
+            // }
+            onChange={(value) =>
               setFormData((prev) => ({
                 ...prev,
-                kategori_permasalahan: e.target.value,
+                kategori_permasalahan: value,
               }))
             }
             error={errors.kategori_permasalahan}
@@ -270,12 +270,16 @@ const AddPengaduanForm = ({ isOpen, onClose, onSubmit }) => {
               { label: 'Pintu pos A', value: '1' },
               { label: 'Pintu pos B', value: '2' },
             ]}
-            // value={selectedOptions.pos_id}
             value={formData.pos_id}
-            // onChange={handleDropdownChange}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, pos_id: e.target.value }))
+            onChange={(value) =>
+              setFormData((prev) => ({
+                ...prev,
+                pos_id: value,
+              }))
             }
+            // onChange={(e) =>
+            //   setFormData((prev) => ({ ...prev, pos_id: e.target.value }))
+            // }
             error={errors.pos_id}
             placeholder="Pilih pintu pos"
           />
@@ -295,13 +299,17 @@ const AddPengaduanForm = ({ isOpen, onClose, onSubmit }) => {
               { label: 'Modem', value: 'Modem' },
               { label: 'Lain-lain', value: 'Lain-lain' },
             ]}
-            // value={selectedOptions.hardware_atau_alat}
             value={formData.hardware_atau_alat}
-            // onChange={handleDropdownChange}
-            onChange={(e) =>
+            // onChange={(e) =>
+            //   setFormData((prev) => ({
+            //     ...prev,
+            //     hardware_atau_alat: e.target.value,
+            //   }))
+            // }
+            onChange={(value) =>
               setFormData((prev) => ({
                 ...prev,
-                hardware_atau_alat: e.target.value,
+                hardware_atau_alat: value,
               }))
             }
             error={errors.hardware_atau_alat}

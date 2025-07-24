@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import DropdownSidebar from '@/components/DropdownSidebar';
 
 export default function ButtonSidebar({
+   label='',
   icon: Icon,
   children,
   active,
@@ -13,7 +14,7 @@ export default function ButtonSidebar({
   const [open, setOpen] = useState(false);
 
   const hasDropdown = dropdownItems.length > 0;
-  const dropdownKey = `dropdown-${children}`; // Unik per label
+  const dropdownKey = `dropdown-${children}-${label}`; // Unik per label
 
   // Load status dari localStorage
   useEffect(() => {

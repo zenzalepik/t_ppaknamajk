@@ -1,0 +1,10 @@
+{
+  "name": "evopark_installer",
+  "version": "1.0.0",
+  "description": "NSIS + Electron JS based EvoPark installer",
+  "main": "build.js",
+  "scripts": {
+    "make": "makensis installer.nsi"
+  },
+  "devDependencies": {}
+}

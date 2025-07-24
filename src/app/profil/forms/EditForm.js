@@ -9,22 +9,31 @@ import EvoNotifCard from '@/components/EvoNotifCard';
 import EvoInDropdown from '@/components/evosist_elements/EvoInDropdown';
 import EvoInRadio from '@/components/evosist_elements/EvoInRadio';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { updateApiProfil } from '@/app/profil/api/updateApiProfil';
+import { fetchApiProfilUpdate } from '../api/fetchApiProfilUpdate';
+import EvoInCheckbox from '@/components/evosist_elements/EvoInCheckbox';
 
-const EditProfilForm = ({ userData, isOpen, onClose, onSubmit }) => {
+const EditProfilForm = ({
+  userData,
+  isOpen,
+  onClose,
+  onSubmit,
+  initialData = null,
+}) => {
+  const [isChangePassword, setIsChangePassword] = useState(false);
   const queryClient = useQueryClient();
   // console.log(userData);
 
   const [formData, setFormData] = useState({
-    namaLengkap: '',
-    nomorHandphone: '',
-    jenisKelamin: '',
-    alamatLengkap: '',
+    id: '',
+    nama: '',
+    no_hp: '',
+    jenis_kelamin: '',
+    alamat_lengkap: '',
     username: '',
     password: '',
     ulangiPassword: '',
-    perusahaan: '',
-    levelPengguna: '',
+    // perusahaan_id: '',
+    // level_pengguna_id: '',
   });
 
   // **Gunakan useEffect untuk update formData saat userData tersedia**
@@ -32,32 +41,57 @@ const EditProfilForm = ({ userData, isOpen, onClose, onSubmit }) => {
     if (userData) {
       setFormData((prev) => ({
         ...prev,
-        namaLengkap: userData?.namaLengkap || '',
-        nomorHandphone: userData?.nomorHandphone || '',
-        jenisKelamin: userData?.jenisKelamin || '',
-        alamatLengkap: userData?.alamatLengkap || '',
-        // username: userData?.username || '',
-        // perusahaan: userData?.asalPerusahaan || '',
-        // levelPengguna: userData?.levelPengguna || '',
+        id: userData?.id || '',
+        nama: userData?.nama || '',
+        no_hp: userData?.no_hp || '',
+        jenis_kelamin: userData?.jenis_kelamin || '',
+        alamat_lengkap: userData?.alamat_lengkap || '',
+        username: userData?.username || '',
+        // perusahaan_id: userData?.asalPerusahaan || '',
+        // level_pengguna_id: userData?.level_pengguna_id || '',
       }));
     }
   }, [userData]); // **Terpicu saat userData berubah**
 
-  // **Mutation untuk Update Profil**
-  const mutation = useMutation({
-    mutationFn: updateApiProfil,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
-      onClose(); // misalnya untuk menutup modal
-    },
-    onError: (error) => {
-      console.error('Error updating profile:', error.message);
-    },
-  });
+  // useEffect(() => {
+  //   if (isOpen && userData) {
+  //     setFormData((prev) => ({
+  //       ...prev,
+  //       id: userData?.id || '',
+  //       nama: userData?.nama || '',
+  //       no_hp: userData?.no_hp || '',
+  //       jenis_kelamin: userData?.jenis_kelamin || '',
+  //       alamat_lengkap: userData?.alamat_lengkap || '',
+  //       username: userData?.username || '',
+  //     }));
+  //   }
+  // }, [isOpen, userData]); // ⬅️ tambahkan isOpen
+
+  // ✅ Fungsi untuk mereset pilihan saat modal ditutup
+  const handleCloseModal = () => {
+    /*setFormData((prev) => ({
+      ...prev, // Menyimpan data yang sudah ada
+      id: '',
+      nama: '',
+      no_hp: '',
+      jenis_kelamin: '',
+      alamat_lengkap: '',
+      username: '',
+      password: '',
+      ulangiPassword: '',
+      perusahaan_id: '',
+      level_pengguna_id: '',
+      // status: true,
+      // added_by: userId,
+    }));*/
+    setErrors({});
+    setNotifMessage('');
+    onClose();
+  };
 
   const [selectedOptions, setSelectedOptions] = useState({
-    perusahaan: '',
-    levelPengguna: '',
+    perusahaan_id: '',
+    level_pengguna_id: '',
   });
 
   const [selectedCameras, setSelectedCameras] = useState({
@@ -81,36 +115,41 @@ const EditProfilForm = ({ userData, isOpen, onClose, onSubmit }) => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const newErrors = {
-      namaLengkap:
-        formData.namaLengkap.trim() === '' ? 'Nama Lengkap wajib diisi' : '',
-      nomorHandphone:
-        formData.nomorHandphone.trim() === ''
-          ? 'Nomor Telepon wajib diisi'
-          : '',
-      jenisKelamin:
-        formData.jenisKelamin === '' ? 'Jenis Kelamin wajib dipilih' : '',
-      alamatLengkap:
-        formData.alamatLengkap.trim() === '' ? 'Alamat wajib diisi' : '',
-      username: formData.username.trim() === '' ? 'Username wajib diisi' : '',
-      password: formData.password.trim() === '' ? 'Password wajib diisi' : '',
-      ulangiPassword:
-        formData.ulangiPassword.trim() === ''
-          ? 'Konfirmasi Password wajib diisi'
-          : '',
-      // perusahaan:
-      //   selectedOptions.perusahaan === '' ? 'Perusahaan wajib dipilih' : '',
-      // levelPengguna:
-      //   selectedOptions.levelPengguna === ''
+      nama: formData.nama === '' ? 'Nama Lengkap wajib diisi' : '',
+      no_hp: formData.no_hp === '' ? 'Nomor Telepon wajib diisi' : '',
+      jenis_kelamin:
+        formData.jenis_kelamin === '' ? 'Jenis Kelamin wajib dipilih' : '',
+      alamat_lengkap:
+        formData.alamat_lengkap === '' ? 'Alamat wajib diisi' : '',
+      // username: formData.username === '' ? 'Username wajib diisi' : '',
+      // password: formData.password === '' ? 'Password wajib diisi' : '',
+      // ulangiPassword:
+      //   formData.ulangiPassword === '' ? 'Konfirmasi Password wajib diisi' : '',
+      // perusahaan_id:
+      //   selectedOptions.perusahaan_id === '' ? 'Perusahaan wajib dipilih' : '',
+      // level_pengguna_id:
+      //   selectedOptions.level_pengguna_id === ''
       //     ? 'Level Pengguna wajib dipilih'
       //     : '',
     };
 
-    if (formData.password !== formData.ulangiPassword) {
-      newErrors.ulangiPassword = 'Password tidak cocok';
+    // if (formData.password !== formData.ulangiPassword) {
+    //   newErrors.ulangiPassword = 'Password tidak cocok';
+    // }
+
+    if (isChangePassword) {
+      newErrors.password =
+        formData.password === '' ? 'Password wajib diisi' : '';
+      newErrors.ulangiPassword =
+        formData.ulangiPassword === '' ? 'Konfirmasi Password wajib diisi' : '';
+
+      if (formData.password !== formData.ulangiPassword) {
+        newErrors.ulangiPassword = 'Password tidak cocok';
+      }
     }
 
     setErrors(newErrors);
@@ -122,23 +161,30 @@ const EditProfilForm = ({ userData, isOpen, onClose, onSubmit }) => {
     }
 
     // onSubmit?.(formData);
+    try {
+      const payload = { ...formData };
+      if (!isChangePassword) {
+        delete payload.password;
+        delete payload.ulangiPassword;
+      }
 
-    // **Lakukan request update profil dengan Mutation**
-    mutation.mutate(formData, {
-      onSuccess: () => {
-        setNotifMessage('Data berhasil disimpan!');
-        setNotifType('success');
-        setTimeout(() => onClose(), 2000);
-      },
-      onError: (error) => {
-        setNotifMessage(`Gagal menyimpan: ${error.message}`);
-        setNotifType('error');
-      },
-    });
+      await fetchApiProfilUpdate(payload);
+
+      queryClient.invalidateQueries(['masterDataPerusahaan']); // Refresh tabel setelah tambah data
+
+      setNotifMessage('Data Perusahaan berhasil disimpan!');
+      setNotifType('success');
+
+      setTimeout(() => handleCloseModal(), 500);
+    } catch (error) {
+      setNotifMessage(error.message);
+      setNotifType('error');
+    }
 
     // setTimeout(() => onClose(), 2000);
   };
 
+  console.log(JSON.stringify(errors));
   return (
     <>
       {notifMessage && (
@@ -158,71 +204,95 @@ const EditProfilForm = ({ userData, isOpen, onClose, onSubmit }) => {
           onCancel={onClose}
         >
           <EvoInText
-            name="namaLengkap"
+            name="nama"
             label="Nama Lengkap"
             placeholder="Masukkan nama lengkap"
-            value={formData.namaLengkap}
+            value={formData.nama}
             onChange={handleChange}
-            error={errors.namaLengkap}
+            error={errors.nama}
           />
 
           <div className="flex gap-3 relative">
             <div className="flex w-1/2">
               <EvoInText
-                name="nomorHandphone"
+                name="no_hp"
                 label="Nomor Handphone"
                 placeholder="Masukkan nomor handphone"
-                value={formData.nomorHandphone}
+                value={formData.no_hp}
                 onChange={handleChange}
-                error={errors.nomorHandphone}
+                error={errors.no_hp}
               />
             </div>
             <div className="flex w-1/2">
               <EvoInRadio
-                name="jenisKelamin"
+                name="jenis_kelamin"
                 label="Jenis Kelamin"
                 placeholder="Pilih jenis kelamin"
                 items={[
-                  { label: 'Laki-laki', value: 'laki-laki' },
-                  { label: 'Perempuan', value: 'perempuan' },
+                  { label: 'Laki-laki', value: 'Laki-laki' },
+                  { label: 'Perempuan', value: 'Perempuan' },
                 ]}
-                defaultValue={formData.jenisKelamin}
+                defaultValue={formData.jenis_kelamin}
                 onChange={(value) =>
-                  setFormData((prev) => ({ ...prev, jenisKelamin: value }))
+                  setFormData((prev) => ({ ...prev, jenis_kelamin: value }))
                 }
                 direction="horizontal"
-                error={errors.jenisKelamin}
+                error={errors.jenis_kelamin}
               />
             </div>
           </div>
           <EvoInTextarea
-            name="alamatLengkap"
+            name="alamat_lengkap"
             label="Alamat Lengkap"
             placeholder="Masukkan alamat lengkap"
-            value={formData.alamatLengkap}
+            value={formData.alamat_lengkap}
             onChange={handleChange}
-            error={errors.alamatLengkap}
+            error={errors.alamat_lengkap}
           />
-          <div className="flex gap-3 relative">
-            <EvoInText
-              name="password"
-              label="Password"
-              type="password"
-              placeholder="Masukkan password"
-              value={formData.password}
-              onChange={handleChange}
-              error={errors.password}
-            />
-            <EvoInText
-              name="ulangiPassword"
-              label="Ulangi Password"
-              placeholder="Masukkan ulangi password"
-              type="password"
-              value={formData.ulangiPassword}
-              onChange={handleChange}
-              error={errors.ulangiPassword}
-            />
-          </div>
+
+          <EvoInCheckbox
+            label="Ubah password?"
+            answers={[
+              {
+                label: 'Iya',
+                value: 'akses_kartu',
+                checked: isChangePassword,
+              },
+            ]}
+            // onChange={(e) => {
+            //   const { value, checked } = e.target;
+            //   setFormData((prev) => ({
+            //     ...prev,
+            //     [value]: checked,
+            //   }));
+            // }}
+            onChange={(e) => {
+              setIsChangePassword(e.target.checked);
+            }}
+            error={errors.akses_kartu}
+          />
+          {isChangePassword && (
+            <div className="flex gap-3 relative">
+              <EvoInText
+                name="password"
+                label="Password"
+                type="password"
+                placeholder="Masukkan password"
+                value={formData.password}
+                onChange={handleChange}
+                error={errors.password}
+              />
+              <EvoInText
+                name="ulangiPassword"
+                label="Ulangi Password"
+                placeholder="Masukkan ulangi password"
+                type="password"
+                value={formData.ulangiPassword}
+                onChange={handleChange}
+                error={errors.ulangiPassword}
+              />
+            </div>
+          )}
         </EvoForm>
       </EvoModal>
     </>

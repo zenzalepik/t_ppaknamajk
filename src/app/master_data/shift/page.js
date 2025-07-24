@@ -19,7 +19,7 @@ export default function MasterDataDataShift() {
     };
 
     checkAuth();
-  }, []);
+  }, [router]);
   return (
     <EvoLayout pageTitle="Master Data">
         <DataShiftSection />

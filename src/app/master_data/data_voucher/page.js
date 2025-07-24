@@ -18,7 +18,7 @@ export default function MasterDataDataVoucher() {const router = useRouter();
     };
 
     checkAuth();
-  }, []);
+  }, [router]);
   return (
     <EvoLayout pageTitle="Master Data">
         <DataVoucherSection />

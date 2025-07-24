@@ -12,10 +12,12 @@ import EvoBtnGantiNomorPolisi from '@/components/evosist_elements/EvoBtnGantiNom
 import EvoBtnRiwayatTransaksi from '@/components/evosist_elements/EvoBtnRiwayatTransaksi';
 
 const EvoTooltipActionDataMember = ({
-  onPerpanjang=() => {},
-  onGantiKartu=() => {},
-  onGantiNomorPolisi=() => {},
-  onRiwayatTransaksi=() => {},
+  onPerpanjang = () => {},
+  onGantiKartu = () => {},
+  onGantiNomorPolisi = () => {},
+  onRiwayatTransaksi = () => {},
+  isGantiKartu = false,
+  isGantiNomorPolisi = false,
   onConfirm,
   onCancel,
 }) => (
@@ -31,31 +33,47 @@ const EvoTooltipActionDataMember = ({
     </div> */}
     <div className="flex flex-col justify-end gap-2">
       <Popover.Close asChild>
-        <EvoBtnPerpanjang
-          onClick={onPerpanjang}
-          className="!py-3 !border-none !bg-primaryTransparent !justify-start !px-6"
-        />
+        {onPerpanjang && (
+          <EvoBtnPerpanjang
+            onClick={onPerpanjang}
+            className="cursor-pointer !py-3 !border-none !bg-primaryTransparent !justify-start !px-6"
+          />
+        )}
       </Popover.Close>
 
       <Popover.Close asChild>
-        <EvoBtnGantiKartu
-          onClick={onGantiKartu}
-          className="!py-3 !border-none !bg-primaryTransparent !justify-start !px-6"
-        />
+        {onGantiKartu && (
+          <EvoBtnGantiKartu
+            onClick={onGantiKartu}
+            className={`cursor-pointer !py-3 !border-none ${
+              isGantiKartu
+                ? '!bg-primaryTransparent'
+                : 'bg-black/20 !text-black'
+            } !justify-start !px-6`}
+          />
+        )}
       </Popover.Close>
 
       <Popover.Close asChild>
-        <EvoBtnGantiNomorPolisi
-          onClick={onGantiNomorPolisi}
-          className="!py-3 !border-none !bg-primaryTransparent !justify-start !px-6"
-        />
+        {onGantiNomorPolisi && (
+          <EvoBtnGantiNomorPolisi
+            onClick={onGantiNomorPolisi}
+            className={`cursor-pointer !py-3 !border-none ${
+              isGantiNomorPolisi
+                ? '!bg-primaryTransparent'
+                : 'bg-black/20 !text-black'
+            } !justify-start !px-6`}
+          />
+        )}
       </Popover.Close>
 
       <Popover.Close asChild>
-        <EvoBtnRiwayatTransaksi
-          onClick={onRiwayatTransaksi}
-          className="!py-3 !border-none !bg-primaryTransparent !justify-start !px-6"
-        />
+        {onRiwayatTransaksi && (
+          <EvoBtnRiwayatTransaksi
+            onClick={onRiwayatTransaksi}
+            className="cursor-pointer !py-3 !border-none !bg-primaryTransparent !justify-start !px-6"
+          />
+        )}
       </Popover.Close>
     </div>
   </Popover.Content>

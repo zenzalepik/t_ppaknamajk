@@ -9,6 +9,8 @@ import EvoNotifCard from '@/components/EvoNotifCard';
 import { useQueryClient } from '@tanstack/react-query';
 import { getUserId } from '@/utils/db';
 import { fetchApiMasterDataDataKendaraanCreate } from '../api/fetchApiMasterDataDataKendaraanCreate';
+import { fetchApiPengaturanParameterTipeKendaraan } from '@/app/pengaturan/parameter/api/items/fetchApiPengaturanParameterTipeKendaraan';
+import { useQuery } from '@tanstack/react-query';
 
 const AddKendaraanForm = ({ isOpen, onClose, onSubmit }) => {
   const [errors, setErrors] = useState({});
@@ -18,7 +20,7 @@ const AddKendaraanForm = ({ isOpen, onClose, onSubmit }) => {
 
   const [formData, setFormData] = useState({
     nama_kendaraan: '',
-    tipe_kendaraan: '',
+    tipe_kendaraan_id: '',
     status: false,
     user_id: '',
   });
@@ -39,6 +41,15 @@ const AddKendaraanForm = ({ isOpen, onClose, onSubmit }) => {
 
     fetchUserId();
   }, [isOpen]);
+
+  const {
+    data: dataTipeKendaraan,
+    error: errorTipeKendaraan,
+    isLoading: isLoadingTipeKendaraan,
+  } = useQuery({
+    queryKey: ['pengaturanTipeKendaraan'],
+    queryFn: () => fetchApiPengaturanParameterTipeKendaraan(),
+  });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -67,7 +78,7 @@ const AddKendaraanForm = ({ isOpen, onClose, onSubmit }) => {
   const handleCloseModal = () => {
     setFormData({
       nama_kendaraan: '',
-      tipe_kendaraan: '',
+      tipe_kendaraan_id: '',
       status: false,
       // user_id: '',
     });
@@ -81,7 +92,6 @@ const AddKendaraanForm = ({ isOpen, onClose, onSubmit }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-
     if (!formData.user_id) {
       setNotifMessage('User ID tidak ditemukan, coba ulangi.');
       setNotifType('error');
@@ -91,8 +101,8 @@ const AddKendaraanForm = ({ isOpen, onClose, onSubmit }) => {
     const newErrors = {
       nama_kendaraan:
         formData.nama_kendaraan === '' ? 'Nama Kendaraan wajib diisi' : '',
-      tipe_kendaraan:
-        formData.tipe_kendaraan.trim() === ''
+      tipe_kendaraan_id:
+        formData.tipe_kendaraan_id.trim() === ''
           ? 'Tipe Kendaraan wajib dipilih'
           : '',
     };
@@ -154,16 +164,23 @@ const AddKendaraanForm = ({ isOpen, onClose, onSubmit }) => {
             error={errors.nama_kendaraan}
           />
           <EvoInDropdown
-            name="tipe_kendaraan"
+            name="tipe_kendaraan_id"
             label="Tipe Kendaraan"
-            options={[
-              { label: 'Motor', value: 'Motor' },
-              { label: 'Mobil', value: 'Mobil' },
-              { label: 'All', value: 'All' },
-            ]}
-            value={formData.tipe_kendaraan}
-            onChange={handleChange}
-            error={errors.tipe_kendaraan}
+            options={
+              dataTipeKendaraan?.data?.map((item) => ({
+                label: item.tipe_kendaraan,
+                value: item.id,
+              })) || []
+            }
+            value={formData.tipe_kendaraan_id}
+            // onChange={handleChange}
+            onChange={(value) =>
+              setFormData((prev) => ({
+                ...prev,
+                tipe_kendaraan_id: value,
+              }))
+            }
+            error={errors.tipe_kendaraan_id}
             placeholder="Pilih tipe kendaraan"
           />
         </EvoForm>

@@ -19,6 +19,7 @@ import { getUserId } from '@/utils/db';
 import { fetchApiMasterDataProdukMemberCreate } from '../api/fetchApiMasterDataProdukMemberCreate';
 import { fetchApiMasterDataDataKendaraan } from '@/app/master_data/data_kendaraan/api/fetchApiMasterDataDataKendaraan';
 
+
 const AddProdukMemberForm = ({ isOpen, onClose, onSubmit }) => {
   const [errors, setErrors] = useState({});
   const [notifMessage, setNotifMessage] = useState('');
@@ -62,12 +63,18 @@ const AddProdukMemberForm = ({ isOpen, onClose, onSubmit }) => {
   // ✅ Fungsi untuk mereset pilihan saat modal ditutup
   const handleCloseModal = () => {
     setFormData({
-      nama: '',
-      jenis_perusahaan: '',
-      kontak: '',
-      status: false,
-      user_id: '',
-      periode: []
+    nama: '',
+    periode_mulai: '',
+    periode_akhir: '',
+    periode:[],
+    // periode_value: '',
+    // periode_unit: '',
+    list_id_kendaraan: [],
+    max_kendaraan: '',
+    tarif: '',
+    biaya_kartu: '',
+    biaya_ganti_nopol: '',
+    status: false,
     });
     setErrors({});
     setNotifMessage('');
@@ -82,14 +89,24 @@ const AddProdukMemberForm = ({ isOpen, onClose, onSubmit }) => {
     setErrors((prev) => ({ ...prev, [name]: '' }));
   };
 
-  useEffect(() => {
+  // useEffect(() => {
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     periode_mulai: startDate,
+  //     periode_akhir: endDate,
+  //     periode: [String(startDate), String(endDate)],
+  //   }));
+  // }, [startDate, endDate]);
+
+   useEffect(() => {
     setFormData((prev) => ({
       ...prev,
-      periode_mulai: startDate,
-      periode_akhir: endDate,
-      periode: [String(startDate), String(endDate)],
+      periode: [
+        String(prev.periode_mulai),
+        String(prev.periode_akhir),
+      ],
     }));
-  }, [startDate, endDate]);
+  }, [formData.periode_mulai, formData.periode_akhir]);
 
   // const [selectedKendaraan, setSelectedKendaraan] = useState({
   //   mobil: false,
@@ -157,7 +174,7 @@ const AddProdukMemberForm = ({ isOpen, onClose, onSubmit }) => {
     // );
 
     const newErrors = {
-      nama: formData.nama.trim() === '' ? 'Nama Produk Member wajib diisi' : '',
+      nama: formData.nama === '' ? 'Nama Produk Member wajib diisi' : '',
       periode_mulai:
         formData.periode_mulai === '' ? 'Tanggal Mulai wajib diisi' : '',
       periode_akhir:
@@ -170,14 +187,14 @@ const AddProdukMemberForm = ({ isOpen, onClose, onSubmit }) => {
       // tipePeriode:
       //   formData.tipePeriode.trim() === '' ? 'Tipe Periode wajib dipilih' : '',
       max_kendaraan:
-        formData.max_kendaraan.trim() === ''
+        formData.max_kendaraan === ''
           ? 'Maksimal Kendaraan wajib diisi'
           : '',
-      tarif: formData.tarif.trim() === '' ? 'Tarif wajib diisi' : '',
+      tarif: formData.tarif === '' ? 'Tarif wajib diisi' : '',
       biaya_kartu:
-        formData.biaya_kartu.trim() === '' ? 'Biaya Kartu wajib diisi' : '',
+        formData.biaya_kartu === '' ? 'Biaya Kartu wajib diisi' : '',
       biaya_ganti_nopol:
-        formData.biaya_ganti_nopol.trim() === ''
+        formData.biaya_ganti_nopol === ''
           ? 'Biaya Ganti Nopol wajib diisi'
           : '',
       // kendaraan:
@@ -211,12 +228,12 @@ const AddProdukMemberForm = ({ isOpen, onClose, onSubmit }) => {
       console.log(formData);
       await fetchApiMasterDataProdukMemberCreate(formData);
 
-      queryClient.invalidateQueries(['masterDataPerusahaan']); // Refresh tabel setelah tambah data
+      queryClient.invalidateQueries(['masterDataProdukVoucher']); // Refresh tabel setelah tambah data
 
       setNotifMessage('Produk Member berhasil disimpan!');
       setNotifType('success');
 
-      setTimeout(() => onClose(), 500);
+      setTimeout(() => handleCloseModal(), 500);
     } catch (error) {
       setNotifMessage(error.message);
       setNotifType('error');
@@ -317,7 +334,7 @@ const AddProdukMemberForm = ({ isOpen, onClose, onSubmit }) => {
             label="Kendaraan"
             answers={
               kendaraanData?.data.map((item) => ({
-                label: `${item.nama_kendaraan} (${item.tipe_kendaraan})`,
+                label: `${item?.nama_kendaraan} (${item?.tipe_kendaraan?.tipe_kendaraan||' - '})`,
                 value: item.id.toString(), // Convert ke string untuk value di HTML
                 // checked: formData.list_id_kendaraan.includes(item.id),
                 checked: formData.list_id_kendaraan.includes(

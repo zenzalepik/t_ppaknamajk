@@ -1,0 +1,149 @@
+const fs = require('fs');
+const path = require('path');
+const readline = require('readline');
+const { execSync } = require('child_process');
+const archiver = require('archiver');
+
+// Path ke package.json
+const pkgPath = path.resolve(__dirname, '../../../package.json');
+const pkg = require(pkgPath);
+const oldVersion = pkg.version; // Versi lama
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
+const ask = (q) => new Promise(resolve => rl.question(q, resolve));
+
+(async () => {
+  // =========================
+  // 0. Input versi baru
+  const newVersion = await ask(`Masukkan versi baru (versi lama: ${oldVersion}): `);
+  pkg.version = newVersion;
+
+  // (Opsional) Simpan versi baru ke package.json
+  // fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
+
+  const rootDir = path.resolve(__dirname, '../../../');
+  const nextDir = path.join(rootDir, '.next');
+  const publicDir = path.join(rootDir, 'public');
+  const nextCacheDir = path.join(nextDir, 'cache');
+
+  const zipNextFileName = '.next.zip';
+  const zipPublicFileName = 'public.zip';
+  const zipNextTemp = path.join(rootDir, zipNextFileName);
+  const zipPublicTemp = path.join(rootDir, zipPublicFileName);
+
+  const rilisRepoDir = 'D:/Github/rilis_ep';
+  const zipNextTarget = path.join(rilisRepoDir, zipNextFileName);
+  const zipPublicTarget = path.join(rilisRepoDir, zipPublicFileName);
+  const versionJsonLocal = path.resolve(__dirname, '../version.json');
+  const versionJsonRemote = path.join(rilisRepoDir, 'version.json');
+
+  const commitMessage = `feat: membuat rilis versi ${newVersion}`;
+
+  // =========================
+  // 1. Bersihkan cache .next
+  if (fs.existsSync(nextCacheDir)) {
+    console.log('🧹 Menghapus folder .next/cache...');
+    fs.rmSync(nextCacheDir, { recursive: true, force: true });
+  }
+
+  // =========================
+  // 2. Buat ZIP dari folder .next
+  console.log('📦 Membuat .next.zip...');
+  await new Promise((resolve, reject) => {
+    const output = fs.createWriteStream(zipNextTemp);
+    const archive = archiver('zip', { zlib: { level: 9 } });
+
+    output.on('close', () => {
+      console.log(`✅ File .next.zip berhasil dibuat (${archive.pointer()} bytes)`);
+      resolve();
+    });
+
+    archive.on('error', (err) => reject(err));
+    archive.pipe(output);
+    archive.glob('**/*', { cwd: nextDir, ignore: ['cache/**'] });
+    archive.finalize();
+  });
+
+  // =========================
+  // 3. Buat ZIP dari folder public
+  console.log('📦 Membuat public.zip...');
+  await new Promise((resolve, reject) => {
+    const output = fs.createWriteStream(zipPublicTemp);
+    const archive = archiver('zip', { zlib: { level: 9 } });
+
+    output.on('close', () => {
+      console.log(`✅ File public.zip berhasil dibuat (${archive.pointer()} bytes)`);
+      resolve();
+    });
+
+    archive.on('error', (err) => reject(err));
+    archive.pipe(output);
+    archive.glob('**/*', { cwd: publicDir });
+    archive.finalize();
+  });
+
+  // =========================
+  // 4. Pindahkan zip ke folder rilis_ep
+  const moveZip = (src, dest) => {
+    if (fs.existsSync(dest)) fs.unlinkSync(dest);
+    fs.copyFileSync(src, dest);
+    console.log(`✅ Dipindah ke: ${dest}`);
+  };
+  console.log('🚚 Memindahkan ZIP ke folder rilis_ep...');
+  moveZip(zipNextTemp, zipNextTarget);
+  moveZip(zipPublicTemp, zipPublicTarget);
+
+  // =========================
+  // 5. Buat file version.json
+  const downloadUrl = await ask('Masukkan URL download update: ');
+  const changelog = await ask('Masukkan catatan rilis: ');
+  const data = {
+    latestVersion: newVersion,
+    downloadUrl,
+    changelog
+  };
+  fs.writeFileSync(versionJsonLocal, JSON.stringify(data, null, 2));
+  console.log(`✅ File version.json disimpan di: ${versionJsonLocal}`);
+
+  // =========================
+  // 6. Commit dan push repo utama
+  try {
+    execSync('git add .', { cwd: rootDir, stdio: 'inherit' });
+    execSync(`git commit -m "${commitMessage}"`, { cwd: rootDir, stdio: 'inherit' });
+    execSync('git push', { cwd: rootDir, stdio: 'inherit' });
+    console.log('🚀 Push ke repo utama selesai');
+  } catch {
+    console.warn('⚠️  Gagal push repo utama (mungkin tidak ada perubahan)');
+  }
+
+  // =========================
+  // 7. Salin version.json ke repo rilis_ep
+  fs.writeFileSync(versionJsonRemote, JSON.stringify(data, null, 2));
+  console.log(`✅ File version.json ditulis ke repo rilis_ep: ${versionJsonRemote}`);
+
+  // =========================
+  // 8. Commit & push repo rilis_ep
+  try {
+    execSync(`git add ${zipNextFileName} ${zipPublicFileName} version.json`, {
+      cwd: rilisRepoDir,
+      stdio: 'inherit'
+    });
+    execSync(`git commit -m "${commitMessage}"`, { cwd: rilisRepoDir, stdio: 'inherit' });
+    execSync('git push', { cwd: rilisRepoDir, stdio: 'inherit' });
+    console.log('🚀 Push ke repo rilis_ep selesai');
+  } catch {
+    console.warn('⚠️  Gagal push repo rilis_ep (mungkin tidak ada perubahan)');
+  }
+
+  // =========================
+  // 9. Tampilkan versi lama & baru
+  console.log('==============================');
+  console.log(`📌 Versi lama : ${oldVersion}`);
+  console.log(`📌 Versi baru : ${newVersion}`);
+  console.log('==============================');
+
+  rl.close();
+})();

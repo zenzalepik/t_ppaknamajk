@@ -18,7 +18,7 @@ export default function TransaksiTambahTransaksi() {const router = useRouter();
     };
 
     checkAuth();
-  }, []);
+  }, [router]);
   return (
     <EvoLayout pageTitle="Transaksi">
         <TambahTransaksiSection />

@@ -125,40 +125,34 @@ export default function PengaduanSection({ onBack }) {
       />
       <EvoTitleSection
         title={titleSection}
-        // radioItems={radioItems}
-        // monthNames={monthNames}
-        // years={years}
         onBack={onBack}
         handleChange={handleChange}
-        // buttonText={titleSection}
         borderTop={true}
-        // onButtonClick={handleTambah}
         icon={<RiAddLargeLine size={16} />}
-        onExportPDF={() => exportPDF('tableToPrint', titleSection)}
-        onExportExcel={() => exportExcel('tableToPrint', titleSection)}
-        onPrint={() => exportPrint('tableToPrint', titleSection)}
       />
 
-      <EditProsesPerbaikanForm
-        isOpen={modalOpenPengaduan}
-        onClose={handleTutup}
-        onSubmit={handleSubmitData}
-      />
-      <EvoTableMulti
-        id="tableToPrint"
-        tableData={tableDataPengaduan}
-        textRight="Perbaikan"
-        textLeft="Masalah"
-        orangeEndIndex={8}
-        blackStartIndex={9}
-        currentPage={1}
-        totalPages={3}
-        onPageChange={
-          (page) => console.log('Page:', page)
-          // columns={tableDataPengaduan.columns} rows={rows}
-        }
-        rows={rows}
-      />
+        <EditProsesPerbaikanForm
+          isOpen={modalOpenPengaduan}
+          onClose={handleTutup}
+          onSubmit={handleSubmitData}
+        />
+      
+        <EvoTableMulti
+          id="tableToPrint"
+          tableData={tableDataPengaduan}
+          textRight="Perbaikan"
+          textLeft="Masalah"
+          orangeEndIndex={8}
+          blackStartIndex={9}
+          currentPage={1}
+          totalPages={3}
+          onPageChange={
+            (page) => console.log('Page:', page)
+            // columns={tableDataPengaduan.columns} rows={rows}
+          }
+          rows={rows}
+        />
+      
     </EvoCardSection>
   );
 }

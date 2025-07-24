@@ -3,6 +3,8 @@ import strings from '../utils/strings';
 import { SidebarProvider } from '../contexts/SidebarContext'; // path sesuai struktur project
 import QueryProvider from '@/utils/QueryProvider';
 // import authTokenHelper from '../helpers/authTokenHelper';
+// import Titlebar from '@/components/Titlebar';
+import TitlebarWrapper from '@/components/TitlebarWrapper';
 
 export const metadata = {
   title: strings.appName,
@@ -34,8 +36,12 @@ export default function RootLayout({ children }) {
 
       <SidebarProvider>
         <body className="font-sans bg-gray-100">
-          <div id="root" className="h-screen w-screen">
-            <QueryProvider> {children}</QueryProvider>
+          <div id="root" className="h-screen w-screen overflow-hidden">
+            <QueryProvider>
+              {/* <Titlebar /> */}
+              <TitlebarWrapper />
+              {children}
+            </QueryProvider>
           </div>
           <div id="tooltip-root"></div>
         </body>

@@ -21,7 +21,7 @@ export default function TransaksiPembatalanTransaksi() {
     };
 
     checkAuth();
-  }, []);
+  }, [router]);
   return (
     <EvoLayout pageTitle="Laporan Data">
       <TransaksiBatalSection />

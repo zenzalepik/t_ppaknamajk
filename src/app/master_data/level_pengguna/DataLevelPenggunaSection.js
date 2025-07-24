@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import EvoTitleSection from '@/components/EvoTitleSection';
 import EvoCardSection from '@/components/evosist_elements/EvoCardSection';
 import EvoTable from '@/components/evosist_elements/EvoTable';
@@ -16,8 +16,11 @@ import Spinner from '@/components/Spinner';
 import { getErrorMessage } from '@/utils/errorHandler';
 import EvoErrorDiv from '@/components/EvoErrorDiv';
 import { getUserId } from '@/utils/db';
-import {fetchApiMasterDataLevelPenggunaDelete} from './api/fetchApiMasterDataLevelPenggunaDelete';
+import { fetchApiMasterDataLevelPenggunaDelete } from './api/fetchApiMasterDataLevelPenggunaDelete';
 import EvoNotifCard from '@/components/EvoNotifCard';
+import EditLevelPenggunaForm from './forms/EditForm';
+import PengaturanLevelPenggunaForm from './forms/PengaturanForm';
+import { ambilLevelPengguna } from '@/utils/levelPenggunaStorage';
 
 const titleSection = 'Level Pengguna';
 
@@ -33,6 +36,24 @@ export default function DataLevelPenggunaSection() {
   const [notifMessage, setNotifMessage] = useState('');
   const [notifType, setNotifType] = useState('success');
 
+  const [selectedEditData, setSelectedEdit] = useState(null);
+  const [modalEditOpen, setModalEditOpen] = useState(false);
+  const handleEditTutup = () => setModalEditOpen(false);
+
+  const [selectedPengaturanData, setSelectedPengaturan] = useState(null);
+  const [modalPengaturanOpen, setModalPengaturanOpen] = useState(false);
+  const handlePengaturanTutup = () => setModalPengaturanOpen(false);
+
+  const [dataHakAkses, setDataLevelSidebar] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const data = await ambilLevelPengguna();
+      setDataLevelSidebar(data);
+    };
+    fetchData();
+  }, []);
+
   const {
     data: masterDataLevelPengguna,
     error,
@@ -43,12 +64,23 @@ export default function DataLevelPenggunaSection() {
       fetchApiMasterDataLevelPengguna({
         limit: 5,
         page: currentPage,
-        offset: (currentPage - 1) * 5,
+        // offset: (currentPage - 1) * 5,
         sortBy: 'id',
         sortOrder: 'desc',
       }),
     // retry: false,
   });
+
+  const hakAksesMDLevelPengguna =
+    dataHakAkses?.[0]?.hak_akses
+      ?.find((akses) => akses.nama_menu === 'Master Data')
+      ?.nama_sub_menu?.find((sub) => sub.nama === 'Level Pengguna')?.aksi || {};
+
+  const tidakPunyaAkses = !Object.values(hakAksesMDLevelPengguna).some(
+    (v) => v === true
+  );
+
+  // console.log(JSON.stringify(masterDataLevelPengguna));
 
   const handlePageChange = (page) => {
     setCurrentPage(page); // trigger TanStack React Query re-fetch dengan page baru
@@ -63,17 +95,64 @@ export default function DataLevelPenggunaSection() {
   const handleEdit = (id) => {
     console.log('Tombol Edit diklik untuk ID:', id);
     // Logika untuk melakukan edit (misalnya membuka form modal)
+
+    const dataDipilih = masterDataLevelPengguna?.data?.find(
+      (item) => item.id === id
+    );
+
+    console.log(dataDipilih);
+
+    if (dataDipilih) {
+      setSelectedEdit({
+        id: dataDipilih.id,
+        nama: dataDipilih.nama || '',
+
+        nama: dataDipilih.nama || '',
+        perusahaan_id: dataDipilih.perusahaan_id || '',
+
+        hak_akses: dataDipilih.hak_akses || '',
+      });
+      setModalEditOpen(true);
+    }
+  };
+
+  const handlePengaturan = (id) => {
+    console.log('Tombol Pengaturan diklik untuk ID:', id);
+    // Logika untuk melakukan pengaturan (misalnya membuka form modal)
+
+    const dataDipilih = masterDataLevelPengguna?.data?.find(
+      (item) => item.id === id
+    );
+
+    console.log(dataDipilih);
+
+    if (dataDipilih) {
+      setSelectedPengaturan({
+        id: dataDipilih.id,
+        nama: dataDipilih.nama || '',
+
+        nama: dataDipilih.nama || '',
+        perusahaan_id: dataDipilih.perusahaan_id || '',
+
+        hak_akses: dataDipilih.hak_akses || '',
+      });
+      setModalPengaturanOpen(true);
+    }
   };
 
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
-  const handleDelete = async(id) => {
+  const handleDelete = async (id) => {
     console.log('Hapus ID:', id);
 
-    await fetchApiMasterDataLevelPenggunaDelete(id, setNotifMessage, setNotifType);
+    await fetchApiMasterDataLevelPenggunaDelete(
+      id,
+      setNotifMessage,
+      setNotifType
+    );
 
     // ✅ Pastikan data diperbarui secara real-time
-    queryClient.invalidateQueries(['masterDataPerusahaan']);    // logic delete
+    queryClient.invalidateQueries(['masterDataLevelPengguna']); // logic delete
   };
 
   const cancelDelete = () => {
@@ -100,48 +179,26 @@ export default function DataLevelPenggunaSection() {
     return <EvoErrorDiv errorHandlerText={getErrorMessage(error)} />; // ✅ Pastikan error ditampilkan di UI
   }
 
-  // const rows =
-  //   masterDataLevelPengguna?.data?.length > 0
-  //     ? masterDataLevelPengguna.data.map((level, index) => ({
-  //         no: index + 1,
-  //         namaLevel: level.nama,
-  //         aksesMenu: level.akses_menu.map((menu) => ({
-  //           namaMenu: menu.nama_menu,
-  //           subMenu: menu.nama_sub_menu
-  //             ? menu.nama_sub_menu.map((sub) => ({
-  //                 nama: sub.nama,
-  //                 aksi: sub.aksi ? sub.aksi[0] : {},
-  //               }))
-  //             : [],
-  //         })),
-  //         added: new Date(level.createdAt).toLocaleString(),
-  //         updated: new Date(level.updatedAt).toLocaleString(),
-  //         aksi: (
-  //           <EvoActionButtons
-  //             rowId={level.id}
-  //             onEdit={() => handleEdit(level.id)}
-  //             onDelete={() => handleDelete(level.id)}
-  //           />
-  //         ),
-  //       }))
-  //     : [];
-
-  // console.log("Data API Level Pengguna:", masterDataLevelPengguna);
-
-  // Struktur Lama => OK
-
   const dataApi = masterDataLevelPengguna || {};
-  console.log(dataApi);
+  // console.log(dataApi);
 
   const rows =
     masterDataLevelPengguna?.data?.length > 0
       ? masterDataLevelPengguna.data.map((row, index) => ({
           no: index + 1,
           nama: <b>{row.nama || <i>*empty</i>}</b>,
-          perusahaan: <b>{row.perusahaan || <i>*empty</i>}</b>,
+          perusahaan: (
+            <b>
+              {row.perusahaan != null && row.perusahaan != undefined ? (
+                row.perusahaan.nama
+              ) : (
+                <i>*empty</i>
+              )}
+            </b>
+          ),
           hakAkses:
-            row.hakAkses && row.hakAkses.length > 0 ? (
-              <EvoAccessLabel akses={row.hakAkses} />
+            row.hak_akses && row.hak_akses.length > 0 ? (
+              <EvoAccessLabel akses={row.hak_akses} />
             ) : (
               'Tidak ada hak akses'
             ),
@@ -150,30 +207,31 @@ export default function DataLevelPenggunaSection() {
           aksi: (
             <EvoActionButtons
               rowId={row.no}
-              onEdit={() => handleEdit(row.id)}
-              onDelete={() => handleDelete(row.id)}
-              // onAktifkan={() => console.log('Aktifkan', row.no)}
-              // onNonAktifkan={() => console.log('NonAktifkan', row.no)}
-              onConfigure={() => console.log('OnConfigure', row.no)}
+              onConfigure={
+                hakAksesMDLevelPengguna.pengaturan == true
+                  ? () => handlePengaturan(row.id)
+                  : null
+              }
+              onEdit={
+                hakAksesMDLevelPengguna.update == true
+                  ? () => handleEdit(row.id)
+                  : null
+              }
+              onDelete={
+                hakAksesMDLevelPengguna.delete == true
+                  ? () => handleDelete(row.id)
+                  : null
+              }
             />
           ),
         }))
       : [];
 
-  // const rows = tableDataLevelPengguna.rows.map((row) => ({
-  //     ...row,
-  //     hakAkses: row.hakAkses && row.hakAkses.length > 0 ? <EvoAccessLabel akses={row.hakAkses} /> : "Tidak ada hak akses",
-  //     aksi: (
-  //       <EvoActionButtons
-  //         rowId={row.no} // Menggunakan nomor urut user untuk aksi
-  //         onEdit={() => console.log('Edit', row.no)}
-  //         onDelete={() => console.log('Delete', row.no)}
-  //         // onAktifkan={() => console.log('Aktifkan', row.no)}
-  //         // onNonAktifkan={() => console.log('NonAktifkan', row.no)}
-  //         onConfigure={() => console.log('OnConfigure', row.no)}
-  //       />
-  //     ),
-  //   }));
+  if (tidakPunyaAkses) {
+    return (
+      <EvoErrorDiv errorHandlerText="Anda tidak memiliki akses menuju halaman ini" />
+    );
+  }
 
   return (
     <>
@@ -188,33 +246,49 @@ export default function DataLevelPenggunaSection() {
       <EvoCardSection>
         <EvoTitleSection
           title={titleSection}
-          // radioItems={radioItems}
-          // monthNames={monthNames}
-          // years={years}
           handleChange={handleChange}
-          buttonText={`Tambah ${titleSection}`}
-          onButtonClick={handleTambah}
+           buttonText={
+            hakAksesMDLevelPengguna.create == true ? `Tambah ${titleSection}` : ''
+          }
+          onButtonClick={
+            hakAksesMDLevelPengguna.create == true ? handleTambah : () => {}
+          }
           icon={<RiAddLargeLine size={16} />}
         />
-        {/* <EvoSearchTabel
-        placeholder="Temukan loker impian kamu..."
-        buttonText="Pencarian"
-        onSearch={handleSearch}
-      /> */}
-        <AddLevelPenggunaForm
-          isOpen={modalOpen}
-          onClose={handleTutup}
-          onSubmit={handleSubmitData}
-        />
-        <EvoTable
-          id="tableToPrint"
-          tableData={tableDataLevelPengguna}
-          currentPage={currentPage}
-          totalPages={dataApi?.totalPages}
-          onPageChange={handlePageChange}
-          rows={rows}
-          isTallRow={true}
-        />
+        {hakAksesMDLevelPengguna.create == true && (
+          <AddLevelPenggunaForm
+            isOpen={modalOpen}
+            onClose={handleTutup}
+            onSubmit={handleSubmitData}
+          />
+        )}
+        {hakAksesMDLevelPengguna.pengaturan == true && (
+          <PengaturanLevelPenggunaForm
+            isOpen={modalPengaturanOpen}
+            onClose={handlePengaturanTutup}
+            onSubmit={handleSubmitData}
+            initialData={selectedPengaturanData}
+          />
+        )}
+        {hakAksesMDLevelPengguna.update == true && (
+          <EditLevelPenggunaForm
+            isOpen={modalEditOpen}
+            onClose={handleEditTutup}
+            onSubmit={handleSubmitData}
+            initialData={selectedEditData}
+          />
+        )}
+        {hakAksesMDLevelPengguna.read == true && (
+          <EvoTable
+            id="tableToPrint"
+            tableData={tableDataLevelPengguna}
+            currentPage={currentPage}
+            totalPages={dataApi?.totalPages}
+            onPageChange={handlePageChange}
+            rows={rows}
+            isTallRow={true}
+          />
+        )}
       </EvoCardSection>
     </>
   );

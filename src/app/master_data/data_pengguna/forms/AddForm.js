@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import EvoModal from '@/components/EvoModal';
 import EvoForm from '@/components/EvoForm';
 import EvoInText from '@/components/evosist_elements/EvoInText';
@@ -6,33 +6,119 @@ import EvoInTextarea from '@/components/evosist_elements/EvoInTextarea';
 import EvoNotifCard from '@/components/EvoNotifCard';
 import EvoInDropdown from '@/components/evosist_elements/EvoInDropdown';
 import EvoInRadio from '@/components/evosist_elements/EvoInRadio';
+import { fetchApiMasterDataDataPenggunaCreate } from '../api/fetchApiMasterDataDataPenggunaCreate';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { getUserId } from '@/utils/db';
+import { fetchApiMasterDataPerusahaan } from '@/app/master_data/perusahaan/api/fetchApiMasterDataPerusahaan';
+import {fetchApiMasterDataLevelPengguna} from '@/app/master_data/level_pengguna/api/fetchApiMasterDataLevelPengguna';
+import Spinner from '@/components/Spinner';
+import EvoErrorDiv from '@/components/EvoErrorDiv';
 
 const AddDataPenggunaForm = ({ isOpen, onClose, onSubmit }) => {
+  const [errors, setErrors] = useState({});
+  const [notifMessage, setNotifMessage] = useState('');
+  const [notifType, setNotifType] = useState('success');
+  const queryClient = useQueryClient();
+  const [userId, setUserId] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+
   const [formData, setFormData] = useState({
-    namaLengkap: '',
-    nomorHandphone: '',
-    jenisKelamin: '',
-    alamatLengkap: '',
+    nama: '',
+    no_hp: '',
+    jenis_kelamin: '',
+    alamat_lengkap: '',
     username: '',
     password: '',
     ulangiPassword: '',
-    perusahaan: '',
-    levelPengguna: '',
+    perusahaan_id: '',
+    level_pengguna_id: '',
+    status: true,
+    added_by: userId,
   });
 
-  const [selectedOptions, setSelectedOptions] = useState({
-    perusahaan: '',
-    levelPengguna: '',
+  useEffect(() => {
+    const fetchUserId = async () => {
+      const id = await getUserId();
+      console.log('User ID yang terautentikasi:', id);
+      setUserId(id);
+    };
+
+    fetchUserId();
+  }, []);
+
+  useEffect(() => {
+    if (userId) {
+      setFormData((prev) => ({
+        ...prev,
+        added_by: userId,
+      }));
+    }
+  }, [userId]);
+
+  const {
+    data: masterDataPerusahaan,
+    errorDataPerusahaan,
+    isLoadingDataPerusahaan,
+  } = useQuery({
+    queryKey: ['masterDataPerusahaan', currentPage],
+    queryFn: () =>
+      fetchApiMasterDataPerusahaan({
+        limit: 905,
+        page: currentPage,
+        offset: (currentPage - 1) * 5,
+        sortBy: 'id',
+        sortOrder: 'desc',
+      }),
+    // retry: false,
   });
+
+  const {
+    data: masterDataLevelPengguna,
+    errorDataLevelPengguna,
+    isLoadingDataLevelPengguna,
+  } = useQuery({
+    queryKey: ['masterDataLevelPengguna', currentPage],
+    queryFn: () =>
+      fetchApiMasterDataLevelPengguna({
+        limit: 905,
+        page: currentPage,
+        offset: (currentPage - 1) * 5,
+        sortBy: 'id',
+        sortOrder: 'desc',
+      }),
+    // retry: false,
+  });
+
+  // ✅ Fungsi untuk mereset pilihan saat modal ditutup
+  const handleCloseModal = () => {
+    setFormData((prev) => ({
+      ...prev, // Menyimpan data yang sudah ada
+      nama: '',
+      no_hp: '',
+      jenis_kelamin: '',
+      alamat_lengkap: '',
+      username: '',
+      password: '',
+      ulangiPassword: '',
+      perusahaan_id: '',
+      level_pengguna_id: '',
+      status: true,
+      added_by: userId,
+    }));
+    setErrors({});
+    setNotifMessage('');
+    onClose();
+  };
+
+  // const [selectedOptions, setSelectedOptions] = useState({
+  //   perusahaan_id: '',
+  //   level_pengguna_id: '',
+  // });
 
   const [selectedCameras, setSelectedCameras] = useState({
     kamera1: false,
     kamera2: false,
   });
-
-  const [errors, setErrors] = useState({});
-  const [notifMessage, setNotifMessage] = useState('');
-  const [notifType, setNotifType] = useState('success');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -88,36 +174,30 @@ const AddDataPenggunaForm = ({ isOpen, onClose, onSubmit }) => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const newErrors = {
-      namaLengkap:
-        formData.namaLengkap.trim() === '' ? 'Nama Lengkap wajib diisi' : '',
-      nomorHandphone:
-        formData.nomorHandphone.trim() === ''
-          ? 'Nomor Telepon wajib diisi'
-          : '',
-      jenisKelamin:
-        formData.jenisKelamin === '' ? 'Jenis Kelamin wajib dipilih' : '',
-      alamatLengkap:
-        formData.alamatLengkap.trim() === '' ? 'Alamat wajib diisi' : '',
+      nama: formData.nama.trim() === '' ? 'Nama Lengkap wajib diisi' : '',
+      no_hp: formData.no_hp.trim() === '' ? 'Nomor Telepon wajib diisi' : '',
+      jenis_kelamin:
+        formData.jenis_kelamin === '' ? 'Jenis Kelamin wajib dipilih' : '',
+      alamat_lengkap:
+        formData.alamat_lengkap.trim() === '' ? 'Alamat wajib diisi' : '',
       username: formData.username.trim() === '' ? 'Username wajib diisi' : '',
       password: formData.password.trim() === '' ? 'Password wajib diisi' : '',
       ulangiPassword:
         formData.ulangiPassword.trim() === ''
           ? 'Konfirmasi Password wajib diisi'
           : '',
-      perusahaan:
-        selectedOptions.perusahaan === '' ? 'Perusahaan wajib dipilih' : '',
-      levelPengguna:
-        selectedOptions.levelPengguna === ''
-          ? 'Level Pengguna wajib dipilih'
-          : '',
-      // perusahaan:
-      //   formData.perusahaan === '' ? 'Perusahaan Asal wajib dipilih' : '',
-      // levelPengguna:
-      //   formData.levelPengguna === '' ? 'Level Pengguna wajib dipilih' : '',
+      perusahaan_id:
+        formData.perusahaan_id === '' ? 'Perusahaan wajib dipilih' : '',
+      level_pengguna_id:
+        formData.level_pengguna_id === '' ? 'Level Pengguna wajib dipilih' : '',
+      // perusahaan_id:
+      //   formData.perusahaan_id === '' ? 'Perusahaan Asal wajib dipilih' : '',
+      // level_pengguna_id:
+      //   formData.level_pengguna_id === '' ? 'Level Pengguna wajib dipilih' : '',
     };
 
     if (formData.password !== formData.ulangiPassword) {
@@ -132,13 +212,34 @@ const AddDataPenggunaForm = ({ isOpen, onClose, onSubmit }) => {
       return;
     }
 
-    onSubmit?.(formData);
+    // onSubmit?.(formData);
+    console.log(formData);
+    try {
+      await fetchApiMasterDataDataPenggunaCreate(formData);
 
-    setNotifMessage('Data pengguna berhasil disimpan!');
-    setNotifType('success');
+      queryClient.invalidateQueries(['masterDataDataPengguna']); // Refresh tabel setelah tambah data
 
-    setTimeout(() => onClose(), 2000);
+      setNotifMessage('Data pengguna berhasil disimpan!');
+      setNotifType('success');
+
+      setTimeout(() => handleCloseModal(), 500);
+    } catch (error) {
+      setNotifMessage(error.message);
+      setNotifType('error');
+    }
   };
+
+  if (isLoadingDataPerusahaan||isLoadingDataLevelPengguna)
+    return (
+      <div className="h-full flex flex-col gap-2 justify-center items-center text-center text-primary">
+        <Spinner size={32} color="border-black" />
+        Loading...
+      </div>
+    );
+
+  if (errorDataPerusahaan||errorDataLevelPengguna) {
+    return <EvoErrorDiv errorHandlerText={getErrorMessage(errorDataPerusahaan||errorDataLevelPengguna)} />; // ✅ Pastikan error ditampilkan di UI
+  }
 
   return (
     <>
@@ -159,50 +260,50 @@ const AddDataPenggunaForm = ({ isOpen, onClose, onSubmit }) => {
           onCancel={onClose}
         >
           <EvoInText
-            name="namaLengkap"
+            name="nama"
             label="Nama Lengkap"
             placeholder="Masukkan nama lengkap"
-            value={formData.namaLengkap}
+            value={formData.nama}
             onChange={handleChange}
-            error={errors.namaLengkap}
+            error={errors.nama}
           />
 
           <div className="flex gap-3 relative">
             <div className="flex w-1/2">
               <EvoInText
-                name="nomorHandphone"
+                name="no_hp"
                 label="Nomor Handphone"
                 placeholder="Masukkan nomor handphone"
-                value={formData.nomorHandphone}
+                value={formData.no_hp}
                 onChange={handleChange}
-                error={errors.nomorHandphone}
+                error={errors.no_hp}
               />
             </div>
             <div className="flex w-1/2">
               <EvoInRadio
-                name="jenisKelamin"
+                name="jenis_kelamin"
                 label="Jenis Kelamin"
                 placeholder="Pilih jenis kelamin"
                 items={[
-                  { label: 'Laki-laki', value: 'laki-laki' },
-                  { label: 'Perempuan', value: 'perempuan' },
+                  { label: 'Laki-laki', value: 'Laki-laki' },
+                  { label: 'Perempuan', value: 'Perempuan' },
                 ]}
-                defaultValue={formData.jenisKelamin}
+                defaultValue={formData.jenis_kelamin}
                 onChange={(value) =>
-                  setFormData((prev) => ({ ...prev, jenisKelamin: value }))
+                  setFormData((prev) => ({ ...prev, jenis_kelamin: value }))
                 }
                 direction="horizontal"
-                error={errors.jenisKelamin}
+                error={errors.jenis_kelamin}
               />
             </div>
           </div>
           <EvoInTextarea
-            name="alamatLengkap"
+            name="alamat_lengkap"
             label="Alamat Lengkap"
             placeholder="Masukkan alamat lengkap"
-            value={formData.alamatLengkap}
+            value={formData.alamat_lengkap}
             onChange={handleChange}
-            error={errors.alamatLengkap}
+            error={errors.alamat_lengkap}
           />
           <EvoInText
             name="username"
@@ -232,28 +333,65 @@ const AddDataPenggunaForm = ({ isOpen, onClose, onSubmit }) => {
               error={errors.ulangiPassword}
             />
           </div>
-          <EvoInDropdown
-            name="perusahaan"
+          {/* <EvoInDropdown
+            name="perusahaan_id"
             label="Asal Perusahaan"
             options={[
               { label: 'Perusahaan A', value: 'A' },
               { label: 'Perusahaan B', value: 'B' },
             ]}
-            value={selectedOptions.perusahaan}
+            value={selectedOptions.perusahaan_id}
             onChange={handleDropdownChange}
-            error={errors.perusahaan}
+            error={errors.perusahaan_id}
+            placeholder="Pilih perusahaan_id"
+          /> */}
+          <EvoInDropdown
+            name="perusahaan_id"
+            label="Asal Perusahaan"
+            // options={[
+            //   { label: 'Evolusi Sistem Digital', value: 1 },
+            //   { label: 'Graha Sejahtera', value: 3 },
+            //   { label: 'Smart Office Solutions', value: 4 },
+            //   { label: 'Smart Office Solutions', value: 7 },
+            //   { label: 'Mega Proyek Indonesia', value: 8 },
+            // ]}
+            options={(masterDataPerusahaan?.data || []).map(
+              (item) => ({
+                label: item.nama,
+                value: item.id,
+              })
+            )}
+            value={formData.perusahaan_id}
+            onChange={(value) =>
+              setFormData((prev) => ({
+                ...prev,
+                perusahaan_id: value,
+              }))
+            }
+            error={errors.perusahaan_id}
             placeholder="Pilih perusahaan"
           />
           <EvoInDropdown
-            name="levelPengguna"
+            name="level_pengguna_id"
             label="Level Pengguna"
-            options={[
-              { label: 'Admin', value: 'admin' },
-              { label: 'User', value: 'user' },
-            ]}
-            value={selectedOptions.levelPengguna}
-            onChange={handleDropdownChange}
-            error={errors.levelPengguna}
+            // options={[
+            //   { label: 'Admin', value: '1' },
+            //   { label: 'User', value: '2' },
+            // ]}
+            value={formData.level_pengguna_id}
+            options={(masterDataLevelPengguna?.data || []).map(
+              (item) => ({
+                label: item.nama,
+                value: item.id,
+              })
+            )}
+            onChange={(value) =>
+              setFormData((prev) => ({
+                ...prev,
+                level_pengguna_id: value,
+              }))
+            }
+            error={errors.level_pengguna_id}
             placeholder="Pilih level pengguna"
           />
         </EvoForm>

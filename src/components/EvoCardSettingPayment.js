@@ -21,6 +21,7 @@ const EvoCardSettingPayment = ({
   isActive,
   onTurnOff,
   onTurnOn,
+  isAvailable = false,
 }) => {
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
@@ -35,7 +36,7 @@ const EvoCardSettingPayment = ({
 
   const getIcon = () => {
     switch (title) {
-      case 'Cash':
+      case 'Cash' || 'Tunai':
         return <RiMoneyDollarCircleLine size={72} />;
       case 'Prepaid':
         return <RiBankCardLine size={72} />;
@@ -52,7 +53,7 @@ const EvoCardSettingPayment = ({
 
   const getBg = () => {
     switch (title) {
-      case 'Cash':
+      case 'Cash' || 'Tunai':
         return 'bg-gradientPrimary45';
       case 'Prepaid':
         return 'bg-gradientSecondary45';
@@ -69,29 +70,40 @@ const EvoCardSettingPayment = ({
 
   return (
     <div
-      className={`flex flex-col p-6 rounded-[20px] ${getBg()} text-white ${className}`}
+      className={`flex flex-col p-6 rounded-[20px] ${getBg()} text-white ${className} `}
     >
       {getIcon()}
       <div className="text-title_large mb-3">{title}</div>
       <div className="text-content_medium text-white/40">Updated:</div>
       <div className="text-content_reguler text-white/[0.64]">
-        {updatedBy} {updatedDate}
+        {/* {updatedBy}  */}
+        {updatedDate}
       </div>
 
       <div className="mt-3 w-[144px]">
-        {isActive == true ? (
-          onTurnOff&&(
+        {isAvailable && (
           <Popover.Root
             open={confirmDeleteId === title}
             onOpenChange={(open) => setConfirmDeleteId(open ? title : null)}
           >
             <Popover.Trigger asChild>
-              <EvoBtnTurnOff
-                //   onClick={() => setConfirmDeleteId(title)}
-                className="!relative"
-                textColor="!text-danger"
-                bgColor="!bg-white"
-              />
+              {isActive && onTurnOff ? (
+                <EvoBtnTurnOff
+                  // onClick={() => setConfirmDeleteId(title)}
+                  className="!relative"
+                  textColor="!text-danger"
+                  bgColor="!bg-white"
+                />
+              ) : !isActive && onTurnOn ? (
+                <EvoBtnTurnOn
+                  // onClick={onTurnOn}
+                  className="!relative"
+                  textColor="!text-danger"
+                  bgColor="!bg-white"
+                />
+              ) : (
+                <></>
+              )}
             </Popover.Trigger>
 
             <Popover.Portal>
@@ -102,15 +114,31 @@ const EvoCardSettingPayment = ({
                 className="z-50 bg-white rounded-[24px] shadow-popover p-6 max-w-[280px]"
               >
                 <div className="text-title_small text-black/[0.8] mb-4">
-                  Yakin ingin menonaktifkan{' '}
+                  Yakin ingin menonaktifkan jenis pembayaran{' '}
                   <b className="text-black">{title}</b>?
                 </div>
                 <div className="flex justify-end gap-3">
-                  <EvoButton
-                    buttonText="Ya, non aktifkan"
-                    onClick={handleTurnOff}
-                    className="px-4 py-4 !bg-danger"
-                  />
+                  {isActive && onTurnOff ? (
+                    <EvoButton
+                      buttonText="Ya, non aktifkan"
+                      onClick={() => {
+                        onTurnOff(); // aksi utamamu
+                        setConfirmDeleteId(null); // tutup popover
+                      }}
+                      className="px-4 py-4 !bg-danger"
+                    />
+                  ) : !isActive && onTurnOn ? (
+                    <EvoButton
+                      buttonText="Ya, Aktifkan"
+                      onClick={() => {
+                        onTurnOn(); // aksi utamamu
+                        setConfirmDeleteId(null); // tutup popover
+                      }}
+                      className="px-4 py-4 !bg-primary"
+                    />
+                  ) : (
+                    <></>
+                  )}
                   <EvoButton
                     outlined={true}
                     buttonText="Batal"
@@ -121,16 +149,7 @@ const EvoCardSettingPayment = ({
                 <Popover.Arrow className="fill-white" />
               </Popover.Content>
             </Popover.Portal>
-          </Popover.Root>)
-        ) : (
-          onTurnOff && (
-            <EvoBtnTurnOn
-              //   onClick={() => setConfirmDeleteId(title)}
-              className="!relative"
-              textColor="!text-danger"
-              bgColor="!bg-white"
-            />
-          )
+          </Popover.Root>
         )}
       </div>
     </div>

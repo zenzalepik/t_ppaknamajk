@@ -20,7 +20,7 @@ export default function MasterDataDataPerusahan() {
     };
 
     checkAuth();
-  }, []);
+  }, [router]);
   return (
     <EvoLayout pageTitle="Master Data">
         <DataPerusahaanSection />

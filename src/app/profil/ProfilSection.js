@@ -5,7 +5,7 @@ import EvoCardSection from '@/components/evosist_elements/EvoCardSection';
 import EditProfilForm from './forms/EditForm';
 import EvoButton from '@/components/evosist_elements/EvoButton';
 import { getToken, removeToken } from '@/utils/db';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import {
   RiUser3Line,
@@ -23,8 +23,14 @@ import { getErrorMessage } from '@/utils/errorHandler';
 import Spinner from '@/components/Spinner';
 import EvoErrorDiv from '@/components/EvoErrorDiv';
 import { getUserId } from '@/utils/db';
+import { fetchApiMasterDataPerusahaan } from '@/app/master_data/perusahaan/api/fetchApiMasterDataPerusahaan';
 
 export default function DataPenggunaSection() {
+  const [currentPage, setCurrentPage] = useState(1);
+  const queryClient = useQueryClient();
+  const [notifMessage, setNotifMessage] = useState('');
+  const [notifType, setNotifType] = useState('success');
+
   const {
     data: profil,
     error,
@@ -39,7 +45,27 @@ export default function DataPenggunaSection() {
   const handleUbah = () => setModalOpen(true);
   const handleTutup = () => setModalOpen(false);
 
-  if (isLoading)
+  const {
+    data: masterDataPerusahaan,
+    errorDataPerusahaan,
+    isLoadingDataPerusahaan,
+  } = useQuery({
+    queryKey: ['masterDataPerusahaan', currentPage],
+    queryFn: () =>
+      fetchApiMasterDataPerusahaan({
+        limit: 905,
+        page: currentPage,
+        offset: (currentPage - 1) * 5,
+        sortBy: 'id',
+        sortOrder: 'desc',
+      }),
+    // retry: false,
+  });
+
+  const dataProfil = Array.isArray(profil) ? profil[0] : {};
+  console.log(dataProfil);
+
+  if (isLoading || isLoadingDataPerusahaan)
     return (
       <div className="h-full flex flex-col gap-2 justify-center items-center text-center text-primary">
         <Spinner size={32} color="border-black" />
@@ -47,18 +73,22 @@ export default function DataPenggunaSection() {
       </div>
     );
 
-  if (error) {
+  if (error || errorDataPerusahaan) {
     return <EvoErrorDiv errorHandlerText={getErrorMessage(error)} />; // ✅ Pastikan error ditampilkan di UI
   }
 
-  const dataProfil = profil[0] ?? [];
-
+  const dataPerusahaan = masterDataPerusahaan?.data || [];
+  console.log(dataPerusahaan);
   return (
     <EvoCardSection>
-      <EditProfilForm userData={dataProfil } isOpen={modalOpen} onClose={handleTutup} />
+      <EditProfilForm
+        userData={dataProfil}
+        isOpen={modalOpen}
+        onClose={handleTutup}
+      />
 
       {/* Tampilan error jika terjadi masalah */}
-      <EvoErrorDiv error={error} />
+      {/* <EvoErrorDiv error={error} /> */}
 
       {/* Konten utama */}
       <div className="flex gap-12 p-6">
@@ -105,12 +135,25 @@ export default function DataPenggunaSection() {
             {
               icon: RiBuildingLine,
               label: 'Asal Perusahaan',
-              value: dataProfil?.asal_perusahaan || '-',
+              // value:
+              //   dataProfil?.perusahaan_id == null
+              //     ? '-'
+              //     : dataProfil?.perusahaan_id || '-',
+              value: (() => {
+                if (!dataProfil?.perusahaan_id) return '-';
+                const perusahaan = dataPerusahaan.find(
+                  (p) => p.id === dataProfil.perusahaan_id
+                );
+                return perusahaan?.nama || '-';
+              })(),
             },
             {
               icon: RiShieldUserLine,
               label: 'Level Pengguna',
-              value: dataProfil?.levelPengguna || '-',
+              value:
+                dataProfil?.level_pengguna == null
+                  ? '-'
+                  : dataProfil?.level_pengguna?.nama || '-',
             },
           ].map(({ icon: Icon, label, value }, index) => (
             <div

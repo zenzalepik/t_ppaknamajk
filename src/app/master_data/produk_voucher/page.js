@@ -19,7 +19,7 @@ const router = useRouter();
     };
 
     checkAuth();
-  }, []);
+  }, [router]);
   
   return (
     <EvoLayout pageTitle="Master Data">

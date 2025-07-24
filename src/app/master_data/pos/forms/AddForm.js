@@ -7,15 +7,95 @@ import EvoInDropdown from '@/components/evosist_elements/EvoInDropdown';
 import EvoInCheckbox from '@/components/evosist_elements/EvoInCheckbox';
 import companyTypes from '@/utils/companyTypes';
 import strings from '@/utils/strings';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getUserId } from '@/utils/db';
 import { fetchApiMasterDataPOSCreate } from '../api/fetchApiMasterDataPOSCreate';
+import { fetchApiPengaturanParameterTipeKendaraan } from '@/app/pengaturan/parameter/api/items/fetchApiPengaturanParameterTipeKendaraan';
+import { fetchApiPengaturanParameterTipeManless } from '@/app/pengaturan/parameter/api/items/fetchApiPengaturanParameterTipeManless';
+import { fetchApiPengaturanParameterNamaPrinter } from '@/app/pengaturan/parameter/api/items/fetchApiPengaturanParameterNamaPrinter';
+import { fetchApiPengaturanParameterNamaInterface } from '@/app/pengaturan/parameter/api/items/fetchApiPengaturanParameterNamaInterface';
+import Spinner from '@/components/Spinner';
+import EvoErrorDiv from '@/components/EvoErrorDiv';
 
 const AddPosForm = ({ isOpen, onClose, onSubmit }) => {
   const [errors, setErrors] = useState({});
   const [notifMessage, setNotifMessage] = useState('');
   const [notifType, setNotifType] = useState('success');
   const queryClient = useQueryClient();
+  const [currentPageTipeKendaraan, setCurrentPageTipeKendaraan] = useState(1);
+  const [currentPageTipeManless, setCurrentPageTipeManless] = useState(1);
+  const [currentPageNamaPrinter, setCurrentPageNamaPrinter] = useState(1);
+  const [currentPageNamaInterface, setCurrentPageNamaInterface] = useState(1);
+
+  const {
+    data: pengaturanParameterTipeKendaraan,
+    errorTipeKendaraan,
+    isLoadingTipeKendaraan,
+  } = useQuery({
+    queryKey: ['pengaturanParameterTipeKendaraan', currentPageTipeKendaraan],
+    queryFn: () =>
+      fetchApiPengaturanParameterTipeKendaraan({
+        limit: 111,
+        page: currentPageTipeKendaraan,
+        // offset: (currentPageTipeKendaraan - 1) * 5,
+        // sortBy: 'id',
+        sortOrder: 'desc',
+      }),
+    // retry: false,
+  });
+
+  const {
+    data: pengaturanParameterTipeManless,
+    errorTipeManless,
+    isLoadingTipeManless,
+  } = useQuery({
+    queryKey: ['pengaturanParameterTipeManless', currentPageTipeManless],
+    queryFn: () =>
+      fetchApiPengaturanParameterTipeManless({
+        limit: 111,
+        page: currentPageTipeManless,
+        // offset: (currentPageTipeManless - 1) * 5,
+        // sortBy: 'id',
+        sortOrder: 'desc',
+      }),
+    // retry: false,
+  });
+
+  const {
+    data: pengaturanParameterNamaPrinter,
+    errorNamaPrinter,
+    isLoadingNamaPrinter,
+  } = useQuery({
+    queryKey: ['pengaturanParameterNamaPrinter', currentPageNamaPrinter],
+    queryFn: () =>
+      fetchApiPengaturanParameterNamaPrinter({
+        limit: 111,
+        page: currentPageNamaPrinter,
+        // offset: (currentPageNamaPrinter - 1) * 5,
+        // sortBy: 'id',
+        sortOrder: 'desc',
+      }),
+    // retry: false,
+  });
+
+  const {
+    data: pengaturanParameterNamaInterface,
+    errorNamaInterface,
+    isLoadingNamaInterface,
+  } = useQuery({
+    queryKey: ['pengaturanParameterNamaInterface', currentPageNamaInterface],
+    queryFn: () =>
+      fetchApiPengaturanParameterNamaInterface({
+        limit: 111,
+        page: currentPageNamaInterface,
+        // offset: (currentPageNamaInterface - 1) * 5,
+        // sortBy: 'id',
+        sortOrder: 'desc',
+      }),
+    // retry: false,
+  });
+
+  // console.log(pengaturanParameterTipeKendaraan);
 
   const [formData, setFormData] = useState({
     kode: '',
@@ -23,46 +103,73 @@ const AddPosForm = ({ isOpen, onClose, onSubmit }) => {
     synchronize: '',
     com_port: '',
     user_id: '',
-  });
 
-  // Ambil user_id secara async
-  useEffect(() => {
-      const fetchUserId = async () => {
-        try {
-          const id = await getUserId();
-          if (isOpen && !id) {
-            throw new Error('User ID tidak ditemukan');
-          }
-          setFormData((prev) => ({ ...prev, user_id: id }));
-        } catch (error) {
-          setNotifMessage(`Error mengambil User ID: ${error.message}`);
-          setNotifType('error');
-        }
-      };
-  
-      fetchUserId();
-    }, [isOpen]);
-
-  const [selectedOptions, setSelectedOptions] = useState({
     otorisasi: false,
     tipe_kendaraan: '',
     tipe_pos: '',
-    tipe_manless: '',
-    nama_printer: '',
-    nama_interface: '',
+    tipe_manless_id: '',
+    nama_printer_id: '',
+    nama_interface_id: '',
+  });
+
+  // ✅ Fungsi untuk mereset pilihan saat modal ditutup
+  const handleCloseModal = () => {
+    setFormData({
+      kode: '',
+      keterangan: '',
+      synchronize: '',
+      com_port: '',
+      // user_id: '',
+
+      otorisasi: false,
+      tipe_kendaraan: '',
+      tipe_pos: '',
+      tipe_manless_id: '',
+      nama_printer_id: '',
+      nama_interface_id: '',
+    });
+
+    setSelectedOptions({
+      otorisasi: false,
+    });
+
+    setSelectedCameras({
+      kamera_1: false,
+      kamera_2: false,
+    });
+
+    setErrors({});
+    setNotifMessage('');
+    setNotifType('success'); // opsional, jika ingin reset ke default
+    onClose();
+  };
+
+  // Ambil user_id secara async
+  useEffect(() => {
+    const fetchUserId = async () => {
+      try {
+        const id = await getUserId();
+        if (isOpen && !id) {
+          throw new Error('User ID tidak ditemukan');
+        }
+        setFormData((prev) => ({ ...prev, user_id: id }));
+      } catch (error) {
+        setNotifMessage(`Error mengambil User ID: ${error.message}`);
+        setNotifType('error');
+      }
+    };
+
+    fetchUserId();
+  }, [isOpen]);
+
+  const [selectedOptions, setSelectedOptions] = useState({
+    otorisasi: false,
   });
 
   const [selectedCameras, setSelectedCameras] = useState({
     kamera_1: false,
     kamera_2: false,
   });
-
-  // useEffect(() => {
-  //   setFormData((prev) => ({
-  //     ...prev,
-  //     jenis_perusahaan: selectedJenisPerusahaan,
-  //   }));
-  // }, [selectedJenisPerusahaan]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -117,37 +224,6 @@ const AddPosForm = ({ isOpen, onClose, onSubmit }) => {
       cameras: '', // Remove camera selection error
     }));
   };
-
-  // ✅ Fungsi untuk mereset pilihan saat modal ditutup
-  const handleCloseModal = () => {
-    setFormData({
-      kode: '',
-      keterangan: '',
-      synchronize: '',
-      com_port: '',
-      user_id: '',
-    });
-
-    setSelectedOptions({
-      otorisasi: false,
-      tipe_kendaraan: '',
-      tipe_pos: '',
-      tipe_manless: '',
-      nama_printer: '',
-      nama_interface: '',
-    });
-
-    setSelectedCameras({
-      kamera_1: false,
-      kamera_2: false,
-    });
-
-    setErrors({});
-    setNotifMessage('');
-    setNotifType('success'); // opsional, jika ingin reset ke default
-    onClose();
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -156,7 +232,7 @@ const AddPosForm = ({ isOpen, onClose, onSubmit }) => {
       setNotifType('error');
       return;
     }
-    
+
     const newErrors = {
       kode: formData.kode.trim() === '' ? 'Kode wajib diisi' : '',
       keterangan:
@@ -167,18 +243,14 @@ const AddPosForm = ({ isOpen, onClose, onSubmit }) => {
           : '',
       com_port: formData.com_port.trim() === '' ? 'COM Port wajib diisi' : '',
       tipe_kendaraan:
-        selectedOptions.tipe_kendaraan === ''
-          ? 'Tipe Kendaraan wajib dipilih'
-          : '',
-      tipe_pos: selectedOptions.tipe_pos === '' ? 'Tipe Pos wajib dipilih' : '',
-      tipe_manless:
-        selectedOptions.tipe_manless === '' ? 'Tipe Manless wajib dipilih' : '',
-      nama_printer:
-        selectedOptions.nama_printer === '' ? 'nama_printer wajib dipilih' : '',
-      nama_interface:
-        selectedOptions.nama_interface === ''
-          ? 'nama_interface wajib dipilih'
-          : '',
+        formData.tipe_kendaraan === '' ? 'Tipe Kendaraan wajib dipilih' : '',
+      tipe_pos: formData.tipe_pos === '' ? 'Tipe Pos wajib dipilih' : '',
+      tipe_manless_id:
+        formData.tipe_manless_id === '' ? 'Tipe Manless wajib dipilih' : '',
+      nama_printer_id:
+        formData.nama_printer_id === '' ? 'nama_printer wajib dipilih' : '',
+      nama_interface_id:
+        formData.nama_interface_id === '' ? 'nama_interface wajib dipilih' : '',
       cameras:
         !selectedCameras.kamera_1 && !selectedCameras.kamera_2
           ? 'Minimal satu kamera harus dipilih'
@@ -209,12 +281,43 @@ const AddPosForm = ({ isOpen, onClose, onSubmit }) => {
       setNotifMessage('Data Pos berhasil disimpan!');
       setNotifType('success');
 
-      setTimeout(() => onClose(), 500);
+      setTimeout(() => handleCloseModal(), 500);
     } catch (error) {
       setNotifMessage(error.message);
       setNotifType('error');
     }
   };
+
+  if (
+    isLoadingTipeKendaraan ||
+    isLoadingTipeManless ||
+    isLoadingNamaPrinter ||
+    isLoadingNamaInterface
+  )
+    return (
+      <div className="h-full flex flex-col gap-2 justify-center items-center text-center text-primary">
+        <Spinner size={32} color="border-black" />
+        Loading...
+      </div>
+    );
+
+  if (
+    errorTipeKendaraan ||
+    errorTipeManless ||
+    errorNamaPrinter ||
+    errorNamaInterface
+  ) {
+    return (
+      <EvoErrorDiv
+        errorHandlerText={getErrorMessage(
+          errorTipeKendaraan ||
+            errorTipeManless ||
+            errorNamaPrinter ||
+            errorNamaInterface
+        )}
+      />
+    ); // ✅ Pastikan error ditampilkan di UI
+  }
 
   return (
     <>
@@ -281,19 +384,24 @@ const AddPosForm = ({ isOpen, onClose, onSubmit }) => {
             onChange={handleCheckboxChange}
             error={errors.otorisasi}
           />
-
           <EvoInDropdown
             name="tipe_kendaraan"
             label="Tipe Kendaraan"
-            options={[
-              { label: 'Motor', value: 'Motor' },
-              { label: 'Mobil', value: 'Mobil' },
-              { label: 'All', value: 'All' },
-            ]}
-            value={selectedOptions.tipe_kendaraan}
-            onChange={handleDropdownChange}
+            options={(pengaturanParameterTipeKendaraan?.data || []).map(
+              (item) => ({
+                label: item.tipe_kendaraan,
+                value: item.tipe_kendaraan,
+              })
+            )}
+            value={formData.tipe_kendaraan}
+            onChange={(value) =>
+              setFormData((prev) => ({
+                ...prev,
+                tipe_kendaraan: value,
+              }))
+            }
             error={errors.tipe_kendaraan}
-            placeholder="Pilih Tipe Kendaraan"
+            placeholder="Pilih tipe kendaraan"
           />
           <EvoInDropdown
             name="tipe_pos"
@@ -302,12 +410,38 @@ const AddPosForm = ({ isOpen, onClose, onSubmit }) => {
               { label: 'In', value: 'In' },
               { label: 'Out', value: 'Out' },
             ]}
-            value={selectedOptions.tipe_pos}
-            onChange={handleDropdownChange}
+            value={formData.tipe_pos}
+            // onChange={handleDropdownChange}
+            onChange={(value) =>
+              setFormData((prev) => ({
+                ...prev,
+                tipe_pos: value,
+              }))
+            }
             error={errors.tipe_pos}
-            placeholder="Pilih Tipe Pos"
+            placeholder="Pilih tipe pos"
           />
+          
           <EvoInDropdown
+            name="tipe_manless_id"
+            label="Tipe Manless"
+            options={(pengaturanParameterTipeManless?.data || []).map(
+              (item) => ({
+                label: item.tipe_manless,
+                value: item.id,
+              })
+            )}
+            value={formData.tipe_manless_id}
+            onChange={(value) =>
+              setFormData((prev) => ({
+                ...prev,
+                tipe_manless_id: value,
+              }))
+            }
+            error={errors.tipe_manless_id}
+            placeholder="Pilih tipe manless"
+          />
+          {/* <EvoInDropdown
             name="tipe_manless"
             label="Tipe Manless"
             options={[
@@ -319,14 +453,20 @@ const AddPosForm = ({ isOpen, onClose, onSubmit }) => {
               { label: 'Feedback with Button', value: 'Feedback with Button' },
               { label: 'Button Only', value: 'Button Only' },
             ]}
-            value={selectedOptions.tipe_manless}
-            onChange={handleDropdownChange}
+            value={formData.tipe_manless}
+            // onChange={handleDropdownChange}
+            onChange={(value) =>
+              setFormData((prev) => ({
+                ...prev,
+                tipe_manless: value,
+              }))
+            }
             error={errors.tipe_manless}
-            placeholder="Pilih Tipe Manless"
-          />
-          <EvoInDropdown
+            placeholder="Pilih tipe manless"
+          /> */}
+          {/* <EvoInDropdown
             name="nama_printer"
-            label="nama_printer"
+            label="Nama Printer"
             options={[
               { label: 'Epson TM-T81 Receipt', value: 'Epson TM-T81 Receipt' },
               { label: 'Epson TM-T82 Receipt', value: 'Epson TM-T82 Receipt' },
@@ -351,14 +491,59 @@ const AddPosForm = ({ isOpen, onClose, onSubmit }) => {
                 value: 'Epson TM-T82II Receipt',
               },
             ]}
-            value={selectedOptions.nama_printer}
-            onChange={handleDropdownChange}
+            value={formData.nama_printer}
+            // onChange={handleDropdownChange}
+            onChange={(value) =>
+              setFormData((prev) => ({
+                ...prev,
+                nama_printer: value,
+              }))
+            }
             error={errors.nama_printer}
-            placeholder="Pilih nama_printer"
-          />
+            placeholder="Pilih nama printer"
+          /> */}
+          
           <EvoInDropdown
+            name="nama_printer_id"
+            label="Nama Printer"
+            options={(pengaturanParameterNamaPrinter?.data || []).map(
+              (item) => ({
+                label: item.nama_printer,
+                value: item.id,
+              })
+            )}
+            value={formData.nama_printer_id}
+            onChange={(value) =>
+              setFormData((prev) => ({
+                ...prev,
+                nama_printer_id: value,
+              }))
+            }
+            error={errors.nama_printer_id}
+            placeholder="Pilih nama printer"
+          />
+            <EvoInDropdown
+            name="nama_interface_id"
+            label="Nama Interface"
+            options={(pengaturanParameterNamaInterface?.data || []).map(
+              (item) => ({
+                label: item.nama_interface,
+                value: item.id,
+              })
+            )}
+            value={formData.nama_interface_id}
+            onChange={(value) =>
+              setFormData((prev) => ({
+                ...prev,
+                nama_interface_id: value,
+              }))
+            }
+            error={errors.nama_interface_id}
+            placeholder="Pilih nama interface"
+          />
+          {/* <EvoInDropdown
             name="nama_interface"
-            label="nama_interface"
+            label="Nama Interface"
             options={[
               { label: 'BGI', value: 'BGI' },
               { label: 'TWS', value: 'TWS' },
@@ -367,16 +552,22 @@ const AddPosForm = ({ isOpen, onClose, onSubmit }) => {
               { label: 'SER TELINKS', value: 'SER TELINKS' },
               { label: 'USB TELINKS', value: 'USB TELINKS' },
             ]}
-            value={selectedOptions.nama_interface}
-            onChange={handleDropdownChange}
+            value={formData.nama_interface}
+            // onChange={handleDropdownChange}
+            onChange={(value) =>
+              setFormData((prev) => ({
+                ...prev,
+                nama_interface: value,
+              }))
+            }
             error={errors.nama_interface}
-            placeholder="Pilih nama_interface"
-          />
+            placeholder="Pilih nama interface"
+          /> */}
 
           <EvoInText
             name="com_port"
             label="COM Port"
-            placeholder="Nomor Port"
+            placeholder="Nomor port"
             value={formData.com_port}
             onChange={handleChange}
             error={errors.com_port}

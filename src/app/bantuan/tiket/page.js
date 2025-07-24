@@ -20,7 +20,7 @@ export default function BanatuanTiket() {
     };
 
     checkAuth();
-  }, []);
+  }, [router]);
   return (
     <EvoLayout pageTitle="Tiket">
         <PermasalahanPerbaikanSection />

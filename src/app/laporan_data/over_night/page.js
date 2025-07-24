@@ -20,7 +20,7 @@ export default function LaporanDataOverNight() {
     };
 
     checkAuth();
-  }, []);
+  }, [router]);
   return (
     <EvoLayout pageTitle="Laporan Data">
         <OverNightSection />

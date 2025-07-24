@@ -2,9 +2,22 @@
 
 import { fetchWithAuth } from '@/helpers/fetchWithAuth';
 
-export const fetchApiPengaturanPembayaran = async () => {
+export const fetchApiPengaturanPembayaran = async ({
+  limit = 15,
+  page = 1,
+  offset = 0,
+  sortBy = 'id',
+  sortOrder = 'asc',
+} = {}) => {
+  const queryParams = new URLSearchParams({
+    limit: limit.toString(),
+    page: page.toString(),
+    offset: offset.toString(),
+    sortBy,
+    sortOrder,
+  });
   return await fetchWithAuth({
     method: 'get',
-    endpoint: '/setting/payment',
+    endpoint: `/setting/payment?${queryParams.toString()}`,
   });
 };

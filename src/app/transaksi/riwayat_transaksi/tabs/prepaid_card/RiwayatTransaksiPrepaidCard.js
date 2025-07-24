@@ -30,10 +30,24 @@ import {
   getDefaultDateAwal,
   getDefaultDateAkhir,
 } from '@/helpers/dateRangeHelper';
+import { fetchApiRiwayatTransaksiPrepaidCard } from './api/fetchApiRiwayatTransaksiPrepaidCard';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import Spinner from '@/components/Spinner';
+import EvoErrorDiv from '@/components/EvoErrorDiv';
+import { getErrorMessage } from '@/utils/errorHandler';
+import EvoExportApiPDF from '@/components/EvoExportApiPDF';
+import EvoExportApiExcel from '@/components/EvoExportApiExcel';
+import EvoExportApiPrint from '@/components/EvoExportApiPrint';
+import EvoNotifCard from '@/components/EvoNotifCard';
 
 const titleSection = 'Riwayat Transaksi Prepaid Card';
 
 export default function RiwayatTransaksiPrepaidCard({ onBack }) {
+  const urlExport = '/riwayat_transaksi_prepaid_card/';
+  const [modalExportPDFOpen, setModalExportPDFOpen] = useState(false);
+  const [modalExportExcel, setModalExportExcel] = useState(false);
+  const [modalExportPrint, setModalExportPrint] = useState(false);
+
   const [startDate, setStartDate] = React.useState(getDefaultDateAwal());
   const [endDate, setEndDate] = React.useState(getDefaultDateAkhir());
 
@@ -46,6 +60,33 @@ export default function RiwayatTransaksiPrepaidCard({ onBack }) {
 
   const handleTambahPengaduan = () => setModalOpenPengaduan(true);
   const handleTutup = () => setModalOpenPengaduan(false);
+
+   const [currentPage, setCurrentPage] = useState(1);
+    const queryClient = useQueryClient();
+    const [notifMessage, setNotifMessage] = useState('');
+    const [notifType, setNotifType] = useState('success');
+  
+    const {
+      data: laporanRiwayatTransaksiPrepaidCard,
+      error,
+      isLoading,
+    } = useQuery({
+      queryKey: ['laporanRiwayatTransaksiPrepaidCard', currentPage],
+      queryFn: () =>
+        fetchApiRiwayatTransaksiPrepaidCard({
+          limit: 5,
+          page: currentPage,
+          offset: (currentPage - 1) * 5,
+          sortBy: 'id',
+          sortOrder: 'desc',
+        }),
+      // retry: false,
+    });
+  
+    const handlePageChange = (page) => {
+      setCurrentPage(page);
+    };
+  
 
   const handleSubmitData = (data) => {
     console.log('Data baru:', data);
@@ -105,92 +146,55 @@ export default function RiwayatTransaksiPrepaidCard({ onBack }) {
     console.log('Hasil pencarian:', query);
   };
 
-  /*const rows = tableDataRiwayatTransaksiPrepaidCard.rows.map((row) => ({
-    ...row,
-    // status: StatusLabel.status(row.status), // Konversi status menjadi elemen visual
-    // member: row.member ? 'Ya' : 'Tidak',
-    // manualInput: row.manualInput ? 'Ya' : 'Tidak',
-    // kartuMember: row.kartuMember ? 'Ya' : 'Tidak',
-    // Menampilkan "-" untuk nilai yang null
-    // namaBank: row.namaBank ?? '-',
-    // nomorRekening: row.nomorRekening ?? '-',
-    // namaEwallet: row.namaEwallet ?? '-',
-    // nomorEwallet: row.nomorEwallet ?? '-',
-    // Tampilkan link jika `row.foto` memiliki isi, jika tidak tampilkan "-"
-    // foto: row.foto ? (
-    //   <EvoButton
-    //     key={`prosesPerbaikan-${row.no}`}
-    //     outlined={true}
-    //     icon={<RiImageLine />}
-    //     onClick={() => window.open(row.foto, '_blank', 'noopener,noreferrer')}
-    //     buttonText={'Lihat Foto'}
-    //   />
-    // ) : (
-    //   '-'
-    // ),
+  const rows =
+    laporanRiwayatTransaksiPrepaidCard?.data?.length > 0
+      ? laporanRiwayatTransaksiPrepaidCard.data
+          .filter((row) => row.jenisTransaksi === 'Prepaid Card')
+          .map((row, index) => ({
+            no: index + 1,
+            // id: row.id || <i>*empty</i>,
+            // no: row.no || <i>*empty</i>,
 
-    // aksi: (
-    //   <EvoActionButtons
-    //     rowId={row.no}
-        // onEdit={() => handleEdit(row.no)}
-        // onDelete={() => handleDelete(row.no)}
-        // isActive={Boolean(row.status)} // Pastikan boolean dikirim dengan benar
-    //     moreAction={titleSection}
-    //     customButtons={[
-    //       <EvoButton
-    //         key={`prosesPerbaikan-${row.no}`}
-    //         onClick={() => handleProsesPerbaikan(row.no)}
-    //         fillColor={colors.danger}
-    //         buttonText={'Batalkan Transaksi'}
-    //       />,
-    //     ]}
-    //   />
-    // ),
-  }));*/
+            // id: row.id || <i>*empty</i>,
+            // no: row.no || <i>*empty</i>,
+            nomorTiket: row.nomorTiket || <i>*empty</i>,
+            waktuMasuk: row.waktuMasuk || <i>*empty</i>,
+            gerbangMasuk: row.gerbangMasuk || <i>*empty</i>,
+            jenisKendaraan: row.jenisKendaraan || <i>*empty</i>,
+            nomorPolisi: row.nomorPolisi || <i>*empty</i>,
+            waktuKeluar: row.waktuKeluar || <i>*empty</i>,
+            pintuKeluar: row.pintuKeluar || <i>*empty</i>,
+            durasiParkir: row.durasiParkir || <i>*empty</i>,
+            denda: row.denda || <i>*empty</i>,
+            totalPembayaran: row.totalPembayaran || <i>*empty</i>,
+            jenisTransaksi: row.jenisTransaksi || <i>*empty</i>,
+            added: row.added || <i>*empty</i>,
+            updated: row.updated || <i>*empty</i>,
+          }))
+      : [];
 
-  const rows = tableDataRiwayatTransaksiPrepaidCard.rows
-    .filter(
-      (row) => row.jenisTransaksi === 'Prepaid Card'
-    )
-    .map((row) => ({
-      ...row,
-      namaBank: row.namaBank ?? '-',
-      nomorRekening: row.nomorRekening ?? '-',
-      namaEwallet: row.namaEwallet ?? '-',
-      nomorEwallet: row.nomorEwallet ?? '-',
+  if (isLoading)
+    return (
+      <div className="h-full flex flex-col gap-2 justify-center items-center text-center text-primary">
+        <Spinner size={32} color="border-black" />
+        Loading...
+      </div>
+    );
 
-      foto: row.foto ? (
-        <EvoButton
-          key={`lihatFoto-${row.no}`}
-          outlined={true}
-          icon={<RiImageLine />}
-          onClick={() => window.open(row.foto, '_blank', 'noopener,noreferrer')}
-          buttonText={'Lihat Foto'}
-        />
-      ) : (
-        '-'
-      ),
-
-      aksi: (
-        <EvoActionButtons
-          rowId={row.no}
-          onEdit={() => handleEdit(row.no)}
-          onDelete={() => handleDelete(row.no)}
-          isActive={Boolean(row.status)}
-          // moreAction={titleSection}
-          // customButtons={[
-          //   <EvoButton
-          //     key={`batalkanTransaksi-${row.no}`}
-          //     onClick={() => handleProsesPerbaikan(row.no)}
-          //     fillColor={colors.danger}
-          //     buttonText={'Batalkan Transaksi'}
-          //   />,
-          // ]}
-        />
-      ),
-    }));
+  if (error) {
+    return <EvoErrorDiv errorHandlerText={getErrorMessage(error)} />;
+  }
 
   return (
+    <>
+      {notifMessage && (
+        <EvoNotifCard
+          message={notifMessage}
+          onClose={() => setNotifMessage('')}
+          type={notifType}
+          autoClose={true}
+        />
+      )}
     <EvoCardSection className="!p-0 !bg-transparent !shadow-none">
       <EvoTitleSection
         title={titleSection}
@@ -203,13 +207,33 @@ export default function RiwayatTransaksiPrepaidCard({ onBack }) {
         // borderTop={true}
         // onButtonClick={handleTambah}
         icon={<RiAddLargeLine size={16} />}
-        onExportPDF={() => exportPDF('tableToPrint', titleSection)}
-        onExportExcel={() => exportExcel('tableToPrint', titleSection)}
-        onPrint={() => exportPrint('tableToPrint', titleSection)}
+          onExportPDF={() => setModalExportPDFOpen(true)}
+          onExportExcel={() => setModalExportExcel(true)}
+          onPrint={() => setModalExportPrint(true)}
         onDateAkhir={getDefaultDateAkhir}
         onDateAwal={getDefaultDateAwal}
         onDateChange={handleDateChange}
       />
+
+        <>
+          <EvoExportApiPDF
+            isOpen={modalExportPDFOpen}
+            onClose={() => setModalExportPDFOpen(false)}
+            endpoint={urlExport + 'pdf'}
+            filename={titleSection}
+          />
+          <EvoExportApiExcel
+            isOpen={modalExportExcel}
+            onClose={() => setModalExportExcel(false)}
+            endpoint={urlExport + 'excel'}
+            filename={titleSection}
+          />
+          <EvoExportApiPrint
+            isOpen={modalExportPrint}
+            onClose={() => setModalExportPrint(false)}
+            endpoint={urlExport + 'pdf'}
+          />
+        </>
 
       <EvoSearchTabel
         // isFilter={true}
@@ -227,14 +251,12 @@ export default function RiwayatTransaksiPrepaidCard({ onBack }) {
       <EvoTable
         id="tableToPrint"
         tableData={tableDataRiwayatTransaksiPrepaidCard}
-        currentPage={1}
-        totalPages={3}
-        onPageChange={
-          (page) => console.log('Page:', page)
-          // columns={tableDataGerbang.columns} rows={rows}
-        }
+        currentPage={currentPage}
+          totalPages={laporanRiwayatTransaksiPrepaidCard?.totalPages}
+          onPageChange={handlePageChange}
         rows={rows}
       />
     </EvoCardSection>
+    </>
   );
 }

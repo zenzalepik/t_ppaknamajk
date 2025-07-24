@@ -14,6 +14,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { getUserId } from '@/utils/db';
 import { fetchApiBantuanTiketUpdate } from '../api/fetchApiBantuanTiketUpdate';
 
+
 const EditPengaduanForm = ({
   isOpen,
   onClose,
@@ -244,10 +245,10 @@ const EditPengaduanForm = ({
             // value={selectedOptions.kategori_permasalahan}
             value={formData.kategori_permasalahan}
             // onChange={handleDropdownChange}
-            onChange={(e) =>
+           onChange={(value) =>
               setFormData((prev) => ({
                 ...prev,
-                kategori_permasalahan: e.target.value,
+                kategori_permasalahan: value,
               }))
             }
             error={errors.kategori_permasalahan}
@@ -294,8 +295,11 @@ const EditPengaduanForm = ({
             // value={selectedOptions.pos_id}
             value={formData.pos_id}
             // onChange={handleDropdownChange}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, pos_id: e.target.value }))
+           onChange={(value) =>
+              setFormData((prev) => ({
+                ...prev,
+                pos_id: value,
+              }))
             }
             error={errors.pos_id}
             placeholder="Pilih pintu pos"
@@ -319,10 +323,10 @@ const EditPengaduanForm = ({
             // value={selectedOptions.hardware_atau_alat}
             value={formData.hardware_atau_alat}
             // onChange={handleDropdownChange}
-            onChange={(e) =>
+             onChange={(value) =>
               setFormData((prev) => ({
                 ...prev,
-                hardware_atau_alat: e.target.value,
+                hardware_atau_alat: value,
               }))
             }
             error={errors.hardware_atau_alat}

@@ -1,11 +1,18 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useEffect , useState, useRef } from 'react';
 import { RiTimeLine } from '@remixicon/react';
 
 export default function EvoInTimePicker({ name, label, value, onChange, error, placeholder }) {
   const inputRef = useRef(null);
   const [selectedTime, setSelectedTime] = useState(value || '');
+
+   // Sync value from parent
+  useEffect(() => {
+    if (value !== selectedTime) {
+      setSelectedTime(value || '');
+    }
+  }, [value, selectedTime]);
 
   const handleTimeChange = (e) => {
     setSelectedTime(e.target.value);

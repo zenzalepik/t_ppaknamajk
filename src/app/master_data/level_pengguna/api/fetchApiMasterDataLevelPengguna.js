@@ -19,6 +19,6 @@ export const fetchApiMasterDataLevelPengguna = async ({
 
   return await fetchWithAuth({
     method: 'get',
-    endpoint: `/master-data/level-akses?${queryParams.toString()}`,
+    endpoint: `/master-data/level-pengguna?${queryParams.toString()}`,
   });
 };

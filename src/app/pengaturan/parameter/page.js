@@ -19,7 +19,7 @@ export default function PengaturanParameter() {
     };
 
     checkAuth();
-  }, []);
+  }, [router]);
   return (
     <EvoLayout pageTitle="Pengaturan">
         <ParameterSection />

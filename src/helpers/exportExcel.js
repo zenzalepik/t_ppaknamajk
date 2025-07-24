@@ -2,6 +2,7 @@
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import strings from "@/utils/strings"; // Jika menggunakan alias Next.js
+import { getPengaturanGlobal } from '@/utils/dbGlobals';
 
 /**
  * Fungsi untuk mengekspor tabel ke Excel
@@ -10,6 +11,9 @@ import strings from "@/utils/strings"; // Jika menggunakan alias Next.js
  * @returns {Promise<void>}
  */
 export const exportExcel = async (tableId, titleSection) => {
+  const storedGlobal = await getPengaturanGlobal();
+  const dataGlobal = storedGlobal?.data?.[0];
+
   const element = document.getElementById(tableId);
   if (!element) {
     console.error('Elemen tabel tidak ditemukan.');
@@ -63,7 +67,7 @@ export const exportExcel = async (tableId, titleSection) => {
     cellObj.font = font;
   };
 
-  mergeAndStyle('A1', strings.appName, { bold: true, size: 12 }, 1);
+  mergeAndStyle('A1', dataGlobal?.nama_operator , { bold: true, size: 12 }, 1);
   mergeAndStyle('A2', 'Developed by ' + strings.developerName, { italic: true, size: 10 }, 2);
   mergeAndStyle('A3', titleSection, { bold: true, size: 24 }, 3);
   mergeAndStyle('A4', dateStr, { size: 10 }, 4);

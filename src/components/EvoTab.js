@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 
-export default function EvoTab({ tabs, defaultTab, tabComponents }) {
+export default function EvoTab({ tabs, defaultTab, tabComponents, hakAkses }) {
   const [activeTab, setActiveTab] = useState(defaultTab || tabs[0].key);
 
   const handleTabChange = (key) => {

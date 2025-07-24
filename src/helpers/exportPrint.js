@@ -1,30 +1,40 @@
+import { getPengaturanGlobal } from '@/utils/dbGlobals';
+import strings from '@/utils/strings';
+
 /**
  * Export tabel sebagai halaman siap cetak dan langsung membuka dialog print.
  *
  * @param {string} tableId - ID elemen tabel yang ingin dicetak
  * @param {string} titleSection - Judul utama di bagian tengah halaman
  */
-export const exportPrint = (tableId, titleSection = 'Data') => {
-    const table = document.getElementById(tableId);
-    if (!table) return;
-  
-    const printWindow = window.open('', '_blank');
-    const clonedTable = table.cloneNode(true);
-  
-    // Hapus kolom "Aksi"
-    const actionIndex = Array.from(clonedTable.querySelectorAll('th')).findIndex(
-      (th) => th.textContent.trim().toLowerCase() === 'aksi'
-    );
-  
-    if (actionIndex !== -1) {
-      clonedTable.querySelectorAll('tr').forEach((row) => {
-        if (row.children[actionIndex]) {
-          row.removeChild(row.children[actionIndex]);
-        }
-      });
-    }
-  
-    printWindow.document.write(`
+export const exportPrint = async (
+  tableId,
+  titleSection = 'Data',
+  appName = ''
+) => {
+  const storedGlobal = await getPengaturanGlobal();
+  const dataGlobal = storedGlobal?.data?.[0];
+
+  const table = document.getElementById(tableId);
+  if (!table) return;
+
+  const printWindow = window.open('', '_blank');
+  const clonedTable = table.cloneNode(true);
+
+  // Hapus kolom "Aksi"
+  const actionIndex = Array.from(clonedTable.querySelectorAll('th')).findIndex(
+    (th) => th.textContent.trim().toLowerCase() === 'aksi'
+  );
+
+  if (actionIndex !== -1) {
+    clonedTable.querySelectorAll('tr').forEach((row) => {
+      if (row.children[actionIndex]) {
+        row.removeChild(row.children[actionIndex]);
+      }
+    });
+  }
+
+  printWindow.document.write(`
       <html>
         <head>
           <title>Print Table</title>
@@ -64,7 +74,7 @@ export const exportPrint = (tableId, titleSection = 'Data') => {
         <body>
           <div style="text-align: center;">
             <div class="wrap-copyright">
-              <h3>Evosist Parking</h3>
+              <h3>${dataGlobal?.nama_operator || strings.appName}</h3>
               <span class="copyright">Developed by Evosist</span>
             </div>
             <br />
@@ -79,5 +89,4 @@ export const exportPrint = (tableId, titleSection = 'Data') => {
         </body>
       </html>
     `);
-  };
-  
+};

@@ -1,7 +1,7 @@
 //TarifDendaSection.js
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import EvoTitleSection from '@/components/EvoTitleSection';
 import EvoCardSection from '@/components/evosist_elements/EvoCardSection';
 import EvoTable from '@/components/evosist_elements/EvoTable';
@@ -23,6 +23,10 @@ import Spinner from '@/components/Spinner';
 import { getErrorMessage } from '@/utils/errorHandler';
 import EvoErrorDiv from '@/components/EvoErrorDiv';
 import { getUserId } from '@/utils/db';
+import { useHookStatusTarifDenda } from './hooks/useHookStatusTarifDenda';
+import EvoNotifCard from '@/components/EvoNotifCard';
+import { fetchApiPengaturanParameterTipeKendaraan } from '@/app/pengaturan/parameter/api/items/fetchApiPengaturanParameterTipeKendaraan';
+import { ambilLevelPengguna } from '@/utils/levelPenggunaStorage';
 
 const titleSection = 'Tarif Denda';
 
@@ -37,6 +41,46 @@ export default function TarifDendaSection() {
   const [notifMessage, setNotifMessage] = useState('');
   const [notifType, setNotifType] = useState('success');
   const [selectedData, setSelectedData] = useState(null);
+
+  const { toggleStatus, notif, setNotif } = useHookStatusTarifDenda();
+
+  const [dataHakAkses, setDataLevelSidebar] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const data = await ambilLevelPengguna();
+      setDataLevelSidebar(data);
+    };
+    fetchData();
+  }, []);
+
+  const hakAksesPTarifDenda =
+    dataHakAkses?.[0]?.hak_akses
+      ?.find((akses) => akses.nama_menu === 'Pengaturan')
+      ?.nama_sub_menu?.find((sub) => sub.nama === 'Tarif Denda')?.aksi || {};
+
+  const tidakPunyaAkses = !Object.values(hakAksesPTarifDenda).some(
+    (v) => v === true
+  );
+
+  useEffect(() => {
+    if (notif.message) {
+      setNotifMessage(notif.message);
+      setNotifType(notif.type);
+    }
+  }, [notif]);
+
+  const {
+    data: dataTipeKendaraan,
+    error: errorTipeKendaraan,
+    isLoading: isLoadingTipeKendaraan,
+  } = useQuery({
+    queryKey: ['pengaturanTipeKendaraan'],
+    queryFn: () =>
+      fetchApiPengaturanParameterTipeKendaraan({
+        limit: 5,
+      }),
+  });
 
   const {
     data: pengaturanTarifDenda,
@@ -110,28 +154,6 @@ export default function TarifDendaSection() {
     console.log('Hasil pencarian:', query);
   };
 
-  /*const rows = tableDataTarifDenda.rows.map((row) => ({
-      ...row,
-      dendaUntukMember: StatusLabel.untukMember(row.dendaUntukMember),
-      status: StatusLabel.status(row.status), // Konversi status menjadi elemen visual
-      aksi: (
-        <EvoActionButtons
-          rowId={row.aksi}
-          onPerpanjang={() => handlePerpanjang(row.aksi)}
-          onGantiKartu={() => handleGantiKartu(row.aksi)}
-          onGantiNomorPolisi={() => handleGantiNomorPolisi(row.aksi)}
-          onRiwayatTransaksi={() => handleRiwayatTransaksi(row.aksi)}
-          onEdit={() => handleEdit(row.aksi)}
-          onDelete={() => handleDelete(row.aksi)}
-          // onMore={() => handleMore(row.aksi)}
-          isActive={row.status == true} // Status member digunakan sebagai indikator aktif/non-aktif
-        onAktifkan={() => console.log('Aktifkan', row.aksi)}
-        onNonAktifkan={() => console.log('NonAktifkan', row.aksi)}
-          moreAction={titleSection}
-        />
-      ),
-    }));*/
-
   if (isLoading)
     return (
       <div className="h-full flex flex-col gap-2 justify-center items-center text-center text-primary">
@@ -144,6 +166,11 @@ export default function TarifDendaSection() {
     return <EvoErrorDiv errorHandlerText={getErrorMessage(error)} />; // ✅ Pastikan error ditampilkan di UI
   }
 
+  const getNamaTipeKendaraan = (id, tipeList = []) => {
+    const found = tipeList.find((item) => item.id === id);
+    return found ? found.tipe_kendaraan : '-';
+  };
+
   const dataApi = pengaturanTarifDenda || {};
 
   const rows =
@@ -153,10 +180,18 @@ export default function TarifDendaSection() {
           kendaraan: (
             <b>
               {row.kendaraan
-                ? `${row.kendaraan.nama_kendaraan} (${row.kendaraan.tipe_kendaraan})`
+                ? `${row.kendaraan.nama_kendaraan} (${
+                    row.kendaraan.tipe_kendaraan_id == null
+                      ? '-'
+                      : getNamaTipeKendaraan(
+                          row.kendaraan.tipe_kendaraan_id,
+                          dataTipeKendaraan?.data
+                        )
+                  })`
                 : 'Tidak ditemukan'}
             </b>
           ),
+
           tarifDendaTiket:
             row.denda_tiket != null
               ? `Rp ${row.denda_tiket.toLocaleString()}`
@@ -175,40 +210,84 @@ export default function TarifDendaSection() {
           aksi: (
             <EvoActionButtons
               rowId={row.id}
-              onEdit={() => handleEdit(row.id)}
+              onEdit={
+                hakAksesPTarifDenda.update == true
+                  ? () => handleEdit(row.id)
+                  : null
+              }
               isActive={row.status}
-              onAktifkan={() => console.log('Aktifkan', row.id)}
-              onNonAktifkan={() => console.log('NonAktifkan', row.id)}
+              onAktifkan={
+                hakAksesPTarifDenda.aktif_nonaktif == true
+                  ? () => toggleStatus(row.id, true)
+                  : null
+              }
+              onNonAktifkan={
+                hakAksesPTarifDenda.aktif_nonaktif == true
+                  ? () => toggleStatus(row.id, false)
+                  : null
+              }
             />
           ),
         }))
       : [];
 
-  return (
-    <EvoCardSection>
-      <EvoTitleSection
-        title={titleSection}
-        handleChange={handleChange}
-        icon={<RiAddLargeLine size={16} />}
-        onExportPDF={() => exportPDF('tableToPrint', titleSection)}
-        onExportExcel={() => exportExcel('tableToPrint', titleSection)}
-        onPrint={() => exportPrint('tableToPrint', titleSection)}
-      />
+  if (tidakPunyaAkses) {
+    return (
+      <EvoErrorDiv errorHandlerText="Anda tidak memiliki akses menuju halaman ini" />
+    );
+  }
 
-      <EditTarifDendaForm
-        isOpen={modalOpen}
-        onClose={handleTutup}
-        onSubmit={handleSubmitData}
-        initialData={selectedData}
-      />
-      <EvoTable
-        id="tableToPrint"
-        tableData={tableDataTarifDenda}
-        currentPage={currentPage}
-        totalPages={dataApi?.totalPages}
-        onPageChange={handlePageChange}
-        rows={rows}
-      />
-    </EvoCardSection>
+  return (
+    <>
+      {notif.message && (
+        <EvoNotifCard
+          message={notif.message}
+          onClose={() => setNotif({ message: '', type: 'success' })}
+          type={notif.type}
+          autoClose={true}
+        />
+      )}
+      <EvoCardSection>
+        <EvoTitleSection
+          title={titleSection}
+          handleChange={handleChange}
+          icon={<RiAddLargeLine size={16} />}
+          onExportPDF={
+            hakAksesPTarifDenda.read == true
+              ? () => exportPDF('tableToPrint', titleSection)
+              : null
+          }
+          onExportExcel={
+            hakAksesPTarifDenda.read == true
+              ? () => exportExcel('tableToPrint', titleSection)
+              : null
+          }
+          onPrint={
+            hakAksesPTarifDenda.read == true
+              ? () => exportPrint('tableToPrint', titleSection)
+              : null
+          }
+        />
+
+      {hakAksesPTarifDenda.update == true && (
+        <EditTarifDendaForm
+          isOpen={modalOpen}
+          onClose={handleTutup}
+          onSubmit={handleSubmitData}
+          initialData={selectedData}
+        />)}
+        
+      {hakAksesPTarifDenda.read == true && (
+        <EvoTable
+          id="tableToPrint"
+          tableData={tableDataTarifDenda}
+          currentPage={currentPage}
+          totalPages={dataApi?.totalPages}
+          onPageChange={handlePageChange}
+          rows={rows}
+        />
+      )}
+      </EvoCardSection>
+    </>
   );
 }

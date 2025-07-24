@@ -17,7 +17,21 @@ import strings from '@/utils/strings';
  * @param {Object} [config.params] - Query param (untuk GET)
  * @returns {Promise<any>} Hasil dari `response.data.results`
  */
-export async function fetchWithAuth({ method = 'get', endpoint, data = null, params = null }) {
+export async function fetchWithAuth({
+  method = 'get',
+  endpoint,
+  data = null,
+  params = null,
+
+  stripOffset = true, // default: hapus offset
+}) {
+  const cleanedParams =
+    params && stripOffset
+      ? Object.fromEntries(
+          Object.entries(params).filter(([key]) => key !== 'offset')
+        )
+      : params;
+
   const token = await getToken();
   if (!token) throw new Error('Token tidak ditemukan, harap login ulang.');
 
@@ -26,7 +40,8 @@ export async function fetchWithAuth({ method = 'get', endpoint, data = null, par
       method,
       url: `${strings.apiUrl}${endpoint}`,
       data,
-      params,
+      // params,
+      params: cleanedParams,
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -35,7 +50,9 @@ export async function fetchWithAuth({ method = 'get', endpoint, data = null, par
     // console.log(response.data);
 
     if (!response.data.success) {
-      throw new Error(DOMPurify.sanitize(response.data.message || 'Permintaan gagal.'));
+      throw new Error(
+        DOMPurify.sanitize(response.data.message || 'Permintaan gagal.')
+      );
     }
 
     return response.data.results;

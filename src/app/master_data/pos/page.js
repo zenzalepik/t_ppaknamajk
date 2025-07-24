@@ -19,7 +19,7 @@ export default function MasterDataDataPos() {
     };
 
     checkAuth();
-  }, []);
+  }, [router]);
   return (
     <EvoLayout pageTitle="Master Data">
       <PosSection />

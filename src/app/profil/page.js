@@ -21,7 +21,7 @@ export default function Profil() {
     };
 
     checkAuth();
-  }, []);
+  }, [router]);
 
   return (
     <EvoLayout pageTitle="Profil Akun">

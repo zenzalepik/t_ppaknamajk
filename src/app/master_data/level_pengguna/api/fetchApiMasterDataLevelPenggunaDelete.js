@@ -9,17 +9,17 @@ export const fetchApiMasterDataLevelPenggunaDelete = async (
   try {
     await fetchWithAuth({
       method: 'delete',
-      endpoint: `/master-data/level-akses/${id}`,
+      endpoint: `/master-data/level-pengguna/${id}`,
     });
 
-    console.log('Perusahaan berhasil dihapus');
+    console.log('Level Pengguna berhasil dihapus');
 
-    queryClient.invalidateQueries(['masterDataPerusahaan']); // Refresh tabel setelah delete
+    queryClient.invalidateQueries(['masterDataLevelPengguna']); // Refresh tabel setelah delete
 
-    setNotifMessage('Data perusahaan telah dihapus');
+    setNotifMessage('Data level pengguna telah dihapus');
     setNotifType('success');
   } catch (error) {
-    console.error('Error saat menghapus perusahaan:', error);
+    console.error('Error saat menghapus level pengguna:', error);
     setNotifMessage(`Error: ${error.message}`);
     setNotifType('error');
   }

@@ -59,7 +59,7 @@ const EvoTitleSection = ({
   const [selectedDateFilterAkhir, setSelectedDateFilterAkhir] = React.useState(
     () => onDateAkhir?.() || null
   );
-  
+
   // Memastikan onDateChange dipanggil saat tanggal berubah
   React.useEffect(() => {
     if (onDateChange) {
@@ -85,32 +85,35 @@ const EvoTitleSection = ({
         </div>
         <div className="flex items-center gap-6 mt-2 md:mt-0">
           {/* Date Range */}
-          {showDatePickers && (
-            <div className="flex items-center gap-2 mb-2.5">
-              <div className="flex w-[144px]">
-                <EvoInDatePicker
-                  name="tanggalFilterAwal"
-                  label="Tanggal Awal"
-                  value={selectedDateFilterAwal}
-                  placeholder="Pilih tanggal awal"
-                  isWidthFull={true}
-                  size="small"
-                  onChange={(date) => setSelectedDateFilterAwal(date)}
-                />
+          {showDatePickers &&
+            onExportPDF != null &&
+            onExportExcel != null &&
+            onPrint != null && (
+              <div className="flex items-center gap-2 mb-2.5">
+                <div className="flex w-[144px]">
+                  <EvoInDatePicker
+                    name="tanggalFilterAwal"
+                    label="Tanggal Awal"
+                    value={selectedDateFilterAwal}
+                    placeholder="Pilih tanggal awal"
+                    isWidthFull={true}
+                    size="small"
+                    onChange={(date) => setSelectedDateFilterAwal(date)}
+                  />
+                </div>
+                <div className="flex w-[144px]">
+                  <EvoInDatePicker
+                    name="tanggalFilterAkhir"
+                    label="Tanggal Akhir"
+                    value={selectedDateFilterAkhir}
+                    placeholder="Pilih tanggal akhir"
+                    isWidthFull={true}
+                    size="small"
+                    onChange={(date) => setSelectedDateFilterAkhir(date)}
+                  />
+                </div>
               </div>
-              <div className="flex w-[144px]">
-                <EvoInDatePicker
-                  name="tanggalFilterAkhir"
-                  label="Tanggal Akhir"
-                  value={selectedDateFilterAkhir}
-                  placeholder="Pilih tanggal akhir"
-                  isWidthFull={true}
-                  size="small"
-                  onChange={(date) => setSelectedDateFilterAkhir(date)}
-                />
-              </div>
-            </div>
-          )}
+            )}
 
           {/* Render EvoInRadio hanya jika radioItems ada */}
           {radioItems && radioItems.length > 0 && (

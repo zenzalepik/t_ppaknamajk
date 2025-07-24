@@ -1,7 +1,7 @@
 //ParameterSection.js
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import EvoTitleSection from '@/components/EvoTitleSection';
 import EvoCardSection from '@/components/evosist_elements/EvoCardSection';
 import EvoTable from '@/components/evosist_elements/EvoTable';
@@ -20,10 +20,19 @@ import Spinner from '@/components/Spinner';
 import { getErrorMessage } from '@/utils/errorHandler';
 import EvoErrorDiv from '@/components/EvoErrorDiv';
 import { getUserId } from '@/utils/db';
+import { ambilLevelPengguna } from '@/utils/levelPenggunaStorage';
+import EvoExportApiPDF from '@/components/EvoExportApiPDF';
+import EvoExportApiExcel from '@/components/EvoExportApiExcel';
+import EvoExportApiPrint from '@/components/EvoExportApiPrint';
 
 const titleSection = 'Parameter';
 
 export default function ParameterSection() {
+  const urlExport = '/setting/parameter/parameter/';
+  const [modalExportPDFOpen, setModalExportPDFOpen] = useState(false);
+  const [modalExportExcel, setModalExportExcel] = useState(false);
+  const [modalExportPrint, setModalExportPrint] = useState(false);
+
   const [modalOpen, setModalOpen] = useState(false);
   const handleTutup = () => setModalOpen(false);
   const handleUbah = () => setModalOpen(true);
@@ -33,6 +42,25 @@ export default function ParameterSection() {
   const [notifMessage, setNotifMessage] = useState('');
   const [notifType, setNotifType] = useState('success');
   const [selectedData, setSelectedData] = useState(null);
+
+  const [dataHakAkses, setDataLevelSidebar] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const data = await ambilLevelPengguna();
+      setDataLevelSidebar(data);
+    };
+    fetchData();
+  }, []);
+
+  const hakAksesPParameter =
+    dataHakAkses?.[0]?.hak_akses
+      ?.find((akses) => akses.nama_menu === 'Pengaturan')
+      ?.nama_sub_menu?.find((sub) => sub.nama === 'Parameter')?.aksi || {};
+
+  const tidakPunyaAkses = !Object.values(hakAksesPParameter).some(
+    (v) => v === true
+  );
 
   const {
     data: pengaturanParameter,
@@ -96,23 +124,6 @@ export default function ParameterSection() {
     console.log('Hasil pencarian:', query);
   };
 
-  /*  const rows = tableDataParameter.rows.map((row) => ({
-    ...row,
-    // kamera1: StatusLabel.kamera(row.kamera1),
-    // kamera2: StatusLabel.kamera(row.kamera2),
-    // otorisasi: StatusLabel.otorisasi(row.otorisasi),
-    aksi: (
-      <EvoActionButtons
-        rowId={row.aksi}
-        onEdit={() => handleEdit(row.no)}
-        // onDelete={handleDelete}
-        isActive={row.otorisasi} // atau row.kamera1 jika itu yang dianggap status aktifnya
-        // onAktifkan={() => console.log('Aktifkan', row.aksi)}
-        // onNonAktifkan={() => console.log('NonAktifkan', row.aksi)}
-      />
-    ),
-  }));*/
-
   if (isLoading)
     return (
       <div className="h-full flex flex-col gap-2 justify-center items-center text-center text-primary">
@@ -137,44 +148,90 @@ export default function ParameterSection() {
           aksi: (
             <EvoActionButtons
               rowId={row.id}
-              onEdit={() => handleEdit(row.id)}
+              onEdit={
+                hakAksesPParameter.update == true
+                  ? () => handleEdit(row.id)
+                  : null
+              }
             />
           ),
         }))
       : [];
 
+  if (tidakPunyaAkses) {
+    return (
+      <EvoErrorDiv errorHandlerText="Anda tidak memiliki akses menuju halaman ini" />
+    );
+  }
+
   return (
     <EvoCardSection>
       <EvoTitleSection
         title={titleSection}
-        // radioItems={radioItems}
-        // monthNames={monthNames}
-        // years={years}
         handleChange={handleChange}
         icon={<RiAddLargeLine size={16} />}
-        onExportPDF={() => exportPDF('tableToPrint', titleSection)}
-        onExportExcel={() => exportExcel('tableToPrint', titleSection)}
-        onPrint={() => exportPrint('tableToPrint', titleSection)}
+        onExportPDF={
+          hakAksesPParameter.read == true
+            ? () => setModalExportPDFOpen(true)
+            : null
+        }
+        onExportExcel={
+          hakAksesPParameter.read == true
+            ? () => setModalExportExcel(true)
+            : null
+        }
+        onPrint={
+          hakAksesPParameter.read == true
+            ? () => setModalExportPrint(true)
+            : null
+        }
       />
-      <EvoSearchTabel
-        placeholder="Ketik nama parameter..."
-        buttonText="Pencarian"
-        onSearch={handleSearch}
-      />
-      <EditParameterForm
-        isOpen={modalOpen}
-        onClose={handleTutup}
-        onSubmit={handleSubmitData}
-        initialData={selectedData}
-      />
-      <EvoTable
-        id="tableToPrint"
-        tableData={tableDataParameter}
-        currentPage={currentPage}
-        totalPages={dataApi?.totalPages}
-        onPageChange={handlePageChange}
-        rows={rows}
-      />
+      {hakAksesPParameter.read == true && (
+        <>
+          <EvoExportApiPDF
+            isOpen={modalExportPDFOpen}
+            onClose={() => setModalExportPDFOpen(false)}
+            endpoint={urlExport + 'pdf'}
+            filename={titleSection}
+          />
+          <EvoExportApiExcel
+            isOpen={modalExportExcel}
+            onClose={() => setModalExportExcel(false)}
+            endpoint={urlExport + 'excel'}
+            filename={titleSection}
+          />
+          <EvoExportApiPrint
+            isOpen={modalExportPrint}
+            onClose={() => setModalExportPrint(false)}
+            endpoint={urlExport + 'pdf'}
+          />
+        </>
+      )}
+      {hakAksesPParameter.read == true && (
+        <EvoSearchTabel
+          placeholder="Ketik nama parameter..."
+          buttonText="Pencarian"
+          onSearch={handleSearch}
+        />
+      )}
+      {hakAksesPParameter.update == true && (
+        <EditParameterForm
+          isOpen={modalOpen}
+          onClose={handleTutup}
+          onSubmit={handleSubmitData}
+          initialData={selectedData}
+        />
+      )}
+      {hakAksesPParameter.read == true && (
+        <EvoTable
+          id="tableToPrint"
+          tableData={tableDataParameter}
+          currentPage={currentPage}
+          totalPages={dataApi?.totalPages}
+          onPageChange={handlePageChange}
+          rows={rows}
+        />
+      )}
     </EvoCardSection>
   );
 }

@@ -5,7 +5,7 @@ import EvoInText from '@/components/evosist_elements/EvoInText';
 import EvoInTextarea from '@/components/evosist_elements/EvoInTextarea';
 import EvoNotifCard from '@/components/EvoNotifCard';
 import { useQueryClient } from '@tanstack/react-query';
-import {fetchApiPengaturanGlobalOperatorUpdate} from '../api/fetchApiPengaturanGlobalOperatorUpdate';
+import { fetchApiPengaturanGlobalOperatorUpdate } from '../api/fetchApiPengaturanGlobalOperatorUpdate';
 
 const EditPembayaranForm = ({
   isOpen,
@@ -89,23 +89,22 @@ const EditPembayaranForm = ({
     // onSubmit?.(formData);
     // console.log('Submit data' + JSON.stringify(formData));
 
-    
-        try {
-          await fetchApiPengaturanGlobalOperatorUpdate(formData);
-    
-          queryClient.invalidateQueries(['pengaturanGlobal']); // Refresh tabel setelah tambah data
-    
-          
-    setNotifMessage('Data operator berhasil disimpan!');
-    setNotifType('success');
-    
-          setTimeout(() => handleCloseModal(), 500);
-        } catch (error) {
-          setNotifMessage(error.message);
-          setNotifType('error');
-        }
+    try {
+      await fetchApiPengaturanGlobalOperatorUpdate(formData);
 
+      queryClient.invalidateQueries(['pengaturanGlobal']); // Refresh tabel setelah tambah data
 
+      setNotifMessage('Data operator berhasil disimpan!');
+      setNotifType('success');
+
+      setTimeout(() => handleCloseModal(), 500);
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000); // kasih delay biar notif sempat tampil
+    } catch (error) {
+      setNotifMessage(error.message);
+      setNotifType('error');
+    }
   };
 
   return (

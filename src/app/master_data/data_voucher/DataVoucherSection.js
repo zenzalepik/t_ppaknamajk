@@ -1,7 +1,7 @@
 //DataVoucherSection.js
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import EvoTitleSection from '@/components/EvoTitleSection';
 import EvoCardSection from '@/components/evosist_elements/EvoCardSection';
 import EvoTable from '@/components/evosist_elements/EvoTable';
@@ -26,10 +26,23 @@ import EvoErrorDiv from '@/components/EvoErrorDiv';
 import { getUserId } from '@/utils/db';
 import { fetchApiMasterDataDataVoucherDelete } from './api/fetchApiMasterDataDataVoucherDelete';
 import EvoNotifCard from '@/components/EvoNotifCard';
+import dayjs from 'dayjs';
+import EvoEmpty from '@/components/EvoEmpty';
+import EditDataVoucherForm from './forms/EditForm';
+import { fetchApiPengaturanParameterTipeKendaraan } from '@/app/pengaturan/parameter/api/items/fetchApiPengaturanParameterTipeKendaraan';
+import { ambilLevelPengguna } from '@/utils/levelPenggunaStorage';
+import EvoExportApiPDF from '@/components/EvoExportApiPDF';
+import EvoExportApiExcel from '@/components/EvoExportApiExcel';
+import EvoExportApiPrint from '@/components/EvoExportApiPrint';
 
 const titleSection = 'Data Voucher';
 
 export default function DataVoucherSection() {
+  const urlExport = '/master-data/data-voucher/';
+  const [modalExportPDFOpen, setModalExportPDFOpen] = useState(false);
+  const [modalExportExcel, setModalExportExcel] = useState(false);
+  const [modalExportPrint, setModalExportPrint] = useState(false);
+
   const [modalOpen, setModalOpen] = useState(false);
   const handleTambah = () => setModalOpen(true);
   const handleTutup = () => setModalOpen(false);
@@ -39,6 +52,20 @@ export default function DataVoucherSection() {
   const queryClient = useQueryClient();
   const [notifMessage, setNotifMessage] = useState('');
   const [notifType, setNotifType] = useState('success');
+
+  const [selectedEditData, setSelectedEdit] = useState(null);
+  const [modalEditOpen, setModalEditOpen] = useState(false);
+  const handleEditTutup = () => setModalEditOpen(false);
+
+  const [dataHakAkses, setDataLevelSidebar] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const data = await ambilLevelPengguna();
+      setDataLevelSidebar(data);
+    };
+    fetchData();
+  }, []);
 
   const {
     data: masterDataDataVoucher,
@@ -57,6 +84,24 @@ export default function DataVoucherSection() {
     // retry: false,
   });
 
+  const hakAksesMDDataVoucher =
+    dataHakAkses?.[0]?.hak_akses
+      ?.find((akses) => akses.nama_menu === 'Master Data')
+      ?.nama_sub_menu?.find((sub) => sub.nama === 'Data Voucher')?.aksi || {};
+
+  const tidakPunyaAkses = !Object.values(hakAksesMDDataVoucher).some(
+    (v) => v === true
+  );
+
+  const {
+    data: dataTipeKendaraan,
+    error: errorTipeKendaraan,
+    isLoading: isLoadingTipeKendaraan,
+  } = useQuery({
+    queryKey: ['pengaturanTipeKendaraan'],
+    queryFn: () => fetchApiPengaturanParameterTipeKendaraan(),
+  });
+
   const handlePageChange = (page) => {
     setCurrentPage(page); // trigger TanStack React Query re-fetch dengan page baru
   };
@@ -70,6 +115,26 @@ export default function DataVoucherSection() {
   const handleEdit = (id) => {
     console.log('Tombol Edit diklik untuk ID:', id);
     // Logika untuk melakukan edit (misalnya membuka form modal)
+
+    const dataDipilih = masterDataDataVoucher?.data?.find(
+      (item) => item.id === id
+    );
+
+    // console.log(dataDipilih);
+
+    if (dataDipilih) {
+      setSelectedEdit({
+        json: dataDipilih,
+        id: dataDipilih.id,
+
+        no_tiket_atau_nopol: dataDipilih.no_tiket_atau_nopol || '',
+        kendaraan_id: dataDipilih.kendaraan_id,
+        keterangan: dataDipilih.keterangan,
+      });
+      // setModalEditOpen(true);
+      // setModalEditOpen(true);
+      setModalEditOpen(true);
+    }
   };
 
   // const [confirmMoreId, setConfirmMoreId] = useState(null);
@@ -121,28 +186,26 @@ export default function DataVoucherSection() {
     console.log('Hasil pencarian:', query);
   };
 
-  /*const rows = tableDataVoucher.rows.map((row) => ({
-    ...row,
-    aksesTiket: StatusLabel.status(row.aksesTiket), // Konversi akses tiket menjadi elemen visual
-    aksesKartu: StatusLabel.status(row.aksesKartu), // Konversi akses kartu menjadi elemen visual
-    status: StatusLabel.status(row.status), // Konversi status menjadi elemen visual
-    aksi: (
-      <EvoActionButtons
-        rowId={row.aksi}
-        onPerpanjang={() => handlePerpanjang(row.aksi)}
-        onGantiKartu={() => handleGantiKartu(row.aksi)}
-        onGantiNomorPolisi={() => handleGantiNomorPolisi(row.aksi)}
-        onRiwayatTransaksi={() => handleRiwayatTransaksi(row.aksi)}
-        onEdit={() => handleEdit(row.aksi)}
-        onDelete={() => handleDelete(row.aksi)}
-        // onMore={() => handleMore(row.aksi)}
-        isActive={row.status === 'Aktif'} // Status voucher digunakan sebagai indikator aktif/non-aktif
-        // onAktifkan={() => console.log('Aktifkan', row.aksi)}
-        // onNonAktifkan={() => console.log('NonAktifkan', row.aksi)}
-        moreAction={titleSection}
-      />
-    ),
-  }));*/
+  const durasiHari = (periode) => {
+    if (Array.isArray(periode) && periode.length === 2) {
+      const start = dayjs(periode[0].value);
+      const end = dayjs(periode[1].value);
+      return end.diff(start, 'day') + 1; // +1 kalau ingin termasuk hari pertama
+    }
+    return 0;
+  };
+
+  const dataApiTipeKendaraan = dataTipeKendaraan?.data || {};
+
+  // const getNamaTipeKendaraan = (id, tipeList = []) => {
+  //   const found = tipeList.find((item) => item.id === id);
+  //   return found ? found.tipe_kendaraan : '-';
+  // };
+  const getNamaTipeKendaraan = (id, tipeList = []) => {
+    if (!Array.isArray(tipeList)) return '-';
+    const found = tipeList.find((item) => item.id === id);
+    return found ? found.tipe_kendaraan : '-';
+  };
 
   if (isLoading)
     return (
@@ -166,27 +229,50 @@ export default function DataVoucherSection() {
           waktuInput: row.createdAt
             ? new Date(row.createdAt).toLocaleString()
             : '-',
-          produkVoucher: row.produk_voucher.nama,
-          noTiket: row.no_tiket_atau_nopol,
-          nopol: row.no_tiket_atau_nopol,
+          produkVoucher: row.produk_voucher.nama || <EvoEmpty />,
+          noTiket:
+            row.verifikasi == 'Tiket'
+              ? row.no_tiket_atau_nopol || <EvoEmpty />
+              : '-',
+          nopol:
+            row.verifikasi == 'Nopol'
+              ? row.no_tiket_atau_nopol || <EvoEmpty />
+              : '-',
           jenisKendaraan:
-            row.kendaraan.nama_kendaraan +
+            (row.kendaraan.nama_kendaraan || '-') +
             ' (' +
-            row.kendaraan.tipe_kendaraan +
+            getNamaTipeKendaraan(
+              row.kendaraan.tipe_kendaraan_id,
+              dataApiTipeKendaraan
+            ) +
             ') ',
-          modelBayar: row.model_bayar,
-          verifikasi: row.verifikasi,
-          periode: row.periode_value + ' ' + row.periode_unit,
+          modelBayar: row.model_bayar || <EvoEmpty />,
+          verifikasi: row.verifikasi || <EvoEmpty />,
+          periode:
+            row.periode == null ? (
+              <EvoEmpty />
+            ) : Array.isArray(row.periode) && row.periode.length === 2 ? (
+              `${durasiHari(row.periode)} Hari`
+            ) : (
+              '-'
+            ),
+          // Array.isArray(row.periode) && row.periode.length === 2
+          //   ? row.periode[0].value + ' s/d ' + row.periode[1].value
+          //   : '',
           tarif: row.tarif ? `Rp${row.tarif.toLocaleString()}` : '-',
           masaAktif:
-            Array.isArray(row.periode) && row.periode.length === 2
-              ? `${row.periode[0].value} s/d ${row.periode[1].value}`
-              : '-',
-          keterangan: row.keterangan,
+            row.priode == null ? (
+              <EvoEmpty />
+            ) : Array.isArray(row.periode) && row.periode.length === 2 ? (
+              `${row.periode[0].value} s/d ${row.periode[1].value}`
+            ) : (
+              '-'
+            ),
+          keterangan: row.keterangan || <EvoEmpty />,
 
           nama: row.nama || '-',
           kontak: row.no_hp || '-',
-          perusahaan: row.perusahaan?.nama || '-',
+          row: row.row?.nama || '-',
           aksesTiket: StatusLabel.status(row.akses_tiket),
           aksesKartu: StatusLabel.status(row.akses_kartu),
           nomorKartu: row.no_kartu || '-',
@@ -203,18 +289,26 @@ export default function DataVoucherSection() {
           aksi: (
             <EvoActionButtons
               rowId={row.id}
-              onPerpanjang={() => handlePerpanjang(row.id)}
-              onGantiKartu={() => handleGantiKartu(row.id)}
-              onGantiNomorPolisi={() => handleGantiNomorPolisi(row.id)}
-              onRiwayatTransaksi={() => handleRiwayatTransaksi(row.id)}
-              onEdit={() => handleEdit(row.id)}
-              onDelete={() => handleDelete(row.id)}
-              isActive={true}
-              moreAction={titleSection}
+              onEdit={
+                hakAksesMDDataVoucher.update == true
+                  ? () => handleEdit(row.id)
+                  : null
+              }
+              onDelete={
+                hakAksesMDDataVoucher.delete == true
+                  ? () => handleDelete(row.id)
+                  : null
+              }
             />
           ),
         }))
       : [];
+
+  if (tidakPunyaAkses) {
+    return (
+      <EvoErrorDiv errorHandlerText="Anda tidak memiliki akses menuju halaman ini" />
+    );
+  }
 
   return (
     <>
@@ -233,33 +327,83 @@ export default function DataVoucherSection() {
           // monthNames={monthNames}
           // years={years}
           handleChange={handleChange}
-          buttonText={`Tambah ${titleSection}`}
-          onButtonClick={handleTambah}
+          buttonText={
+            hakAksesMDDataVoucher.create == true ? `Tambah ${titleSection}` : ''
+          }
+          onButtonClick={
+            hakAksesMDDataVoucher.create == true ? handleTambah : () => {}
+          }
           icon={<RiAddLargeLine size={16} />}
-          onExportPDF={() => exportPDF('tableToPrint', titleSection)}
-          onExportExcel={() => exportExcel('tableToPrint', titleSection)}
-          onPrint={() => exportPrint('tableToPrint', titleSection)}
-        />
-        <EvoSearchTabel
-          isFilter={true}
-          // FilterComponent={FilterMasProdukVoucher}
-          placeholder="Ketik nama voucher atau nomor handphone voucher..."
-          onSearch={(data) => console.log('Hasil pencarian:', data)}
-        />
-
-        <AddDataVoucherForm
-          isOpen={modalOpen}
-          onClose={handleTutup}
-          onSubmit={handleSubmitData}
-        />
-        <EvoTable
-          id="tableToPrint"
-          tableData={tableDataVoucher}
-          currentPage={currentPage}
-          totalPages={dataApi?.totalPages}
-          onPageChange={handlePageChange}
-          rows={rows}
-        />
+          onExportPDF={
+            hakAksesMDDataVoucher.read == true
+              ? () => setModalExportPDFOpen(true)
+              : null
+          }
+          onExportExcel={
+            hakAksesMDDataVoucher.read == true
+              ? () => setModalExportExcel(true)
+              : null
+          }
+          onPrint={
+            hakAksesMDDataVoucher.read == true
+              ? () => setModalExportPrint(true)
+              : null
+          }
+        />{' '}
+        {hakAksesMDDataVoucher.read == true && (
+          <>
+            <EvoExportApiPDF
+              isOpen={modalExportPDFOpen}
+              onClose={() => setModalExportPDFOpen(false)}
+              endpoint={urlExport + 'pdf'}
+              filename={titleSection}
+            />
+            <EvoExportApiExcel
+              isOpen={modalExportExcel}
+              onClose={() => setModalExportExcel(false)}
+              endpoint={urlExport + 'excel'}
+              filename={titleSection}
+            />
+            <EvoExportApiPrint
+              isOpen={modalExportPrint}
+              onClose={() => setModalExportPrint(false)}
+              endpoint={urlExport + 'pdf'}
+            />
+          </>
+        )}
+        {hakAksesMDDataVoucher.read == true && (
+          <EvoSearchTabel
+            isFilter={true}
+            // FilterComponent={FilterMasProdukVoucher}
+            placeholder="Ketik nama voucher atau nomor handphone voucher..."
+            onSearch={(data) => console.log('Hasil pencarian:', data)}
+          />
+        )}
+        {hakAksesMDDataVoucher.create == true && (
+          <AddDataVoucherForm
+            isOpen={modalOpen}
+            onClose={handleTutup}
+            onSubmit={handleSubmitData}
+          />
+        )}
+        {hakAksesMDDataVoucher.update == true && (
+          <EditDataVoucherForm
+            isOpen={modalEditOpen}
+            onClose={handleEditTutup}
+            onSubmit={handleSubmitData}
+            initialData={selectedEditData}
+          />
+        )}{' '}
+        {hakAksesMDDataVoucher.read == true && (
+          <EvoTable
+            id="tableToPrint"
+            tableData={tableDataVoucher}
+            currentPage={currentPage}
+            totalPages={dataApi?.totalPages}
+            onPageChange={handlePageChange}
+            rows={rows}
+          />
+        )}
       </EvoCardSection>
     </>
   );

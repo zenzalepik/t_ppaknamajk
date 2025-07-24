@@ -12,7 +12,9 @@ import EvoBtnKonfigurasi from '@/components/evosist_elements/EvoBtnKonfigurasi';
 export default function EvoActionButtons({
   rowId,
   onPerpanjang = () => {},
+  isGantiKartu=false,
   onGantiKartu = () => {},
+  isGantiNomorPolisi=false,
   onGantiNomorPolisi = () => {},
   onRiwayatTransaksi = () => {},
   onEdit,
@@ -54,12 +56,23 @@ export default function EvoActionButtons({
         <Popover.Root>
           <Popover.Trigger asChild>
             <span>
-              <EvoBtnAktifkan
+              {/* <EvoBtnAktifkan
                 isActive={isActive}
                 onClick={handleAktifkanClick}
-              />
+              /> */}
+              <EvoBtnAktifkan isActive={isActive} onClick={() => {}} />
             </span>
           </Popover.Trigger>
+          <EvoTooltipConfirm
+            title={
+              isActive
+                ? 'Anda yakin ingin menonaktifkan data ini?'
+                : 'Anda yakin ingin mengaktifkan data ini?'
+            }
+            color='#FF5B2A'
+            onConfirm={() => handleAktifkanClick()}
+            onCancel={() => document.activeElement?.blur()}
+          />
         </Popover.Root>
       )}
 
@@ -92,7 +105,9 @@ export default function EvoActionButtons({
             onConfirm={() => onDelete(rowId)}
             onCancel={() => document.activeElement?.blur()}
             onPerpanjang={onPerpanjang}
+            isGantiKartu={isGantiKartu}
             onGantiKartu={onGantiKartu}
+            isGantiNomorPolisi={isGantiNomorPolisi}
             onGantiNomorPolisi={onGantiNomorPolisi}
             onRiwayatTransaksi={onRiwayatTransaksi}
           />

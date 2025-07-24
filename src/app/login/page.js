@@ -16,9 +16,16 @@ import EvoNotifCard from '@/components/EvoNotifCard';
 import { sanitizeInput } from '@/utils/security';
 import { getToken, setToken, getUserId, setUserId } from '@/utils/db';
 import { encryptText } from '@/utils/encryption';
+import { usePengaturanGlobalFromLocal } from '@/app/pengaturan/global/hooks/usePengaturanGlobalFromLocal';
+import { useSyncPengaturanGlobal } from '@/app/pengaturan/global/hooks/useSyncPengaturanGlobal';
 
 
 export default function LoginPage() {
+  useSyncPengaturanGlobal();
+  const dataGlobal = usePengaturanGlobalFromLocal()?.data?.[0];
+
+  console.log(dataGlobal);
+
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -35,7 +42,7 @@ export default function LoginPage() {
     };
 
     checkAuth();
-  }, []);
+  }, [router]);
 
   // ✅ Regex untuk validasi email dan password
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -112,12 +119,12 @@ const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/; // Minimal 8 kar
           </h1>
           <div className="flex flex-col mb-8 p-2 border border-border/20 rounded-[24px]">
             <p className="text-title_large text-center text-white mb-0 font-semibold">
-              {strings.appName}
+              {dataGlobal?.nama_operator || strings.appName}
             </p>
 
             <div className="opacity-40 flex gap-1 justify-center items-center text-article text-center text-white">
               <RiRoadMapLine size={20} />
-              {strings.locationName}
+              {dataGlobal?.nama_lokasi || strings.locationName}
             </div>
           </div>
           <form onSubmit={handleLogin} className="space-y-4">

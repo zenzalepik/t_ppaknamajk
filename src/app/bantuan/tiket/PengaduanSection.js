@@ -1,7 +1,7 @@
 //PengaduanSection.js
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import EvoTitleSection from '@/components/EvoTitleSection';
 import EvoCardSection from '@/components/evosist_elements/EvoCardSection';
 import EvoTableMulti from '@/components/evosist_elements/EvoTableMulti';
@@ -32,13 +32,21 @@ import EvoNotifCard from '@/components/EvoNotifCard';
 import { fetchApiBantuanTiketPermasalahanPerbaikan } from './api/fetchApiBantuanTiketPermasalahanPerbaikan.js';
 import { fetchApiBantuanTiketDelete } from './api/fetchApiBantuanTiketDelete';
 import EditPengaduanForm from './forms/EditForm';
+import EvoExportApiPDF from '@/components/EvoExportApiPDF';
+import EvoExportApiExcel from '@/components/EvoExportApiExcel';
+import EvoExportApiPrint from '@/components/EvoExportApiPrint';
 
 const titleSection = 'Data Pengaduan';
 
-export default function PengaduanSection({ onBack }) {
+export default function PengaduanSection({ onBack, hakAksesBTiket }) {
+  const urlExport = '/transaksi/permasalahan-atau-perbaikan/';
+  const [modalExportPDFOpen, setModalExportPDFOpen] = useState(false);
+  const [modalExportExcel, setModalExportExcel] = useState(false);
+  const [modalExportPrint, setModalExportPrint] = useState(false);
+
   const [startDate, setStartDate] = React.useState(getDefaultDateAwal());
   const [endDate, setEndDate] = React.useState(getDefaultDateAkhir());
-  const handleUbah = () => setModalOpen(true);
+  // const handleUbah = () => setModalOpen(true);
   const [userId, setUserId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const queryClient = useQueryClient();
@@ -206,11 +214,11 @@ export default function PengaduanSection({ onBack }) {
           penyebab: row.penyebab_permasalahan || <i>tidak diketahui</i>,
           keterangan_masalah: row.keterangan_permasalahan || <i>*empty</i>,
           pelapor: row.nama_pelapor || <i>*empty</i>,
-          tanggal_perbaikan: row.tanggal_perbaikan || <i>*empty</i>,
-          jenis_perbaikan: row.jenis_perbaikan || <i>*empty</i>,
-          penanganan: row.penanganan || <i>*empty</i>,
-          keterangan_perbaikan: row.keterangan_penanganan || <i>*empty</i>,
-          yang_menangani: row.nama_yang_menangani || <i>*empty</i>,
+          tanggal_perbaikan: row.tanggal_perbaikan || '-',
+          jenis_perbaikan: row.jenis_perbaikan || '-',
+          penanganan: row.penanganan || '-',
+          keterangan_perbaikan: row.keterangan_penanganan || '-',
+          yang_menangani: row.nama_yang_menangani || '-',
           status: StatusLabel.permasalahanPerbaikan(row.status_perbaikan) || (
             <i>*empty</i>
           ),
@@ -223,51 +231,42 @@ export default function PengaduanSection({ onBack }) {
           aksi: (
             <EvoActionButtons
               rowId={row.id}
-              onEdit={() => handleEdit(row.id)}
-              onDelete={() => handleDelete(row.id)}
-              // isActive={row.status}
+              onEdit={
+                hakAksesBTiket.update == true ? () => handleEdit(row.id) : null
+              }
+              onDelete={
+                hakAksesBTiket.delete == true
+                  ? () => handleDelete(row.id)
+                  : null
+              } // isActive={row.status}
               // onAktifkan={() => console.log('Aktifkan', row.id)}
               // onNonAktifkan={() => console.log('NonAktifkan', row.id)}
               moreAction={titleSection}
-              customButtons={[
-                <EvoButton
-                  key="prosesPerbaikan"
-                  onClick={() => handleProsesPerbaikan(row.id)}
-                  buttonText={'Proses Data Perbaikan'}
-                />,
-              ]}
+              customButtons={
+                hakAksesBTiket.proses_data_perbaikan == true
+                  ? [
+                      <EvoButton
+                        key="prosesPerbaikan"
+                        onClick={() => handleProsesPerbaikan(row.id)}
+                        buttonText={'Proses Data Perbaikan'}
+                      />,
+                    ]
+                  : []
+              }
             />
           ),
         }))
       : [];
 
-  // const rows = tableDataPengaduan.rows.map((row) => ({
-  //   ...row,
-  //   status: StatusLabel.status(row.status), // Konversi status menjadi elemen visual
-  //   aksi: (
-  //     <EvoActionButtons
-  //       rowId={row.no}
-  //       // onPerpanjang={() => handlePerpanjang(row.no)}
-  //       // onGantiKartu={() => handleGantiKartu(row.no)}
-  //       // onGantiNomorPolisi={() => handleGantiNomorPolisi(row.no)}
-  //       // onRiwayatTransaksi={() => handleRiwayatTransaksi(row.no)}
-  //       onEdit={() => handleEdit(row.no)}
-  //       onDelete={() => handleDelete(row.no)}
-  //       // onMore={() => handleMore(row.no)}
-  //       isActive={row.status === 'Aktif'} // Status member digunakan sebagai indikator aktif/non-aktif
-  //       // onAktifkan={() => console.log('Aktifkan', row.no)}
-  //       // onNonAktifkan={() => console.log('NonAktifkan', row.no)}
-  //       moreAction={titleSection}
-  //       customButtons={[
-  //         <EvoButton
-  //           key="prosesPerbaikan"
-  //           onClick={() => handleProsesPerbaikan(row.no)}
-  //           buttonText={'Proses Data Perbaikan'}
-  //         />,
-  //       ]}
-  //     />
-  //   ),
-  // }));
+  const tidakPunyaAkses = !Object.values(hakAksesBTiket).some(
+    (v) => v === true
+  );
+
+  if (tidakPunyaAkses) {
+    return (
+      <EvoErrorDiv errorHandlerText="Anda tidak memiliki akses menuju halaman ini" />
+    );
+  }
 
   return (
     <EvoCardSection>
@@ -276,42 +275,78 @@ export default function PengaduanSection({ onBack }) {
         onBack={onBack}
         handleChange={handleChange}
         icon={<RiAddLargeLine size={16} />}
-        onExportPDF={() => exportPDF('tableToPrint', titleSection)}
-        onExportExcel={() => exportExcel('tableToPrint', titleSection)}
-        onPrint={() => exportPrint('tableToPrint', titleSection)}
+        onExportPDF={
+          hakAksesBTiket.read == true ? () => setModalExportPDFOpen(true) : null
+        }
+        onExportExcel={
+          hakAksesBTiket.read == true ? () => setModalExportExcel(true) : null
+        }
+        onPrint={
+          hakAksesBTiket.read == true ? () => setModalExportPrint(true) : null
+        }
         onDateAkhir={getDefaultDateAkhir}
         onDateAwal={getDefaultDateAwal}
         onDateChange={handleDateChange}
       />
-      <EvoSearchTabel
-        placeholder="Ketik nama judul masalah atau jenis perbaikan..."
-        onSearch={(data) => console.log('Hasil pencarian:', data)}
-      />
+      {hakAksesBTiket.read == true && (
+        <>
+          <EvoExportApiPDF
+            isOpen={modalExportPDFOpen}
+            onClose={() => setModalExportPDFOpen(false)}
+            endpoint={urlExport + 'pdf'}
+            filename={titleSection}
+          />
+          <EvoExportApiExcel
+            isOpen={modalExportExcel}
+            onClose={() => setModalExportExcel(false)}
+            endpoint={urlExport + 'excel'}
+            filename={titleSection}
+          />
+          <EvoExportApiPrint
+            isOpen={modalExportPrint}
+            onClose={() => setModalExportPrint(false)}
+            endpoint={urlExport + 'pdf'}
+          />
+        </>
+      )}
 
-      <EditProsesPerbaikanForm
-        isOpen={modalOpenPengaduan}
-        onClose={handleProsesDataTutup}
-        onSubmit={handleSubmitData}
-        initialData={selectedData}
-      />
-      <EditPengaduanForm
-        isOpen={modalOpen}
-        onClose={handleEditPengaduanTutup}
-        onSubmit={handleSubmitData}
-        initialData={selectedData}
-      />
-      <EvoTableMulti
-        id="tableToPrint"
-        tableData={tableDataPengaduan}
-        textRight="Perbaikan"
-        textLeft="Masalah"
-        orangeEndIndex={8}
-        blackStartIndex={9}
-        currentPage={currentPage}
-        totalPages={dataApi?.totalPages}
-        onPageChange={handlePageChange}
-        rows={rows}
-      />
+      {hakAksesBTiket.read == true && (
+        <EvoSearchTabel
+          placeholder="Ketik nama judul masalah atau jenis perbaikan..."
+          onSearch={(data) => console.log('Hasil pencarian:', data)}
+        />
+      )}
+
+      {hakAksesBTiket.proses_data_perbaikan == true && (
+        <EditProsesPerbaikanForm
+          isOpen={modalOpenPengaduan}
+          onClose={handleProsesDataTutup}
+          onSubmit={handleSubmitData}
+          initialData={selectedData}
+        />
+      )}
+      {hakAksesBTiket.update == true && (
+        <EditPengaduanForm
+          isOpen={modalOpen}
+          onClose={handleEditPengaduanTutup}
+          onSubmit={handleSubmitData}
+          initialData={selectedData}
+        />
+      )}
+      {hakAksesBTiket.read == true && (
+        <EvoTableMulti
+          id="tableToPrint"
+          tableData={tableDataPengaduan}
+          textRight="Perbaikan"
+          textLeft="Masalah"
+          orangeEndIndex={8}
+          blackStartIndex={9}
+          currentPage={currentPage}
+          totalPages={dataApi?.totalPages}
+          onPageChange={handlePageChange}
+          rows={rows}
+        />
+      )}
     </EvoCardSection>
   );
 }

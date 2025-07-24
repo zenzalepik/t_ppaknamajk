@@ -19,6 +19,8 @@ import Spinner from '@/components/Spinner';
 import { getErrorMessage } from '@/utils/errorHandler';
 import EvoErrorDiv from '@/components/EvoErrorDiv';
 import { getUserId } from '@/utils/db';
+import { fetchApiPengaturanParameterTipeKendaraan } from '@/app/pengaturan/parameter/api/items/fetchApiPengaturanParameterTipeKendaraan';
+import { ambilLevelPengguna } from '@/utils/levelPenggunaStorage';
 
 const titleSection = 'Tarif Parkir';
 
@@ -32,6 +34,25 @@ export default function TarifParkirSection() {
   const [notifMessage, setNotifMessage] = useState('');
   const [notifType, setNotifType] = useState('success');
   const [selectedData, setSelectedData] = useState(null);
+
+  const [dataHakAkses, setDataLevelSidebar] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const data = await ambilLevelPengguna();
+      setDataLevelSidebar(data);
+    };
+    fetchData();
+  }, []);
+
+  const hakAksesPTarifParkir =
+    dataHakAkses?.[0]?.hak_akses
+      ?.find((akses) => akses.nama_menu === 'Pengaturan')
+      ?.nama_sub_menu?.find((sub) => sub.nama === 'Tarif Parkir')?.aksi || {};
+
+  const tidakPunyaAkses = !Object.values(hakAksesPTarifParkir).some(
+    (v) => v === true
+  );
 
   const {
     data: pengaturanTarifParkir,
@@ -48,6 +69,18 @@ export default function TarifParkirSection() {
         sortOrder: 'desc',
       }),
     // retry: false,
+  });
+
+  const {
+    data: dataTipeKendaraan,
+    error: errorTipeKendaraan,
+    isLoading: isLoadingTipeKendaraan,
+  } = useQuery({
+    queryKey: ['pengaturanTipeKendaraan'],
+    queryFn: () =>
+      fetchApiPengaturanParameterTipeKendaraan({
+        limit: 5,
+      }),
   });
 
   const handlePageChange = (page) => {
@@ -98,23 +131,6 @@ export default function TarifParkirSection() {
     console.log('Hasil pencarian:', query);
   };
 
-  /*const rows = tableDataTarifParkir.rows.map((row) => ({
-    ...row,
-    // kamera1: StatusLabel.kamera(row.kamera1),
-    // kamera2: StatusLabel.kamera(row.kamera2),
-    // otorisasi: StatusLabel.otorisasi(row.otorisasi),
-    aksi: (
-      <EvoActionButtons
-        rowId={row.aksi}
-        onEdit={handleEdit}
-        // onDelete={handleDelete}
-        isActive={row.otorisasi} // atau row.kamera1 jika itu yang dianggap status aktifnya
-        // onAktifkan={() => console.log('Aktifkan', row.aksi)}
-        // onNonAktifkan={() => console.log('NonAktifkan', row.aksi)}
-      />
-    ),
-  }));*/
-
   if (isLoading)
     return (
       <div className="h-full flex flex-col gap-2 justify-center items-center text-center text-primary">
@@ -127,6 +143,11 @@ export default function TarifParkirSection() {
     return <EvoErrorDiv errorHandlerText={getErrorMessage(error)} />; // ✅ Pastikan error ditampilkan di UI
   }
 
+  const getNamaTipeKendaraan = (id, tipeList = []) => {
+    const found = tipeList.find((item) => item.id === id);
+    return found ? found.tipe_kendaraan : '-';
+  };
+
   const dataApi = pengaturanTarifParkir || {};
 
   const rows =
@@ -136,11 +157,19 @@ export default function TarifParkirSection() {
           tipeKendaraan: (
             <b>
               {row.kendaraan
-                ? `${row.kendaraan.nama_kendaraan} (${row.kendaraan.tipe_kendaraan})`
+                ? `${row.kendaraan.nama_kendaraan} (${
+                    row.kendaraan.tipe_kendaraan_id == null
+                      ? '-'
+                      : getNamaTipeKendaraan(
+                          row.kendaraan.tipe_kendaraan_id,
+                          dataTipeKendaraan?.data
+                        )
+                  })`
                 : 'Tidak ditemukan'}
             </b>
           ),
-          toleransiWaktu: row.grace_period + ' menit',
+          toleransiWaktu:
+            row.grace_period == null ? '-' : row.grace_period + ' menit',
           tarifRotasiPertama:
             row.tarif_rotasi_pertama != null
               ? `Rp ${row.tarif_rotasi_pertama.toLocaleString()}`
@@ -164,11 +193,35 @@ export default function TarifParkirSection() {
           aksi: (
             <EvoActionButtons
               rowId={row.id}
-              onEdit={() => handleEdit(row.id)}
+              onEdit={
+                hakAksesPTarifParkir.update == true
+                  ? () => handleEdit(row.id)
+                  : null
+              }
             />
           ),
         }))
       : [];
+
+  if (errorTipeKendaraan)
+    return (
+      <div className="h-full flex flex-col gap-2 justify-center items-center text-center text-primary">
+        <Spinner size={32} color="border-black" />
+        Loading...
+      </div>
+    );
+
+  if (isLoadingTipeKendaraan) {
+    return (
+      <EvoErrorDiv errorHandlerText={getErrorMessage(isLoadingTipeKendaraan)} />
+    ); // ✅ Pastikan error ditampilkan di UI
+  }
+
+  if (tidakPunyaAkses) {
+    return (
+      <EvoErrorDiv errorHandlerText="Anda tidak memiliki akses menuju halaman ini" />
+    );
+  }
 
   return (
     <EvoCardSection>
@@ -176,24 +229,40 @@ export default function TarifParkirSection() {
         title={titleSection}
         handleChange={handleChange}
         icon={<RiAddLargeLine size={16} />}
-        onExportPDF={() => exportPDF('tableToPrint', titleSection)}
-        onExportExcel={() => exportExcel('tableToPrint', titleSection)}
-        onPrint={() => exportPrint('tableToPrint', titleSection)}
+        onExportPDF={
+          hakAksesPTarifParkir.read == true
+            ? () => exportPDF('tableToPrint', titleSection)
+            : null
+        }
+        onExportExcel={
+          hakAksesPTarifParkir.read == true
+            ? () => exportExcel('tableToPrint', titleSection)
+            : null
+        }
+        onPrint={
+          hakAksesPTarifParkir.read == true
+            ? () => exportPrint('tableToPrint', titleSection)
+            : null
+        }
       />
-      <EditTarifParkirForm
-        isOpen={modalOpen}
-        onClose={handleTutup}
-        onSubmit={handleSubmitData}
-        initialData={selectedData}
-      />
-      <EvoTable
-        id="tableToPrint"
-        tableData={tableDataTarifParkir}
-        currentPage={currentPage}
-        totalPages={dataApi?.totalPages}
-        onPageChange={handlePageChange}
-        rows={rows}
-      />
+      {hakAksesPTarifParkir.update == true && (
+        <EditTarifParkirForm
+          isOpen={modalOpen}
+          onClose={handleTutup}
+          onSubmit={handleSubmitData}
+          initialData={selectedData}
+        />
+      )}
+      {hakAksesPTarifParkir.read == true && (
+        <EvoTable
+          id="tableToPrint"
+          tableData={tableDataTarifParkir}
+          currentPage={currentPage}
+          totalPages={dataApi?.totalPages}
+          onPageChange={handlePageChange}
+          rows={rows}
+        />
+      )}
     </EvoCardSection>
   );
 }

@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
 import EvoButton from '@/components/evosist_elements/EvoButton';
 import { RiWirelessChargingLine } from '@remixicon/react';
 
-const EvoBtnTurnOn = ({ onClick, className }) => {
+const EvoBtnTurnOn = forwardRef( ({ onClick, className }, ref) => {
   return (
     <EvoButton
+      ref={ref}
       // outlined
       buttonText="Aktifkan"
       icon={<RiWirelessChargingLine size={18} />}
@@ -14,7 +15,7 @@ const EvoBtnTurnOn = ({ onClick, className }) => {
       title='Aktifkan'
     />
   );
-};
+});
 
 // Tambahkan displayName untuk menghilangkan warning
 EvoBtnTurnOn.displayName = "EvoBtnTurnOn";

@@ -1,18 +1,15 @@
 //DataMemberSection.js
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import EvoTitleSection from '@/components/EvoTitleSection';
 import EvoCardSection from '@/components/evosist_elements/EvoCardSection';
 import EvoTable from '@/components/evosist_elements/EvoTable';
 import { RiAddLargeLine, RiSearchLine, RiUser3Line } from '@remixicon/react';
 import AddDataMemberForm from './forms/AddForm';
-import * as Popover from '@radix-ui/react-popover';
 import { exportExcel } from '@/helpers/exportExcel';
 import { exportPDF } from '@/helpers/exportPDF';
 import { exportPrint } from '@/helpers/exportPrint';
-import { monthNames } from '@/helpers/timeMonth';
-import { currentYear, years } from '@/helpers/timeYear';
 import { tableDataMember } from './tableDataMember';
 import EvoActionButtons from '@/components/EvoActionButtons';
 import { StatusLabel } from '@/components/StatusLabel';
@@ -26,10 +23,24 @@ import EvoErrorDiv from '@/components/EvoErrorDiv';
 import { getUserId } from '@/utils/db';
 import { fetchApiMasterDataDataMemberDelete } from './api/fetchApiMasterDataDataMemberDelete';
 import EvoNotifCard from '@/components/EvoNotifCard';
+import EditDataMemberForm from './forms/EditForm';
+import EditPerpanjangMasaAktifForm from './forms/EditPerpanjangMasaAktifForm';
+import EditGantiKartuForm from './forms/EditGantiKartuForm';
+import EditGantiNomorPolisiForm from './forms/EditGantiNomorPolisiForm';
+import ViewRiwayatTransaksiForm from './forms/ViewRiwayatTransaksiForm';
+import { ambilLevelPengguna } from '@/utils/levelPenggunaStorage';
+import EvoExportApiPDF from '@/components/EvoExportApiPDF';
+import EvoExportApiExcel from '@/components/EvoExportApiExcel';
+import EvoExportApiPrint from '@/components/EvoExportApiPrint';
 
 const titleSection = 'Data Member';
 
 export default function DataMemberSection() {
+  const urlExport = '/master-data/data-member/';
+  const [modalExportPDFOpen, setModalExportPDFOpen] = useState(false);
+  const [modalExportExcel, setModalExportExcel] = useState(false);
+  const [modalExportPrint, setModalExportPrint] = useState(false);
+
   const [modalOpen, setModalOpen] = useState(false);
   const handleTambah = () => setModalOpen(true);
   const handleTutup = () => setModalOpen(false);
@@ -39,6 +50,49 @@ export default function DataMemberSection() {
   const queryClient = useQueryClient();
   const [notifMessage, setNotifMessage] = useState('');
   const [notifType, setNotifType] = useState('success');
+
+  const [selectedEditData, setSelectedEdit] = useState(null);
+  const [modalEditOpen, setModalEditOpen] = useState(false);
+  const handleEditTutup = () => setModalEditOpen(false);
+
+  const [
+    selectedEditPerpanjangMasaAktifData,
+    setSelectedEditPerpanjangMasaAktif,
+  ] = useState(null);
+  const [
+    modalEditPerpanjangMasaAktifOpen,
+    setModalEditPerpanjangMasaAktifOpen,
+  ] = useState(false);
+  const handleEditPerpanjangMasaAktifTutup = () =>
+    setModalEditPerpanjangMasaAktifOpen(false);
+
+  const [selectedEditGantiKartuData, setSelectedEditGantiKartu] =
+    useState(null);
+  const [modalEditGantiKartuOpen, setModalEditGantiKartuOpen] = useState(false);
+  const handleEditGantiKartuTutup = () => setModalEditGantiKartuOpen(false);
+
+  const [selectedEditNomorPolisiData, setSelectedEditNomorPolisi] =
+    useState(null);
+  const [modalEditNomorPolisiOpen, setModalEditNomorPolisiOpen] =
+    useState(false);
+  const handleEditNomorPolisiTutup = () => setModalEditNomorPolisiOpen(false);
+
+  const [selectedViewRiwayatTransaksiData, setSelectedViewRiwayatTransaksi] =
+    useState(null);
+  const [modalViewRiwayatTransaksiOpen, setModalViewRiwayatTransaksiOpen] =
+    useState(false);
+  const handleViewRiwayatTransaksiTutup = () =>
+    setModalViewRiwayatTransaksiOpen(false);
+
+  const [dataHakAkses, setDataLevelSidebar] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const data = await ambilLevelPengguna();
+      setDataLevelSidebar(data);
+    };
+    fetchData();
+  }, []);
 
   const {
     data: masterDataDataMember,
@@ -57,6 +111,15 @@ export default function DataMemberSection() {
     // retry: false,
   });
 
+  const hakAksesMDDataMember =
+    dataHakAkses?.[0]?.hak_akses
+      ?.find((akses) => akses.nama_menu === 'Master Data')
+      ?.nama_sub_menu?.find((sub) => sub.nama === 'Data Member')?.aksi || {};
+
+  const tidakPunyaAkses = !Object.values(hakAksesMDDataMember).some(
+    (v) => v === true
+  );
+
   const handleSubmitData = (data) => {
     console.log('Data baru:', data);
     // Kirim ke API atau setState
@@ -66,6 +129,37 @@ export default function DataMemberSection() {
   const handleEdit = (id) => {
     console.log('Tombol Edit diklik untuk ID:', id);
     // Logika untuk melakukan edit (misalnya membuka form modal)
+
+    const dataDipilih = masterDataDataMember?.data?.find(
+      (item) => item.id === id
+    );
+
+    console.log(dataDipilih);
+
+    if (dataDipilih) {
+      setSelectedEdit({
+        json: dataDipilih || {},
+        id: dataDipilih.id,
+        nama: dataDipilih.nama || '',
+        // jenis_perusahaan: dataDipilih.jenis_perusahaan || '',
+        // kontak: dataDipilih.kontak || '',
+        no_hp: dataDipilih.no_hp || '',
+        perusahaan_id: dataDipilih.perusahaan_id || '',
+        akses_tiket: dataDipilih.akses_tiket || false,
+        akses_kartu: dataDipilih.akses_kartu || false,
+        no_kartu: dataDipilih.no_kartu || '',
+        tgl_input: dataDipilih.tgl_input || '',
+        produk_id: dataDipilih.produk_id || '',
+        tarif: dataDipilih.tarif || '',
+        biaya_member: dataDipilih.biaya_member || '',
+        biaya_kartu: dataDipilih.biaya_kartu || '',
+        user_id: dataDipilih.user_id || '',
+        periode: dataDipilih.periode || [],
+      });
+      // setModalEditOpen(true);
+      // setModalEditOpen(true);
+      setModalEditOpen(true);
+    }
   };
 
   // const [confirmMoreId, setConfirmMoreId] = useState(null);
@@ -88,21 +182,145 @@ export default function DataMemberSection() {
   const handlePerpanjang = (id) => {
     console.log('Perpanjang ID:', id);
     // Logika untuk melakukan edit (misalnya membuka form modal)
+
+    const dataDipilih = masterDataDataMember?.data?.find(
+      (item) => item.id === id
+    );
+
+    console.log(dataDipilih);
+
+    if (dataDipilih) {
+      setSelectedEditPerpanjangMasaAktif({
+        json: dataDipilih || {},
+        id: dataDipilih.id,
+        nama: dataDipilih.nama || '',
+        // jenis_perusahaan: dataDipilih.jenis_perusahaan || '',
+        // kontak: dataDipilih.kontak || '',
+        no_hp: dataDipilih.no_hp || '',
+        perusahaan_id: dataDipilih.perusahaan_id || '',
+        akses_tiket: dataDipilih.akses_tiket || false,
+        akses_kartu: dataDipilih.akses_kartu || false,
+        no_kartu: dataDipilih.no_kartu || '',
+        tgl_input: dataDipilih.tgl_input || '',
+        produk_id: dataDipilih.produk_id || '',
+        tarif: dataDipilih.tarif || '',
+        biaya_member: dataDipilih.biaya_member || '',
+        biaya_kartu: dataDipilih.biaya_kartu || '',
+        user_id: dataDipilih.user_id || '',
+        periode: dataDipilih.periode || [],
+      });
+      // setModalEditOpen(true);
+      // setModalEditOpen(true);
+      setModalEditPerpanjangMasaAktifOpen(true);
+    }
   };
 
   const handleGantiKartu = (id) => {
     console.log('Ganti Kartu ID:', id);
     // Logika untuk melakukan edit (misalnya membuka form modal)
+
+    const dataDipilih = masterDataDataMember?.data?.find(
+      (item) => item.id === id
+    );
+
+    console.log(dataDipilih);
+
+    if (dataDipilih) {
+      setSelectedEditGantiKartu({
+        json: dataDipilih || {},
+        id: dataDipilih.id,
+        nama: dataDipilih.nama || '',
+        // jenis_perusahaan: dataDipilih.jenis_perusahaan || '',
+        // kontak: dataDipilih.kontak || '',
+        no_hp: dataDipilih.no_hp || '',
+        perusahaan_id: dataDipilih.perusahaan_id || '',
+        akses_tiket: dataDipilih.akses_tiket || false,
+        akses_kartu: dataDipilih.akses_kartu || false,
+        no_kartu: dataDipilih.no_kartu || '',
+        tgl_input: dataDipilih.tgl_input || '',
+        produk_id: dataDipilih.produk_id || '',
+        tarif: dataDipilih.tarif || '',
+        biaya_member: dataDipilih.biaya_member || '',
+        biaya_kartu: dataDipilih.biaya_kartu || '',
+        user_id: dataDipilih.user_id || '',
+        periode: dataDipilih.periode || [],
+      });
+      // setModalEditOpen(true);
+      // setModalEditOpen(true);
+      setModalEditGantiKartuOpen(true);
+    }
   };
 
   const handleGantiNomorPolisi = (id) => {
     console.log('Ganti Nomor Polisi ID:', id);
     // Logika untuk melakukan edit (misalnya membuka form modal)
+
+    const dataDipilih = masterDataDataMember?.data?.find(
+      (item) => item.id === id
+    );
+
+    console.log(dataDipilih);
+
+    if (dataDipilih) {
+      setSelectedEditNomorPolisi({
+        json: dataDipilih || {},
+        id: dataDipilih.id,
+        nama: dataDipilih.nama || '',
+        // jenis_perusahaan: dataDipilih.jenis_perusahaan || '',
+        // kontak: dataDipilih.kontak || '',
+        no_hp: dataDipilih.no_hp || '',
+        perusahaan_id: dataDipilih.perusahaan_id || '',
+        akses_tiket: dataDipilih.akses_tiket || false,
+        akses_kartu: dataDipilih.akses_kartu || false,
+        no_kartu: dataDipilih.no_kartu || '',
+        tgl_input: dataDipilih.tgl_input || '',
+        produk_id: dataDipilih.produk_id || '',
+        tarif: dataDipilih.tarif || '',
+        biaya_member: dataDipilih.biaya_member || '',
+        biaya_kartu: dataDipilih.biaya_kartu || '',
+        user_id: dataDipilih.user_id || '',
+        periode: dataDipilih.periode || [],
+      });
+      // setModalEditOpen(true);
+      // setModalEditOpen(true);
+      setModalEditNomorPolisiOpen(true);
+    }
   };
 
   const handleRiwayatTransaksi = (id) => {
     console.log('Riwayat Transaksi ID:', id);
     // Logika untuk melakukan edit (misalnya membuka form modal)
+
+    const dataDipilih = masterDataDataMember?.data?.find(
+      (item) => item.id === id
+    );
+
+    console.log(dataDipilih);
+
+    if (dataDipilih) {
+      setSelectedViewRiwayatTransaksi({
+        json: dataDipilih || {},
+        id: dataDipilih.id,
+        nama: dataDipilih.nama || '',
+        // jenis_perusahaan: dataDipilih.jenis_perusahaan || '',
+        // kontak: dataDipilih.kontak || '',
+        no_hp: dataDipilih.no_hp || '',
+        perusahaan_id: dataDipilih.perusahaan_id || '',
+        akses_tiket: dataDipilih.akses_tiket || false,
+        akses_kartu: dataDipilih.akses_kartu || false,
+        no_kartu: dataDipilih.no_kartu || '',
+        tgl_input: dataDipilih.tgl_input || '',
+        produk_id: dataDipilih.produk_id || '',
+        tarif: dataDipilih.tarif || '',
+        biaya_member: dataDipilih.biaya_member || '',
+        biaya_kartu: dataDipilih.biaya_kartu || '',
+        user_id: dataDipilih.user_id || '',
+        periode: dataDipilih.periode || [],
+      });
+      // setModalEditOpen(true);
+      // setModalEditOpen(true);
+      setModalViewRiwayatTransaksiOpen(true);
+    }
   };
 
   const handleChange = (selectedValue) => {
@@ -112,29 +330,6 @@ export default function DataMemberSection() {
   const handleSearch = (query) => {
     console.log('Hasil pencarian:', query);
   };
-
-  // const rows = tableDataMember.rows.map((row) => ({
-  //   ...row,
-  //   aksesTiket: StatusLabel.status(row.aksesTiket), // Konversi akses tiket menjadi elemen visual
-  //   aksesKartu: StatusLabel.status(row.aksesKartu), // Konversi akses kartu menjadi elemen visual
-  //   status: StatusLabel.status(row.status), // Konversi status menjadi elemen visual
-  //   aksi: (
-  //     <EvoActionButtons
-  //       rowId={row.aksi}
-  //       onPerpanjang={() => handlePerpanjang(row.aksi)}
-  //       onGantiKartu={() => handleGantiKartu(row.aksi)}
-  //       onGantiNomorPolisi={() => handleGantiNomorPolisi(row.aksi)}
-  //       onRiwayatTransaksi={() => handleRiwayatTransaksi(row.aksi)}
-  //       onEdit={() => handleEdit(row.aksi)}
-  //       onDelete={() => handleDelete(row.aksi)}
-  //       // onMore={() => handleMore(row.aksi)}
-  //       isActive={row.status === 'Aktif'} // Status member digunakan sebagai indikator aktif/non-aktif
-  //       // onAktifkan={() => console.log('Aktifkan', row.aksi)}
-  //       // onNonAktifkan={() => console.log('NonAktifkan', row.aksi)}
-  //       moreAction={titleSection}
-  //     />
-  //   ),
-  // }));
 
   if (isLoading)
     return (
@@ -159,9 +354,13 @@ export default function DataMemberSection() {
   const rows =
     masterDataDataMember?.data?.map((row, index) => ({
       no: index + 1,
-      nama: row.nama || '-',
+      nama: row.nama == null ? '-' : <b>{row.nama || '-'}</b>,
       kontak: row.no_hp || '-',
-      perusahaan: row.perusahaan?.nama || '-',
+      perusahaan:
+        (row.perusahaan?.nama || '-') +
+        ' (' +
+        (row.perusahaan?.jenis_perusahaan || 'Tidak diketahui') +
+        ')',
       aksesTiket: StatusLabel.status(row.akses_tiket),
       aksesKartu: StatusLabel.status(row.akses_kartu),
       nomorKartu: row.no_kartu || '-',
@@ -178,17 +377,66 @@ export default function DataMemberSection() {
       aksi: (
         <EvoActionButtons
           rowId={row.id}
-          onPerpanjang={() => handlePerpanjang(row.id)}
-          onGantiKartu={() => handleGantiKartu(row.id)}
-          onGantiNomorPolisi={() => handleGantiNomorPolisi(row.id)}
-          onRiwayatTransaksi={() => handleRiwayatTransaksi(row.id)}
-          onEdit={() => handleEdit(row.id)}
-          onDelete={() => handleDelete(row.id)}
+          onPerpanjang={
+            hakAksesMDDataMember.perpanjang == true
+              ? () => handlePerpanjang(row.id)
+              : null
+          }
+          isGantiKartu={
+            hakAksesMDDataMember.ganti_kartu == true
+              ? row.akses_kartu || false
+              : false
+          }
+          onGantiKartu={
+            hakAksesMDDataMember.ganti_kartu == true
+              ? () => handleGantiKartu(row.id)
+              : null
+          }
+          isGantiNomorPolisi={
+            hakAksesMDDataMember.ganti_nomor_polisi == true
+              ? row.data_nomor_polisi.length > 0
+                ? true
+                : false
+              : false
+          }
+          onGantiNomorPolisi={
+            hakAksesMDDataMember.ganti_nomor_polisi == true
+              ? () => handleGantiNomorPolisi(row.id)
+              : null
+          }
+          onRiwayatTransaksi={
+            hakAksesMDDataMember.riwayat_transaksi == true
+              ? () => handleRiwayatTransaksi(row.id)
+              : null
+          }
+          onEdit={
+            hakAksesMDDataMember.update == true
+              ? () => handleEdit(perusahaan.id)
+              : null
+          }
+          onDelete={
+            hakAksesMDDataMember.delete == true
+              ? () => handleDelete(perusahaan.id)
+              : null
+          }
           isActive={true}
-          moreAction={titleSection}
+          moreAction={
+            hakAksesMDDataMember.perpanjang != true &&
+            hakAksesMDDataMember.ganti_kartu != true &&
+            hakAksesMDDataMember.ganti_nomor_polisi != true &&
+            hakAksesMDDataMember.riwayat_transaksi != true
+              ? ''
+              : titleSection
+          }
         />
       ),
     })) || [];
+
+  if (tidakPunyaAkses) {
+    return (
+      <EvoErrorDiv errorHandlerText="Anda tidak memiliki akses menuju halaman ini" />
+    );
+  }
 
   return (
     <>
@@ -207,33 +455,118 @@ export default function DataMemberSection() {
           // monthNames={monthNames}
           // years={years}
           handleChange={handleChange}
-          buttonText={`Tambah ${titleSection}`}
-          onButtonClick={handleTambah}
+          buttonText={
+            hakAksesMDDataMember.create == true ? `Tambah ${titleSection}` : ''
+          }
+          onButtonClick={
+            hakAksesMDDataMember.create == true ? handleTambah : () => {}
+          }
           icon={<RiAddLargeLine size={16} />}
-          onExportPDF={() => exportPDF('tableToPrint', titleSection)}
-          onExportExcel={() => exportExcel('tableToPrint', titleSection)}
-          onPrint={() => exportPrint('tableToPrint', titleSection)}
+          onExportPDF={
+            hakAksesMDDataMember.read == true
+              ? () => setModalExportPDFOpen(true)
+              : null
+          }
+          onExportExcel={
+            hakAksesMDDataMember.read == true
+              ? () => setModalExportExcel(true)
+              : null
+          }
+          onPrint={
+            hakAksesMDDataMember.read == true
+              ? () => setModalExportPrint(true)
+              : null
+          }
         />
-        <EvoSearchTabel
-          isFilter={true}
-          FilterComponent={FilterMasProdukMember}
-          placeholder="Ketik nama member atau nomor handphone member..."
-          onSearch={(data) => console.log('Hasil pencarian:', data)}
-        />
+        {hakAksesMDDataMember.read == true && (
+          <>
+            <EvoExportApiPDF
+              isOpen={modalExportPDFOpen}
+              onClose={() => setModalExportPDFOpen(false)}
+              endpoint={urlExport + 'pdf'}
+              filename={titleSection}
+            />
+            <EvoExportApiExcel
+              isOpen={modalExportExcel}
+              onClose={() => setModalExportExcel(false)}
+              endpoint={urlExport + 'excel'}
+              filename={titleSection}
+            />
+            <EvoExportApiPrint
+              isOpen={modalExportPrint}
+              onClose={() => setModalExportPrint(false)}
+              endpoint={urlExport + 'pdf'}
+            />
+          </>
+        )}
 
-        <AddDataMemberForm
-          isOpen={modalOpen}
-          onClose={handleTutup}
-          onSubmit={handleSubmitData}
-        />
-        <EvoTable
-          id="tableToPrint"
-          tableData={tableDataMember}
-          currentPage={currentPage}
-          totalPages={dataApi?.totalPages}
-          onPageChange={handlePageChange}
-          rows={rows}
-        />
+        {hakAksesMDDataMember.read == true && (
+          <EvoSearchTabel
+            isFilter={true}
+            FilterComponent={FilterMasProdukMember}
+            placeholder="Ketik nama member atau nomor handphone member..."
+            onSearch={(data) => console.log('Hasil pencarian:', data)}
+          />
+        )}
+        {hakAksesMDDataMember.create == true && (
+          <AddDataMemberForm
+            isOpen={modalOpen}
+            onClose={handleTutup}
+            onSubmit={handleSubmitData}
+          />
+        )}
+        {hakAksesMDDataMember.update == true && (
+          <EditDataMemberForm
+            isOpen={modalEditOpen}
+            onClose={handleEditTutup}
+            onSubmit={handleSubmitData}
+            initialData={selectedEditData}
+          />
+        )}
+        {hakAksesMDDataMember.perpanjang == true && (
+          <EditPerpanjangMasaAktifForm
+            isOpen={modalEditPerpanjangMasaAktifOpen}
+            onClose={handleEditPerpanjangMasaAktifTutup}
+            onSubmit={handleSubmitData}
+            initialData={selectedEditPerpanjangMasaAktifData}
+          />
+        )}
+        {hakAksesMDDataMember.ganti_kartu == true && (
+          <EditGantiKartuForm
+            isOpen={modalEditGantiKartuOpen}
+            onClose={handleEditGantiKartuTutup}
+            onSubmit={handleSubmitData}
+            initialData={selectedEditGantiKartuData}
+          />
+        )}
+
+        {hakAksesMDDataMember.ganti_nomor_polisi == true && (
+          <EditGantiNomorPolisiForm
+            isOpen={modalEditNomorPolisiOpen}
+            onClose={handleEditNomorPolisiTutup}
+            onSubmit={handleSubmitData}
+            initialData={selectedEditNomorPolisiData}
+          />
+        )}
+
+        {hakAksesMDDataMember.riwayat_transaksi == true && (
+          <ViewRiwayatTransaksiForm
+            isOpen={modalViewRiwayatTransaksiOpen}
+            onClose={handleViewRiwayatTransaksiTutup}
+            onSubmit={handleSubmitData}
+            initialData={selectedViewRiwayatTransaksiData}
+          />
+        )}
+        {hakAksesMDDataMember.read == true && (
+          <EvoTable
+            id="tableToPrint"
+            tableData={tableDataMember}
+            currentPage={currentPage}
+            totalPages={dataApi?.totalPages}
+            onPageChange={handlePageChange}
+            rows={rows}
+          />
+        )}
       </EvoCardSection>
     </>
   );

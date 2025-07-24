@@ -18,7 +18,7 @@ export default function PengaturanTarifParkir() {
     };
 
     checkAuth();
-  }, []);
+  }, [router]);
   return (
     <EvoLayout pageTitle="Pengaturan">
         <TarifParkirSection />

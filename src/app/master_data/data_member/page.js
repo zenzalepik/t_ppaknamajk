@@ -19,7 +19,7 @@ export default function MasterDataDataGerbang() {
     };
 
     checkAuth();
-  }, []);
+  }, [router]);
   return (
     <EvoLayout pageTitle="Master Data">
         <DataMemberSection />

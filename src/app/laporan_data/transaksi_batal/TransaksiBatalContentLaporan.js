@@ -1,33 +1,35 @@
-
-//OverNightSection.js
 'use client';
 
 import React, { useState } from 'react';
 import EvoTitleSection from '@/components/EvoTitleSection';
-import EvoCardSection from '@/components/evosist_elements/EvoCardSection';
 import EvoTable from '@/components/evosist_elements/EvoTable';
-import { RiAddLargeLine, RiSearchLine, RiUser3Line } from '@remixicon/react';
-import * as Popover from '@radix-ui/react-popover';
 import { exportExcel } from '@/helpers/exportExcel';
 import { exportPDF } from '@/helpers/exportPDF';
 import { exportPrint } from '@/helpers/exportPrint';
-import { monthNames } from '@/helpers/timeMonth';
-import { currentYear, years } from '@/helpers/timeYear';
 import { tableDataTransaksiBatalLaporan } from './data/tableDataTransaksiBatalLaporan';
-import EvoActionButtons from '@/components/EvoActionButtons';
-import { StatusLabel } from '@/components/StatusLabel';
 import EvoSearchTabel from '@/components/EvoSearchTabel';
-import FilterMasProdukMember from './FilterMasProdukMember';
-import EvoButton from '@/components/evosist_elements/EvoButton';
-import { RiUpload2Line } from '@remixicon/react';
 import {
   getDefaultDateAwal,
   getDefaultDateAkhir,
 } from '@/helpers/dateRangeHelper';
+import { fetchApiTransaksiBatalLaporan } from './api/fetchApiTransaksiBatalLaporan';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import Spinner from '@/components/Spinner';
+import EvoErrorDiv from '@/components/EvoErrorDiv';
+import { getErrorMessage } from '@/utils/errorHandler';
+import EvoExportApiPDF from '@/components/EvoExportApiPDF';
+import EvoExportApiExcel from '@/components/EvoExportApiExcel';
+import EvoExportApiPrint from '@/components/EvoExportApiPrint';
+import EvoNotifCard from '@/components/EvoNotifCard';
 
 const titleSection = 'Laporan Pembatalan Transaksi';
 
 export default function TransaksiBatalContentLaporan() {
+  const urlExport = '/laporan_transaksi_batal_laporan/';
+  const [modalExportPDFOpen, setModalExportPDFOpen] = useState(false);
+  const [modalExportExcel, setModalExportExcel] = useState(false);
+  const [modalExportPrint, setModalExportPrint] = useState(false);
+
   const [startDate, setStartDate] = React.useState(getDefaultDateAwal());
   const [endDate, setEndDate] = React.useState(getDefaultDateAkhir());
 
@@ -40,6 +42,32 @@ export default function TransaksiBatalContentLaporan() {
 
   const handleEdit = () => setModalOpen(true);
   const handleTutup = () => setModalOpen(false);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const queryClient = useQueryClient();
+  const [notifMessage, setNotifMessage] = useState('');
+  const [notifType, setNotifType] = useState('success');
+
+  const {
+    data: laporanTransaksiBatalLaporan,
+    error,
+    isLoading,
+  } = useQuery({
+    queryKey: ['laporanTransaksiBatalLaporan', currentPage],
+    queryFn: () =>
+      fetchApiTransaksiBatalLaporan({
+        limit: 5,
+        page: currentPage,
+        offset: (currentPage - 1) * 5,
+        sortBy: 'id',
+        sortOrder: 'desc',
+      }),
+    // retry: false,
+  });
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
 
   const handleSubmitData = (data) => {
     console.log('Data baru:', data);
@@ -54,60 +82,88 @@ export default function TransaksiBatalContentLaporan() {
     console.log('Hasil pencarian:', query);
   };
 
-  const rows = tableDataTransaksiBatalLaporan.rows.map((row) => ({
-    ...row,
-    // fileSettlementName: (
-    //   <a
-    //     href={`/path/to/files/${row.fileSettlementName}`}
-    //     target="_blank"
-    //     rel="noopener noreferrer"
-    //     className="text-primary underline hover:text-primary/80"
-    //   >
-    //     {row.fileSettlementName.length > 15
-    //       ? '...' + row.fileSettlementName.slice(-15)
-    //       : row.fileSettlementName}
-    //   </a>
-    // ),
+  const rows =
+    laporanTransaksiBatalLaporan?.data?.length > 0
+      ? laporanTransaksiBatalLaporan.data.map((row, index) => ({
+          no: index + 1,
+          // noTiket: <b>{row.noTiket != null ? row.noTiket : <i>*empty</i>}</b>,
+          // id: row.id || <i>*empty</i>,
+          noTiket: row.noTiket == null ? <i>*empty</i> : <b>{row.noTiket}</b>,
+          tglMasuk: row.tglMasuk || <i>*empty</i>,
+          pintuMasuk: row.pintuMasuk || <i>*empty</i>,
+          tanggalPembatalan: row.tanggalPembatalan || <i>*empty</i>,
+          alasanPembatalan: row.alasanPembatalan || <i>*empty</i>,
+          user: row.user || <i>*empty</i>,
+        }))
+      : [];
 
-    // settlementStatus: StatusLabel.settlementStatus(row.settlementStatus), // ambil dari 'settlementStatus'
-    /*aksi: (
-      <EvoActionButtons
-        rowId={row.aksi}
-        // onAktifkan={() => console.log('Aktifkan', row.aksi)}
-        // onNonAktifkan={() => console.log('NonAktifkan', row.aksi)}
-        customButtons={[
-          <EvoButton
-            key="unggahFileSettlement"
-            icon={<RiUpload2Line />}
-            onClick={
-              //() => handleUnggahFileSettlement(row.no)
-              handleEdit
-            }
-            buttonText={'Unggah File'}
-          />,
-        ]}
-      />
-    ),*/
-  }));
+  if (isLoading)
+    return (
+      <div className="h-full flex flex-col gap-2 justify-center items-center text-center text-primary">
+        <Spinner size={32} color="border-black" />
+        Loading...
+      </div>
+    );
+
+  if (error) {
+    return <EvoErrorDiv errorHandlerText={getErrorMessage(error)} />;
+  }
+
   return (
-    <div className='flex flex-col gap-4'>
-     
+    <div className="flex flex-col gap-4">
+      {notifMessage && (
+        <EvoNotifCard
+          message={notifMessage}
+          onClose={() => setNotifMessage('')}
+          type={notifType}
+          autoClose={true}
+        />
+      )}
       <EvoTitleSection
         title={titleSection}
-        // radioItems={radioItems}
-        // monthNames={monthNames}
-        // years={years}
-        // handleChange={handleChange}
-        // buttonText={`Tambah ${titleSection}`}
-        // onButtonClick={handleEdit}
-        // icon={<RiAddLargeLine size={16} />}
-        onExportPDF={() => exportPDF('tableToPrint', titleSection)}
-        onExportExcel={() => exportExcel('tableToPrint', titleSection)}
-        onPrint={() => exportPrint('tableToPrint', titleSection)}
-                onDateAkhir={getDefaultDateAkhir}
-                onDateAwal={getDefaultDateAwal}
-                onDateChange={handleDateChange}
+        onExportPDF={
+          // hakAksesMDPerusahaan.read == true
+          //   ?
+          () => setModalExportPDFOpen(true)
+          // : null
+        }
+        onExportExcel={
+          // hakAksesMDPerusahaan.read == true
+          //   ?
+          () => setModalExportExcel(true)
+          // : null
+        }
+        onPrint={
+          // hakAksesMDPerusahaan.read == true
+          //   ?
+          () => setModalExportPrint(true)
+          // : null
+        }
+        onDateAkhir={getDefaultDateAkhir}
+        onDateAwal={getDefaultDateAwal}
+        onDateChange={handleDateChange}
       />
+      {/* {hakAksesMDPerusahaan.read == true && ( */}
+      <>
+        <EvoExportApiPDF
+          isOpen={modalExportPDFOpen}
+          onClose={() => setModalExportPDFOpen(false)}
+          endpoint={urlExport + 'pdf'}
+          filename={titleSection}
+        />
+        <EvoExportApiExcel
+          isOpen={modalExportExcel}
+          onClose={() => setModalExportExcel(false)}
+          endpoint={urlExport + 'excel'}
+          filename={titleSection}
+        />
+        <EvoExportApiPrint
+          isOpen={modalExportPrint}
+          onClose={() => setModalExportPrint(false)}
+          endpoint={urlExport + 'pdf'}
+        />
+      </>
+      {/* )} */}
       <EvoSearchTabel
         // isFilter={true}
         // FilterComponent={FilterMasProdukMember}
@@ -115,20 +171,14 @@ export default function TransaksiBatalContentLaporan() {
         onSearch={(data) => console.log('Hasil pencarian:', data)}
       />
 
-      
       <EvoTable
         id="tableToPrint"
         tableData={tableDataTransaksiBatalLaporan}
-        currentPage={1}
-        totalPages={3}
-        onPageChange={
-          (page) => console.log('Page:', page)
-          // columns={tableDataTransaksiBatalLaporan.columns} rows={rows}
-        }
+        currentPage={currentPage}
+        totalPages={laporanTransaksiBatalLaporan?.totalPages}
+        onPageChange={handlePageChange}
         rows={rows}
       />
-    
-  
     </div>
   );
 }

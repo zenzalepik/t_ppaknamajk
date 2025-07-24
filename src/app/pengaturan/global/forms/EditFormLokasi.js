@@ -93,6 +93,9 @@ const EditLokasiForm = ({ isOpen, onClose, onSubmit, initialData = null }) => {
       setNotifType('success');
 
       setTimeout(() => handleCloseModal(), 500);
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000); // kasih delay biar notif sempat tampil
     } catch (error) {
       setNotifMessage(error.message);
       setNotifType('error');

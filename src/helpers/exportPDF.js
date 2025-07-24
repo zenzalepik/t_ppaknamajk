@@ -1,5 +1,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { getPengaturanGlobal } from '@/utils/dbGlobals';
+import strings from '@/utils/strings';
 
 /**
  * Fungsi untuk mengubah URL gambar ke Base64
@@ -30,6 +32,9 @@ const loadImageAsBase64 = (url) => {
  * @param {string} logoUrl - Path logo PNG (default: '/images/png/logo.png')
  */
 export const exportPDF = async (tableId, titleSection, logoUrl = '/images/png/logo.png') => {
+  const storedGlobal = await getPengaturanGlobal();
+  const dataGlobal = storedGlobal?.data?.[0];
+
   const element = document.getElementById(tableId);
   if (!element) {
     console.error('Elemen tabel tidak ditemukan.');
@@ -81,7 +86,7 @@ export const exportPDF = async (tableId, titleSection, logoUrl = '/images/png/lo
     doc.addImage(logoBase64, 'PNG', margin, margin, 16, 16);
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
-    doc.text('Evosist Parking', margin + 20, margin + 12);
+    doc.text(dataGlobal?.nama_operator || strings.appName, margin + 20, margin + 12);
 
     const devText = 'Developed by Evosist';
     doc.setFontSize(8);

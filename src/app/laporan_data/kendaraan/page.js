@@ -18,7 +18,7 @@ export default function LaporanDataKendaraan() {const router = useRouter();
     };
 
     checkAuth();
-  }, []);
+  }, [router]);
   return (
     <EvoLayout pageTitle="Laporan Data">
         <KendaraanSection />

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import EvoTitleSection from '@/components/EvoTitleSection';
-import EvoTableMulti from '@/components/evosist_elements/EvoTableMulti';
 import {
   RiImageLine,
   RiAddLargeLine,
@@ -8,12 +7,6 @@ import {
   RiUser3Line,
 } from '@remixicon/react';
 import PembatalanTansaksiForm from './forms/PembatalanTansaksiForm';
-import * as Popover from '@radix-ui/react-popover';
-import { exportExcel } from '@/helpers/exportExcel';
-import { exportPDF } from '@/helpers/exportPDF';
-import { exportPrint } from '@/helpers/exportPrint';
-import { monthNames } from '@/helpers/timeMonth';
-import { currentYear, years } from '@/helpers/timeYear';
 import { tableDataTransaksiBatal } from './data/tableDataTransaksiBatal';
 import EvoActionButtons from '@/components/EvoActionButtons';
 import { StatusLabel } from '@/components/StatusLabel';
@@ -22,6 +15,12 @@ import FilterMasProdukMember from './FilterMasProdukMember';
 import EvoButton from '@/components/evosist_elements/EvoButton';
 import EvoTable from '@/components/evosist_elements/EvoTable';
 import colors from '@/utils/colors';
+import { fetchApiTransaksiBatal } from './api/fetchApiTransaksiBatal';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import Spinner from '@/components/Spinner';
+import EvoErrorDiv from '@/components/EvoErrorDiv';
+import { getErrorMessage } from '@/utils/errorHandler';
+import EvoNotifCard from '@/components/EvoNotifCard';
 
 const titleSection = 'Kirim Pembatalan Transaksi';
 
@@ -31,6 +30,32 @@ export default function TransaksiBatalContentTambah() {
 
   const handleTambahPengaduan = () => setModalOpenPengaduan(true);
   const handleTutup = () => setModalOpenPengaduan(false);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const queryClient = useQueryClient();
+  const [notifMessage, setNotifMessage] = useState('');
+  const [notifType, setNotifType] = useState('success');
+
+  const {
+    data: laporanTransaksiBatal,
+    error,
+    isLoading,
+  } = useQuery({
+    queryKey: ['laporanTransaksiBatal', currentPage],
+    queryFn: () =>
+      fetchApiTransaksiBatal({
+        limit: 5,
+        page: currentPage,
+        offset: (currentPage - 1) * 5,
+        sortBy: 'id',
+        sortOrder: 'desc',
+      }),
+    // retry: false,
+  });
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
 
   const handleSubmitData = (data) => {
     console.log('Data baru:', data);
@@ -91,18 +116,16 @@ export default function TransaksiBatalContentTambah() {
     console.log('Hasil pencarian:', query);
   };
 
-  const rows = tableDataTransaksiBatal.rows.map((row) => ({
+  /*const rows = tableDataTransaksiBatal.rows.map((row) => ({
     ...row,
     status: StatusLabel.status(row.status), // Konversi status menjadi elemen visual
     member: row.member ? 'Ya' : 'Tidak',
     manualInput: row.manualInput ? 'Ya' : 'Tidak',
     kartuMember: row.kartuMember ? 'Ya' : 'Tidak',
-    // Menampilkan "-" untuk nilai yang null
     namaBank: row.namaBank ?? '-',
     nomorRekening: row.nomorRekening ?? '-',
     namaEwallet: row.namaEwallet ?? '-',
     nomorEwallet: row.nomorEwallet ?? '-',
-    // Tampilkan link jika `row.foto` memiliki isi, jika tidak tampilkan "-"
     foto: row.foto ? (
       <EvoButton
         key={`prosesPerbaikan-${row.no}`}
@@ -129,10 +152,94 @@ export default function TransaksiBatalContentTambah() {
         ]}
       />
     ),
-  }));
+  }));*/
+
+  const rows =
+    laporanTransaksiBatal?.data?.length > 0
+      ? laporanTransaksiBatal.data.map((row, index) => ({
+          no: index + 1,
+
+          // id: row.id || <i>*emtpty</i>,
+          nomorTiket: row.nomorTiket == null ? <i>*emtpty</i> : <b>{row.nomorTiket}</b>,
+          nomorPolisi: row.nomorPolisi || <i>*emtpty</i>,
+          jenisKendaraan: row.jenisKendaraan || <i>*emtpty</i>,
+          member: row.member ? 'Ya' : 'Tidak',
+          manualInput: row.manualInput ? 'Ya' : 'Tidak',
+          waktuMasuk: row.waktuMasuk || <i>*emtpty</i>,
+          waktuKeluar: row.waktuKeluar || <i>*emtpty</i>,
+          gerbangMasuk: row.gerbangMasuk || <i>*emtpty</i>,
+          gerbangKeluar: row.gerbangKeluar || <i>*emtpty</i>,
+          durasiParkir: row.durasiParkir || <i>*emtpty</i>,
+          denda: row.denda || <i>*emtpty</i>,
+          totalPembayaran: row.totalPembayaran || <i>*emtpty</i>,
+          status:
+            row.status != null ? (
+              StatusLabel.status(row.status)
+            ) : (
+              <i>*emtpty</i>
+            ),
+          tipe: row.tipe || <i>*emtpty</i>,
+          pembayaran: row.pembayaran || <i>*emtpty</i>,
+          kartuMember: row.kartuMember ? 'Ya' : 'Tidak',
+          namaBank: row.namaBank ?? '-',
+          nomorRekening: row.nomorRekening ?? '-',
+          namaEwallet: row.namaEwallet ?? '-',
+          nomorEwallet: row.nomorEwallet ?? '-',
+          petugas: row.petugas || <i>*emtpty</i>,
+          shift: row.shift || <i>*emtpty</i>,
+          foto: row.foto ? (
+            <EvoButton
+              key={`prosesPerbaikan-${row.no}`}
+              outlined={true}
+              icon={<RiImageLine />}
+              onClick={() =>
+                window.open(row.foto, '_blank', 'noopener,noreferrer')
+              }
+              buttonText={'Lihat Foto'}
+            />
+          ) : (
+            '-'
+          ),
+
+          aksi: (
+            <EvoActionButtons
+              rowId={row.no}
+              moreAction={titleSection}
+              customButtons={[
+                <EvoButton
+                  key={`prosesPerbaikan-${row.no}`}
+                  onClick={() => handleProsesPerbaikan(row.no)}
+                  fillColor={colors.danger}
+                  buttonText={'Batalkan Transaksi'}
+                />,
+              ]}
+            />
+          ),
+        }))
+      : [];
+
+  if (isLoading)
+    return (
+      <div className="h-full flex flex-col gap-2 justify-center items-center text-center text-primary">
+        <Spinner size={32} color="border-black" />
+        Loading...
+      </div>
+    );
+
+  if (error) {
+    return <EvoErrorDiv errorHandlerText={getErrorMessage(error)} />;
+  }
 
   return (
     <div className="flex flex-col gap-4">
+      {notifMessage && (
+        <EvoNotifCard
+          message={notifMessage}
+          onClose={() => setNotifMessage('')}
+          type={notifType}
+          autoClose={true}
+        />
+      )}
       <EvoTitleSection
         title={titleSection}
         handleChange={handleChange}
@@ -157,9 +264,9 @@ export default function TransaksiBatalContentTambah() {
         <EvoTable
           id="tableToPrint"
           tableData={tableDataTransaksiBatal}
-          currentPage={1}
-          totalPages={3}
-          onPageChange={(page) => console.log('Page:', page)}
+          currentPage={currentPage}
+          totalPages={laporanTransaksiBatal?.totalPages}
+          onPageChange={handlePageChange}
           rows={rows}
         />
       )}

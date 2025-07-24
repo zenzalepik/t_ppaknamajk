@@ -19,7 +19,7 @@ export default function PengaturanTarifDenda() {
     };
 
     checkAuth();
-  }, []);
+  }, [router]);
   return (
     <EvoLayout pageTitle="Pengaturan">
         <TarifDendaSection />

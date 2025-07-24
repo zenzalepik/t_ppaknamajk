@@ -14,30 +14,83 @@ import {
 } from '@remixicon/react';
 import EvoButton from '@/components/evosist_elements/EvoButton';
 import colors from '@/utils/colors';
-import TiketForm from './TiketForm';
+import TiketProdukVoucherForm from './TiketProdukVoucherForm';
 // import dataKendaraan from '../data/dataKendaraan';
 import EvoTicketVoucher from '@/components/EvoTicketVoucher';
 import { tableProdukVoucher } from '../../produk_voucher/tableProdukVoucher';
+import { fetchApiMasterDataProdukVoucher } from '@/app/master_data/produk_voucher/api/fetchApiMasterDataProdukVoucher';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { fetchApiMasterDataDataKendaraan } from '@/app/master_data/data_kendaraan/api/fetchApiMasterDataDataKendaraan';
+import { fetchApiMasterDataDataVoucherCreate } from '../api/fetchApiMasterDataDataVoucherCreate';
 
 const AddDataVoucherForm = ({ isOpen, onClose, onSubmit, vouchers }) => {
   const [modalVoucherOpen, setModalVoucherOpen] = useState(false);
   const [selectedVoucher, setSelectedVoucher] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const [errors, setErrors] = useState({});
+  const [notifMessage, setNotifMessage] = useState('');
+  const [notifType, setNotifType] = useState('success');
+  const queryClient = useQueryClient();
+
+  const {
+    data: kendaraanData,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ['kendaraanData'],
+    queryFn: fetchApiMasterDataDataKendaraan,
+  });
+
+  const {
+    data: masterDataProdukVoucher,
+    errorProdukVoucher,
+    isLoadingProdukVoucher,
+  } = useQuery({
+    queryKey: ['masterDataProdukVoucher', currentPage],
+    queryFn: () =>
+      fetchApiMasterDataProdukVoucher({
+        limit: 305,
+        page: currentPage,
+        // offset: (currentPage - 1) * 5,
+        sortBy: 'id',
+        sortOrder: 'desc',
+      }),
+  });
+
+  const [formData, setFormData] = useState({
+    // namaVoucher: '',
+    no_tiket_atau_nopol: '',
+    kendaraan_id: '',
+    keterangan: '',
+  });
+
+  // ✅ Fungsi untuk mereset pilihan saat modal ditutup
+  const handleCloseModal = () => {
+    setFormData({
+      nama: '',
+      periode_mulai: '',
+      periode_akhir: '',
+      periode: [],
+      // periode_value: '',
+      // periode_unit: '',
+      list_id_kendaraan: [],
+      max_kendaraan: '',
+      tarif: '',
+      biaya_kartu: '',
+      biaya_ganti_nopol: '',
+      status: false,
+    });
+    setErrors({});
+    setNotifMessage('');
+    setSelectedVoucher(null);
+    onClose();
+  };
 
   const handleSelectVoucher = (voucher) => {
     setSelectedVoucher(voucher);
     setModalVoucherOpen(false);
   };
-
-  const [formData, setFormData] = useState({
-    // namaVoucher: '',
-    nomorTiketAtauPolisi: '',
-    jenisKendaraan: '',
-    keterangan: '',
-  });
-
-  const [errors, setErrors] = useState({});
-  const [notifMessage, setNotifMessage] = useState('');
-  const [notifType, setNotifType] = useState('success');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -51,7 +104,7 @@ const AddDataVoucherForm = ({ isOpen, onClose, onSubmit, vouchers }) => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!selectedVoucher) {
@@ -70,10 +123,10 @@ const AddDataVoucherForm = ({ isOpen, onClose, onSubmit, vouchers }) => {
     // }
 
     const newErrors = {
-      nomorTiketAtauPolisi:
-        formData.nomorTiketAtauPolisi === '' ? 'Kontak wajib diisi' : '',
-      jenisKendaraan:
-        formData.jenisKendaraan === '' ? 'Jenis Kendaraan wajib diisi' : '',
+      no_tiket_atau_nopol:
+        formData.no_tiket_atau_nopol === '' ? 'Kontak wajib diisi' : '',
+      kendaraan_id:
+        formData.kendaraan_id === '' ? 'Jenis Kendaraan wajib diisi' : '',
       keterangan: formData.keterangan === '' ? 'Keterangan wajib diisi' : '',
     };
 
@@ -85,14 +138,44 @@ const AddDataVoucherForm = ({ isOpen, onClose, onSubmit, vouchers }) => {
       return;
     }
 
-    // onSubmit?.(formData);
-    onSubmit?.({ ...formData, selectedVoucher });
+    const finalData = {
+      ...formData,
+      produk_voucher_id: selectedVoucher.id,
+      tarif: selectedVoucher.tarif || '',
+      model_bayar: selectedVoucher.model_pembayaran || '',
+      verifikasi: selectedVoucher.metode_verifikasi || '',
+      periode: [
+        selectedVoucher.periode[0].value || '',
+        selectedVoucher.periode[1].value || '',
+      ],
+    };
 
-    setNotifMessage('Data berhasil disimpan!');
-    setNotifType('success');
+    console.log('Data yang akan dikirim ke onSubmit:', finalData);
 
-    setTimeout(() => onClose(), 2000);
+    // onSubmit?.(finalData);
+    try {
+      await fetchApiMasterDataDataVoucherCreate(finalData);
+
+      queryClient.invalidateQueries(['masterDataDataVoucher']); // Refresh tabel setelah tambah data
+
+      setNotifMessage('Data voucher berhasil disimpan!');
+      setNotifType('success');
+
+      setTimeout(() => handleCloseModal(), 500);
+    } catch (error) {
+      setNotifMessage(error.message);
+      setNotifType('error');
+    }
   };
+
+  {
+    isLoadingProdukVoucher && <p>Memuat data voucher...</p>;
+  }
+  {
+    errorProdukVoucher && (
+      <p className="text-red-500">Gagal mengambil data voucher</p>
+    );
+  }
 
   return (
     <>
@@ -105,12 +188,16 @@ const AddDataVoucherForm = ({ isOpen, onClose, onSubmit, vouchers }) => {
         />
       )}
 
-      <EvoModal isOpen={isOpen} onClose={onClose} title="Tambah Voucher">
+      <EvoModal
+        isOpen={isOpen}
+        onClose={handleCloseModal}
+        title="Tambah Voucher"
+      >
         <EvoForm
           onSubmit={handleSubmit}
           submitText="Simpan"
           cancelText="Batal"
-          onCancel={onClose}
+          onCancel={handleCloseModal}
         >
           <div className="text-title_small">
             <span className="text-primary">A.</span> Produk Voucher
@@ -124,34 +211,47 @@ const AddDataVoucherForm = ({ isOpen, onClose, onSubmit, vouchers }) => {
             type="button"
             outlined={selectedVoucher == null ? false : true}
           />
-          {errors.ticket && (
-            <p className="text-red-500 text-sm">{errors.ticket}</p>
+          {errors.voucher && (
+            <p className="text-red-500 text-sm">{errors.voucher}</p>
           )}
           {selectedVoucher && <EvoTicketVoucher voucher={selectedVoucher} />}
-
+          {/* <pre>{JSON.stringify(selectedVoucher, null, 2)}</pre> */}
           <div className="text-title_small">
             <span className="text-primary">B.</span> Data Voucher
           </div>
           <EvoInText
-            name="nomorTiketAtauPolisi"
+            name="no_tiket_atau_nopol"
             label="Nomor Tiket / Nomor Polisi"
             placeholder="Masukkan nomor tiket / nomor polisi"
-            value={formData.nomorTiketAtauPolisi}
+            value={formData.no_tiket_atau_nopol || ''}
             onChange={handleChange}
-            error={errors.nomorTiketAtauPolisi}
+            error={errors.no_tiket_atau_nopol}
           />
           <EvoInDropdown
-            name="jenisKendaraan"
-            label="Jenis Kendaraan"
-            options={[
-              { label: 'Jenis Kendaraan', value: 'A' },
-              { label: 'Jenis Kendaraan', value: 'B' },
-            ]}
-            value={formData.jenisKendaraan}
-            onChange={(value) =>
-              setFormData((prev) => ({ ...prev, jenisKendaraan: value }))
+            name="kendaraan_id"
+            label="Kendaraan"
+            options={
+              selectedVoucher?.list_id_kendaraan?.map((id) => {
+                const kendaraan = kendaraanData?.data.find(
+                  (item) => item.id.toString() === id.toString()
+                );
+
+                return {
+                  label: kendaraan
+                    ? `${kendaraan.nama_kendaraan} (${
+                        kendaraan.tipe_kendaraan?.tipe_kendaraan || '-'
+                      })`
+                    : `ID Kendaraan: ${id}`, // fallback jika tidak ditemukan
+                  value: id.toString(),
+                };
+              }) || []
             }
-            error={errors.jenisKendaraan}
+            value={formData.kendaraan_id || ''}
+            onChange={(value) => {
+              setFormData((prev) => ({ ...prev, kendaraan_id: value }));
+              console.log(value);
+            }}
+            error={errors.kendaraan_id}
             placeholder="Pilih jenis kendaraan"
           />
 
@@ -159,18 +259,19 @@ const AddDataVoucherForm = ({ isOpen, onClose, onSubmit, vouchers }) => {
             name="keterangan"
             label="Keterangan"
             placeholder="Masukkan keterangan"
-            value={formData.keterangan}
+            value={formData.keterangan || ''}
             onChange={handleChange}
             error={errors.keterangan}
           />
         </EvoForm>
       </EvoModal>
 
-      <TiketForm
+      <TiketProdukVoucherForm
         isOpen={modalVoucherOpen}
         onClose={() => setModalVoucherOpen(false)}
         onSubmit={handleSelectVoucher}
-        listVouchers={tableProdukVoucher.rows} // Pastikan mengambil data voucher
+        listVouchers={masterDataProdukVoucher?.data || []}
+        // onReceiveListIdKendaraan={handleListIdKendaraanFromChild}
       />
     </>
   );

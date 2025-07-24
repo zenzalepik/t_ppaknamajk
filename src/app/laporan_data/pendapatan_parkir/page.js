@@ -20,7 +20,7 @@ export default function LaporanDataPendapatanParkir() {
     };
 
     checkAuth();
-  }, []);
+  }, [router]);
   return (
     <EvoLayout pageTitle="Laporan Data">
         <PendapatanSection />

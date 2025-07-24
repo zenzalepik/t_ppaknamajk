@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect ,useState } from 'react';
 import EvoTitleSection from '@/components/EvoTitleSection';
 import EvoCardSection from '@/components/evosist_elements/EvoCardSection';
 import { RiAddLargeLine, RiWallet3Line } from '@remixicon/react';
@@ -11,6 +11,8 @@ import EvoCardTambahTransaksi from '@/components/EvoCardTambahTransaksi';
 import { motion } from 'framer-motion';
 import AddManualForm from './forms/AddManualForm';
 import AddTunaiForm from './forms/AddTunaiForm';
+import { ambilLevelPengguna } from '@/utils/levelPenggunaStorage';
+import EvoErrorDiv from '@/components/EvoErrorDiv';
 
 const titleSection = 'Tambah Transaksi';
 
@@ -23,6 +25,26 @@ export default function TambahTransaksiSection() {
 
   const handleManualTutup = () => setModalOpenManual(false);
   const handleTunaiTutup = () => setModalOpenTunai(false);
+
+  const [dataHakAkses, setDataLevelSidebar] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const data = await ambilLevelPengguna();
+      setDataLevelSidebar(data);
+    };
+    fetchData();
+  }, []);
+
+  const hakAksesLDTransaksi =
+    dataHakAkses?.[0]?.hak_akses
+      ?.find((akses) => akses.nama_menu === 'Transaksi')
+      ?.nama_sub_menu?.find((sub) => sub.nama === 'Tambah Transaksi')?.aksi ||
+    {};
+
+  const tidakPunyaAkses = !Object.values(hakAksesLDTransaksi).some(
+    (v) => v === true
+  );
 
   const handleTurnOff = (paymentType) => {
     console.log(`Menonaktifkan ${paymentType}`);
@@ -46,36 +68,48 @@ export default function TambahTransaksiSection() {
     // Kirim ke API atau setState
   };
 
+  if (tidakPunyaAkses) {
+    return (
+      <EvoErrorDiv errorHandlerText="Anda tidak memiliki akses menuju halaman ini" />
+    );
+  }
+
   return (
     <>
-      <AddManualForm
-        isOpen={modalOpenManual}
-        onClose={handleManualTutup}
-        onSubmit={handleManualSubmitData}
-      />
-      <AddTunaiForm
-        isOpen={modalOpenTunai}
-        onClose={handleTunaiTutup}
-        onSubmit={handleTunaiSubmitData}
-      />
+      {hakAksesLDTransaksi.create == true && (
+        <AddManualForm
+          isOpen={modalOpenManual}
+          onClose={handleManualTutup}
+          onSubmit={handleManualSubmitData}
+        />
+      )}
+      {hakAksesLDTransaksi.create == true && (
+        <AddTunaiForm
+          isOpen={modalOpenTunai}
+          onClose={handleTunaiTutup}
+          onSubmit={handleTunaiSubmitData}
+        />
+      )}
       <EvoCardSection>
         {/* Animasi dengan Framer Motion */}
-        <div className="grid grid-cols-2 gap-6 ">
-          <EvoCardTambahTransaksi
-            key="Tambah Transaksi Manual"
-            title="Tambah Transaksi Manual"
-            updatedBy="Muhtar Lubis Asyari"
-            updatedDate="18-11-2021 21:39"
-            action={handleTambahManual}
-          />
-          <EvoCardTambahTransaksi
-            key="Tambah Transaksi Tunai"
-            title="Tambah Transaksi Tunai"
-            updatedBy="Muhtar Lubis Asyari"
-            updatedDate="18-11-2021 21:39"
-            action={handleTambahTunai}
-          />
-        </div>
+        {hakAksesLDTransaksi.create == true && (
+          <div className="grid grid-cols-2 gap-6 ">
+            <EvoCardTambahTransaksi
+              key="Tambah Transaksi Manual"
+              title="Tambah Transaksi Manual"
+              updatedBy="Muhtar Lubis Asyari"
+              updatedDate="18-11-2021 21:39"
+              action={handleTambahManual}
+            />
+            <EvoCardTambahTransaksi
+              key="Tambah Transaksi Tunai"
+              title="Tambah Transaksi Tunai"
+              updatedBy="Muhtar Lubis Asyari"
+              updatedDate="18-11-2021 21:39"
+              action={handleTambahTunai}
+            />
+          </div>
+        )}
       </EvoCardSection>
     </>
   );

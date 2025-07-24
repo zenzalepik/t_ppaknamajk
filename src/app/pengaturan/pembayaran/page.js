@@ -18,7 +18,7 @@ export default function PengaturanGlobal() {
     };
 
     checkAuth();
-  }, []);
+  }, [router]);
   return (
     <EvoLayout pageTitle="Pengaturan">
         <PembayaranSection />

@@ -59,16 +59,16 @@ body {
   overflow: visible;
 }
 
-.evo_sidebar_collapsed .evo_sidebar_menu_button:hover .evo_sidebar_menu_text{
-  width:164px;
-  background:#FF5B2A;
-  position:absolute;
-  left:0;
-  padding-top:4px !important;
-  padding-bottom:4px !important;
-  height:fit-content !important;
-  margin-left:40px;
-  border-radius:12px;
+.evo_sidebar_collapsed .evo_sidebar_menu_button:hover .evo_sidebar_menu_text {
+  width: 164px;
+  background: #ff5b2a;
+  position: absolute;
+  left: 0;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+  height: fit-content !important;
+  margin-left: 40px;
+  border-radius: 12px;
   /* position:absolute; */
 }
 
@@ -92,10 +92,10 @@ body {
   left: 0;
 }
 
-.evo_sidebar_collapsed .evo_sidebar_dropdown_content{
-  position:absolute;
-  width:160px;
-  left:56px;
+.evo_sidebar_collapsed .evo_sidebar_dropdown_content {
+  position: absolute;
+  width: 160px;
+  left: 56px;
   background: black;
 }
 
@@ -141,4 +141,12 @@ button:hover {
   top: 100%;
   left: 50%;
   transform: translateX(-50%);
+}
+
+.evo_title_bar {
+  @apply transition-all   z-[51] h-[38px] flex  bg-[#1e1e1e] text-white pl-[10px];
+}
+
+.evo_title_bar_fullsreen {
+  @apply transition-all opacity-0 hover:opacity-100 z-[51] h-[8px] hover:h-[38px] overflow-hidden absolute right-0 left-0  bg-[#1e1e1e] text-white pl-[10px];
 }

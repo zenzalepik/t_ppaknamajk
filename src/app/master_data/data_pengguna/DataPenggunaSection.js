@@ -1,7 +1,7 @@
 //DataPenggunaSection.js
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import EvoTitleSection from '@/components/EvoTitleSection';
 import EvoCardSection from '@/components/evosist_elements/EvoCardSection';
 import EvoTable from '@/components/evosist_elements/EvoTable';
@@ -20,10 +20,27 @@ import EvoSearchTabel from '@/components/EvoSearchTabel';
 import FilterMasDataPengguna from './FilterMasDataPengguna';
 import { fetchApiMasterDataDataPengguna } from './api/fetchApiMasterDataDataPengguna';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { fetchApiMasterDataDataPenggunaDelete } from './api/fetchApiMasterDataDataPenggunaDelete';
+import EvoNotifCard from '@/components/EvoNotifCard';
+import EditDataPenggunaForm from './forms/EditForm';
+import { useHookStatusDataPengguna } from './hooks/useHookStatusDataPengguna';
+import { fetchApiMasterDataPerusahaan } from '@/app/master_data/perusahaan/api/fetchApiMasterDataPerusahaan';
+import Spinner from '@/components/Spinner';
+import { getErrorMessage } from '@/utils/errorHandler';
+import { ambilLevelPengguna } from '@/utils/levelPenggunaStorage';
+import EvoErrorDiv from '@/components/EvoErrorDiv';
+import EvoExportApiPDF from '@/components/EvoExportApiPDF';
+import EvoExportApiExcel from '@/components/EvoExportApiExcel';
+import EvoExportApiPrint from '@/components/EvoExportApiPrint';
 
 const titleSection = 'Data Pengguna';
 
 export default function DataPenggunaSection() {
+  const urlExport = '/profile/';
+  const [modalExportPDFOpen, setModalExportPDFOpen] = useState(false);
+  const [modalExportExcel, setModalExportExcel] = useState(false);
+  const [modalExportPrint, setModalExportPrint] = useState(false);
+
   const [modalOpen, setModalOpen] = useState(false);
 
   const handleTambah = () => setModalOpen(true);
@@ -36,6 +53,42 @@ export default function DataPenggunaSection() {
   const [notifMessage, setNotifMessage] = useState('');
   const [notifType, setNotifType] = useState('success');
 
+  const [selectedEditData, setSelectedEdit] = useState(null);
+  const [modalEditOpen, setModalEditOpen] = useState(false);
+  const handleEditTutup = () => setModalEditOpen(false);
+
+  const { toggleStatus, notif, setNotif } = useHookStatusDataPengguna();
+
+  const [dataHakAkses, setDataLevelSidebar] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const data = await ambilLevelPengguna();
+      setDataLevelSidebar(data);
+    };
+    fetchData();
+  }, []);
+
+  // const hakAksesPerusahaan =
+  //   dataHakAkses?.[0]?.hak_akses?.find(
+  //     (akses) => akses.nama_menu === 'Perusahaan'
+  //   )?.aksi || {};
+  const hakAksesMDDataPengguna =
+    dataHakAkses?.[0]?.hak_akses
+      ?.find((akses) => akses.nama_menu === 'Master Data')
+      ?.nama_sub_menu?.find((sub) => sub.nama === 'Data Pengguna')?.aksi || {};
+
+  const tidakPunyaAkses = !Object.values(hakAksesMDDataPengguna).some(
+    (v) => v === true
+  );
+
+  useEffect(() => {
+    if (notif.message) {
+      setNotifMessage(notif.message);
+      setNotifType(notif.type);
+    }
+  }, [notif]);
+
   const {
     data: masterDataDataPengguna,
     error,
@@ -45,6 +98,23 @@ export default function DataPenggunaSection() {
     queryFn: () =>
       fetchApiMasterDataDataPengguna({
         limit: 5,
+        page: currentPage,
+        offset: (currentPage - 1) * 5,
+        sortBy: 'id',
+        sortOrder: 'desc',
+      }),
+    // retry: false,
+  });
+
+  const {
+    data: masterDataPerusahaan,
+    errorDataPerusahaan,
+    isLoadingDataPerusahaan,
+  } = useQuery({
+    queryKey: ['masterDataPerusahaan', currentPage],
+    queryFn: () =>
+      fetchApiMasterDataPerusahaan({
+        limit: 905,
         page: currentPage,
         offset: (currentPage - 1) * 5,
         sortBy: 'id',
@@ -66,6 +136,30 @@ export default function DataPenggunaSection() {
   const handleEdit = (id) => {
     console.log('Tombol Edit diklik untuk ID:', id);
     // Logika untuk melakukan edit (misalnya membuka form modal)
+
+    const dataDipilih = masterDataDataPengguna?.data?.find(
+      (item) => item.id === id
+    );
+
+    console.log(dataDipilih);
+
+    if (dataDipilih) {
+      setSelectedEdit({
+        id: dataDipilih.id || '',
+        nama: dataDipilih.nama || '',
+        no_hp: dataDipilih.no_hp || '',
+        jenis_kelamin: dataDipilih.jenis_kelamin || '',
+        alamat_lengkap: dataDipilih.alamat_lengkap || '',
+        username: dataDipilih.username || '',
+        password: dataDipilih.password || '',
+        ulangiPassword: dataDipilih.password || '',
+        perusahaan_id: dataDipilih.perusahaan_id || '',
+        level_pengguna_id: dataDipilih.level_pengguna_id || '',
+      });
+      // setModalEditOpen(true);
+      // setModalEditOpen(true);
+      setModalEditOpen(true);
+    }
   };
 
   // const [confirmMoreId, setConfirmMoreId] = useState(null);
@@ -74,7 +168,11 @@ export default function DataPenggunaSection() {
   const handleDelete = async (id) => {
     console.log('Hapus ID:', id);
 
-    await fetchApiMasterDataPerusahaanDelete(id, setNotifMessage, setNotifType);
+    await fetchApiMasterDataDataPenggunaDelete(
+      id,
+      setNotifMessage,
+      setNotifType
+    );
 
     // ✅ Pastikan data diperbarui secara real-time
     queryClient.invalidateQueries(['masterDataDataPengguna']); // logic delete
@@ -122,7 +220,27 @@ export default function DataPenggunaSection() {
           jenkel: row.jenis_kelamin || <i>*empty</i>,
           noHp: row.no_hp || <i>*empty</i>,
           alamat: row.alamat_lengkap || <i>*empty</i>,
-          level: row.level_akses!=null?(row.level_akses.nama || <i>*empty</i>): <i>*empty</i>,
+          perusahaan: (() => {
+            const perusahaan = masterDataPerusahaan?.data?.find(
+              (p) => p.id === row.perusahaan_id
+            );
+            return perusahaan ? (
+              `${perusahaan.nama} ${
+                perusahaan.jenis_perusahaan
+                  ? `(${perusahaan.jenis_perusahaan})`
+                  : '(Tidak Diketahui)'
+              }`
+            ) : (
+              <i>*tidak ditemukan</i>
+            );
+          })(),
+          // row.perusahaan_id || <i>*empty</i>,
+          level:
+            row.level_pengguna != null ? (
+              row.level_pengguna.nama || <i>*empty</i>
+            ) : (
+              <i>*empty</i>
+            ),
           status: StatusLabel.status(row.status) || <i>*empty</i>,
           added: new Date(row.createdAt).toLocaleString() || <i>*empty</i>,
           updated: new Date(row.updatedAt).toLocaleString() || <i>*empty</i>,
@@ -130,77 +248,156 @@ export default function DataPenggunaSection() {
           aksi: (
             <EvoActionButtons
               rowId={row.id}
-              onEdit={() => handleEdit(row.id)}
-              onDelete={() => handleDelete(row.id)}
+              onEdit={
+                hakAksesMDDataPengguna.update == true
+                  ? () => handleEdit(row.id)
+                  : null
+              }
+              onDelete={
+                hakAksesMDDataPengguna.delete == true
+                  ? () => handleDelete(row.id)
+                  : null
+              }
               isActive={row.status}
-              onAktifkan={() => console.log('Aktifkan', row.id)}
-              onNonAktifkan={() => console.log('NonAktifkan', row.id)}
+              onAktifkan={
+                hakAksesMDDataPengguna.aktif_nonaktif == true
+                  ? () => toggleStatus(row.id, true)
+                  : null
+              }
+              onNonAktifkan={
+                hakAksesMDDataPengguna.aktif_nonaktif == true
+                  ? () => toggleStatus(row.id, false)
+                  : null
+              }
             />
           ),
-        
-        }
-        )
-      )
+        }))
       : [];
 
-  // const rows = tableDataPengguna.rows.map((row) => ({
-  //   ...row,
-  //   aksesTiket: StatusLabel.status(row.aksesTiket), // Konversi akses tiket menjadi elemen visual
-  //   aksesKartu: StatusLabel.status(row.aksesKartu), // Konversi akses kartu menjadi elemen visual
-  //   status: StatusLabel.status(row.status), // Konversi status menjadi elemen visual
-  //   aksi: (
-  //     <EvoActionButtons
-  //       rowId={row.aksi}
-  //       // onPerpanjang={() => handlePerpanjang(row.aksi)}
-  //       // onGantiKartu={() => handleGantiKartu(row.aksi)}
-  //       // onGantiNomorPolisi={() => handleGantiNomorPolisi(row.aksi)}
-  //       // onRiwayatTransaksi={() => handleRiwayatTransaksi(row.aksi)}
-  //       onEdit={() => handleEdit(row.aksi)}
-  //       onDelete={() => handleDelete(row.aksi)}
-  //       // onMore={() => handleMore(row.aksi)}
-  //       isActive={row.status == true} // Status member digunakan sebagai indikator aktif/non-aktif
-  //       onAktifkan={() => console.log('Aktifkan', row.aksi)}
-  //       onNonAktifkan={() => console.log('NonAktifkan', row.aksi)}
-  //       // moreAction={titleSection}
-  //     />
-  //   ),
-  // }));
+  if (isLoadingDataPerusahaan || isLoading)
+    return (
+      <div className="h-full flex flex-col gap-2 justify-center items-center text-center text-primary">
+        <Spinner size={32} color="border-black" />
+        Loading...
+      </div>
+    );
+
+  if (errorDataPerusahaan || error) {
+    return (
+      <EvoErrorDiv
+        errorHandlerText={getErrorMessage(errorDataPerusahaan || error)}
+      />
+    ); // ✅ Pastikan error ditampilkan di UI
+  }
+
+  if (tidakPunyaAkses) {
+    return (
+      <EvoErrorDiv errorHandlerText="Anda tidak memiliki akses menuju halaman ini" />
+    );
+  }
 
   return (
-    <EvoCardSection>
-      <EvoTitleSection
-        title={titleSection}
-        // radioItems={radioItems}
-        // monthNames={monthNames}
-        // years={years}
-        handleChange={handleChange}
-        buttonText={`Tambah ${titleSection}`}
-        onButtonClick={handleTambah}
-        icon={<RiAddLargeLine size={16} />}
-        onExportPDF={() => exportPDF('tableToPrint', titleSection)}
-        onExportExcel={() => exportExcel('tableToPrint', titleSection)}
-        onPrint={() => exportPrint('tableToPrint', titleSection)}
-      />
-      <EvoSearchTabel
-        // isFilter={true}
-        // FilterComponent={FilterMasDataPengguna}
-        placeholder="Ketik nama pengguna..."
-        onSearch={(data) => console.log('Hasil pencarian:', data)}
-      />
-
-      <AddDataPenggunaForm
-        isOpen={modalOpen}
-        onClose={handleTutup}
-        onSubmit={handleSubmitData}
-      />
-      <EvoTable
-        id="tableToPrint"
-        tableData={tableDataPengguna}
-        currentPage={currentPage}
-        totalPages={dataApi?.totalPages}
-        onPageChange={handlePageChange}
-        rows={rows}
-      />
-    </EvoCardSection>
+    <>
+      {notifMessage && (
+        <EvoNotifCard
+          message={notifMessage}
+          onClose={() => setNotifMessage('')}
+          type={notifType}
+          autoClose={true}
+        />
+      )}
+      {notif.message && (
+        <EvoNotifCard
+          message={notif.message}
+          onClose={() => setNotif({ message: '', type: 'success' })}
+          type={notif.type}
+          autoClose={true}
+        />
+      )}
+      <EvoCardSection>
+        <EvoTitleSection
+          title={titleSection}
+          handleChange={handleChange}
+          buttonText={
+            hakAksesMDDataPengguna.create == true
+              ? `Tambah ${titleSection}`
+              : ''
+          }
+          onButtonClick={
+            hakAksesMDDataPengguna.create == true ? handleTambah : () => {}
+          }
+          icon={<RiAddLargeLine size={16} />}
+          onExportPDF={
+            hakAksesMDDataPengguna.read == true
+              ? () => setModalExportPDFOpen(true)
+              : null
+          }
+          onExportExcel={
+            hakAksesMDDataPengguna.read == true
+              ? () => setModalExportExcel(true)
+              : null
+          }
+          onPrint={
+            hakAksesMDDataPengguna.read == true
+              ? () => setModalExportPrint(true)
+              : null
+          }
+        />{' '}
+        {hakAksesMDDataPengguna.read == true && (
+          <>
+            <EvoExportApiPDF
+              isOpen={modalExportPDFOpen}
+              onClose={() => setModalExportPDFOpen(false)}
+              endpoint={urlExport + 'pdf'}
+              filename={titleSection}
+            />
+            <EvoExportApiExcel
+              isOpen={modalExportExcel}
+              onClose={() => setModalExportExcel(false)}
+              endpoint={urlExport + 'excel'}
+              filename={titleSection}
+            />
+            <EvoExportApiPrint
+              isOpen={modalExportPrint}
+              onClose={() => setModalExportPrint(false)}
+              endpoint={urlExport + 'pdf'}
+            />
+          </>
+        )}
+        {hakAksesMDDataPengguna.read == true && (
+          <EvoSearchTabel
+            // isFilter={true}
+            // FilterComponent={FilterMasDataPengguna}
+            placeholder="Ketik nama pengguna..."
+            onSearch={(data) => console.log('Hasil pencarian:', data)}
+          />
+        )}
+        {hakAksesMDDataPengguna.create == true && (
+          <AddDataPenggunaForm
+            isOpen={modalOpen}
+            onClose={handleTutup}
+            onSubmit={handleSubmitData}
+          />
+        )}
+        {hakAksesMDDataPengguna.update == true && (
+          <EditDataPenggunaForm
+            isOpen={modalEditOpen}
+            onClose={handleEditTutup}
+            onSubmit={handleSubmitData}
+            initialData={selectedEditData}
+          />
+        )}
+        {hakAksesMDDataPengguna.read == true && (
+          <EvoTable
+            id="tableToPrint"
+            tableData={tableDataPengguna}
+            currentPage={currentPage}
+            totalPages={dataApi?.totalPages}
+            onPageChange={handlePageChange}
+            rows={rows}
+          />
+        )}
+      </EvoCardSection>
+    </>
   );
 }

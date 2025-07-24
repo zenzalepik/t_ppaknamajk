@@ -19,7 +19,7 @@ export default function LaporanDataSettlementCashless() {
     };
 
     checkAuth();
-  }, []);
+  }, [router]);
   return (
     <EvoLayout pageTitle="Laporan Data">
       <SettlementCashlessSection />

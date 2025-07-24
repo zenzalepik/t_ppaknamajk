@@ -19,7 +19,7 @@ export default function LaporanDataAuditTransaksi() {
     };
 
     checkAuth();
-  }, []);
+  }, [router]);
   return (
     <EvoLayout pageTitle="Laporan Data">
         <AuditTransaksiSection />
