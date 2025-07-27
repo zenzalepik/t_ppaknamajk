@@ -2,9 +2,9 @@ const strings = {
   appName: 'Evolusi Park',
   appDescription: 'Sistem Informasi Parkir Elektronik',
   appLogo: '/images/png/logo.png',
-  developerName: 'PT. Evosist (Evolusi Sistem)',
+  developerName: 'PT. Evolusi Sistem Digital',
   welcomeMessage: 'Selamat datang di sistem parkir Evosist!',
-  copyRight: '© 2025 Evolusi Park – Developed by PT. Evosist (Evolusi Sistem)',
+  copyRight: '© 2025 Evolusi Park – Developed by PT. Evolusi Sistem Digital',
   locationName: 'Food Court Plaza Pasar Senin',
   error: {
     notFound: 'Halaman tidak ditemukan.',
