@@ -20,6 +20,7 @@ import EvoExportApiPDF from '@/components/EvoExportApiPDF';
 import EvoExportApiExcel from '@/components/EvoExportApiExcel';
 import EvoExportApiPrint from '@/components/EvoExportApiPrint';
 import EvoNotifCard from '@/components/EvoNotifCard';
+import { format } from 'date-fns';
 
 const titleSection = 'Kendaraan Masih di Dalam';
 
@@ -34,6 +35,8 @@ export default function KendaraanContentIn() {
   const [modalOpen, setModalOpen] = useState(false);
   const handleEdit = () => setModalOpen(true);
   const handleTutup = () => setModalOpen(false);
+
+  const formatDate = (date) => format(date, 'dd-MM-yyyy');
 
   const handleDateChange = (start, end) => {
     setStartDate(start);
@@ -50,7 +53,7 @@ export default function KendaraanContentIn() {
     error,
     isLoading,
   } = useQuery({
-    queryKey: ['laporanKendaraanContentIn', currentPage],
+    queryKey: ['laporanKendaraanContentIn', currentPage, startDate, endDate],
     queryFn: () =>
       fetchApiKendaraanContentIn({
         limit: 5,
@@ -58,6 +61,8 @@ export default function KendaraanContentIn() {
         offset: (currentPage - 1) * 5,
         sortBy: 'id',
         sortOrder: 'desc',
+        startDate: formatDate(startDate),
+        endDate: formatDate(endDate),
       }),
     // retry: false,
   });
@@ -145,25 +150,25 @@ export default function KendaraanContentIn() {
         onDateChange={handleDateChange}
       />
       {/* {hakAksesMDPe.read == true && ( */}
-        <>
-          <EvoExportApiPDF
-            isOpen={modalExportPDFOpen}
-            onClose={() => setModalExportPDFOpen(false)}
-            endpoint={urlExport + 'pdf'}
-            filename={titleSection}
-          />
-          <EvoExportApiExcel
-            isOpen={modalExportExcel}
-            onClose={() => setModalExportExcel(false)}
-            endpoint={urlExport + 'excel'}
-            filename={titleSection}
-          />
-          <EvoExportApiPrint
-            isOpen={modalExportPrint}
-            onClose={() => setModalExportPrint(false)}
-            endpoint={urlExport + 'pdf'}
-          />
-        </>
+      <>
+        <EvoExportApiPDF
+          isOpen={modalExportPDFOpen}
+          onClose={() => setModalExportPDFOpen(false)}
+          endpoint={urlExport + 'pdf'}
+          filename={titleSection}
+        />
+        <EvoExportApiExcel
+          isOpen={modalExportExcel}
+          onClose={() => setModalExportExcel(false)}
+          endpoint={urlExport + 'excel'}
+          filename={titleSection}
+        />
+        <EvoExportApiPrint
+          isOpen={modalExportPrint}
+          onClose={() => setModalExportPrint(false)}
+          endpoint={urlExport + 'pdf'}
+        />
+      </>
       {/* )} */}
       <EvoSearchTabel
         placeholder={`Ketik nomor tiket atau nomor polisi...`}

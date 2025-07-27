@@ -1,6 +1,6 @@
 // api/fetchApiKendaraanContentIn.js
 
-import { fetchWithAuthDummy } from '@/helpers/fetchWithAuthDummy';
+import { fetchWithAuth } from '@/helpers/fetchWithAuth';
 
 export const fetchApiKendaraanContentIn = async ({
   limit = 15,
@@ -8,6 +8,9 @@ export const fetchApiKendaraanContentIn = async ({
   offset = 0,
   sortBy = 'id',
   sortOrder = 'asc',
+  
+  startDate,
+  endDate,
 } = {}) => {
   const queryParams = new URLSearchParams({
     limit: limit.toString(),
@@ -17,8 +20,18 @@ export const fetchApiKendaraanContentIn = async ({
     sortOrder,
   });
 
-  return await fetchWithAuthDummy({
+  
+
+  if (startDate) {
+    queryParams.append('start_date', startDate);
+  }
+
+  if (endDate) {
+    queryParams.append('end_date', endDate);
+  }
+
+  return await fetchWithAuth({
     method: 'get',
-    endpoint: `/data_kendaraan_masuk?${queryParams.toString()}`,
+    endpoint: `/laporan-data/kendaraan/kendaraan-in?${queryParams.toString()}`,
   });
 };

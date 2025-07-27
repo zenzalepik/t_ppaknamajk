@@ -77,15 +77,6 @@ export default function ActivitySection() {
     return <EvoErrorDiv errorHandlerText={getErrorMessage(error)} />;
   }
 
-  // const rows = tabelDataAktivitasKendaraan.rows.filter((row) => {
-  //   if (!row.tanggal) return true;
-  //   const rowDate = new Date(row.tanggal);
-  //   return (
-  //     (!startDate || !isBefore(rowDate, startDate)) &&
-  //     (!endDate || !isAfter(rowDate, endDate))
-  //   );
-  // });
-
   console.log( dashboardActivity?.data);
   const rows =
     dashboardActivity?.data?.length > 0

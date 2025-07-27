@@ -214,7 +214,7 @@ export default function Sidebar() {
       <div className="p-3">
         <div className="flex items-center mb-8">
           <div className={`${isCollapsed ? 'p-0' : 'p-2'}`}>
-            <div className="overflow-hidden rounded-xl bg-white p-0.5">
+            <div className="overflow-hidden rounded-xl bg-black p-0.5">
               <Image
                 src={strings.appLogo}
                 alt="Logo"

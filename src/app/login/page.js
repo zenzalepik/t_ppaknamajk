@@ -183,7 +183,7 @@ const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/; // Minimal 8 kar
         </div>
 
         {/* Image Section */}
-        <div className="hidden md:flex w-[480px] !max-w-[480px] items-center justify-center bg-black relative mr-8 ml-12 mt-8 mb-8">
+        <div className="hidden md:flex w-[480px] !max-w-[480px] items-center justify-center bg-black/0 relative mr-8 ml-12 mt-8 mb-8">
           <Image
             src="/images/png/img_login.png"
             alt="Login Illustration"
