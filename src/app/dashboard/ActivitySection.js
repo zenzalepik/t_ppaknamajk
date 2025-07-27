@@ -19,6 +19,7 @@ import Spinner from '@/components/Spinner';
 import EvoErrorDiv from '@/components/EvoErrorDiv';
 import { getErrorMessage } from '@/utils/errorHandler';
 import EvoNotifCard from '@/components/EvoNotifCard';
+import { StatusLabel } from '@/components/StatusLabel';
 
 const titleSection = 'Aktivitas Gerbang Kendaraan';
 
@@ -40,12 +41,12 @@ export default function ActivitySection() {
     queryFn: () =>
       fetchApiDashboardActivity({
         limit: 15,
-        // page: currentPage,
+        page: currentPage,
         // offset: (currentPage - 1) * 5,
         sortBy: 'id',
         sortOrder: 'desc',
       }),
-    // retry: false,
+    retry: false,
   });
 
   const handlePageChange = (page) => {
@@ -89,10 +90,12 @@ export default function ActivitySection() {
 
           time: row.waktu || <i>*empty</i>,
           gate: row.lokasi_gerbang || <i>*empty</i>,
-          status: row.buka_atau_tutup || <i>*empty</i>,
+          status:  row.buka_atau_tutup || <i>*empty</i>,
           // open: row.petugas || <i>*empty</i>,
-          officer: row.petugas || <i>*empty</i>,
-          result: row.status_palang || <i>*empty</i>,
+          officer:  row.petugas?.nama?.trim()
+    ? row.petugas.nama
+    : <i>*empty</i>,
+          result: StatusLabel.status_palang(row.status_palang) || <i>*empty</i>,
         }))
       : [];
 
@@ -125,7 +128,7 @@ export default function ActivitySection() {
         <EvoTable
           id="tableToPrint"
           tableData={tabelDataAktivitasKendaraan}
-          // currentPage={currentPage}
+          currentPage={currentPage}
           totalPages={dashboardActivity?.totalPages}
           onPageChange={handlePageChange}
           rows={rows}

@@ -56,16 +56,17 @@ export default function KendaraanContentIn() {
     queryKey: ['laporanKendaraanContentIn', currentPage, startDate, endDate],
     queryFn: () =>
       fetchApiKendaraanContentIn({
-        limit: 5,
+        limit: 15,
         page: currentPage,
-        offset: (currentPage - 1) * 5,
-        sortBy: 'id',
+        // offset: (currentPage - 1) * 5,
+        // sortBy: 'id',
         sortOrder: 'desc',
         startDate: formatDate(startDate),
         endDate: formatDate(endDate),
       }),
     // retry: false,
   });
+  // console.log(laporanKendaraanContentIn);
 
   const handlePageChange = (page) => {
     setCurrentPage(page); // trigger TanStack React Query re-fetch dengan page baru

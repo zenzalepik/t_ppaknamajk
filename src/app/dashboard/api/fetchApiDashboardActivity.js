@@ -7,7 +7,7 @@ export const fetchApiDashboardActivity = async ({
   page = 1,
   offset = 0,
   sortBy = 'id',
-  sortOrder = 'asc',
+  sortOrder = 'desc',
 } = {}) => {
   const queryParams = new URLSearchParams({
     limit: limit.toString(),
