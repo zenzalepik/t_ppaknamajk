@@ -12,6 +12,7 @@
     "build:web": "next build",
     "start": "next start",
     "deployVercel": "call vercel\\deploy-to-ppaknamajk.bat",
+    "pushRootAndVercel": "node vercel/pushRootAndVercel.js",
     "start:desktop": "electron .",
     "build:desktop": "pnpm build:web && electron-builder",
     "stepPublish1BuildWebAndDesktop": "pnpm build:desktop",

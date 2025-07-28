@@ -3,14 +3,15 @@
 import { fetchWithAuth } from '@/helpers/fetchWithAuth';
 
 export const fetchApiKendaraanContentIn = async ({
-  limit = 15,
+  limit = 13,
   page = 1,
   offset = 0,
   sortBy = 'id',
   sortOrder = 'asc',
   
-  startDate,
-  endDate,
+  
+  start_date,   // <-- tambahkan
+  end_date,     // <-- tambahkan
 } = {}) => {
   const queryParams = new URLSearchParams({
     limit: limit.toString(),
@@ -22,13 +23,10 @@ export const fetchApiKendaraanContentIn = async ({
 
   
 
-  if (startDate) {
-    queryParams.append('start_date', startDate);
-  }
 
-  if (endDate) {
-    queryParams.append('end_date', endDate);
-  }
+  
+  if (start_date) queryParams.append('start_date', start_date);
+  if (end_date) queryParams.append('end_date', end_date); 
 
   return await fetchWithAuth({
     method: 'get',

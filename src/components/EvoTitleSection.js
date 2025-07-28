@@ -28,30 +28,6 @@ const EvoTitleSection = ({
   onDateAkhir, // <-- fungsi untuk ambil tanggal akhir
   onDateChange, // <-- callback baru untuk mengirimkan tanggal
 }) => {
-  /*
-  const [selectedDateFilterAwal, setSelectedDateFilterAwal] = React.useState(
-    () => onDateAwal?.() || null
-  );
-  const [selectedDateFilterAkhir, setSelectedDateFilterAkhir] = React.useState(
-    () => onDateAkhir?.() || null
-  );
-
-  // Notify parent ketika tanggal berubah
-  React.useEffect(() => {
-    if (onDateChange) {
-      onDateChange(selectedDateFilterAwal, selectedDateFilterAkhir);
-    }
-  }, [selectedDateFilterAwal, selectedDateFilterAkhir]);
-  const showDatePickers = selectedDateFilterAwal || selectedDateFilterAkhir;
-
-  // const memoizedOnDateChange = useCallback(onDateChange, []);
-
-  // React.useEffect(() => {
-  //   if (memoizedOnDateChange) {
-  //     memoizedOnDateChange(selectedDateFilterAwal, selectedDateFilterAkhir);
-  //   }
-  // }, [selectedDateFilterAwal, selectedDateFilterAkhir, memoizedOnDateChange]);
-*/
 
   const [selectedDateFilterAwal, setSelectedDateFilterAwal] = React.useState(
     () => onDateAwal?.() || null
