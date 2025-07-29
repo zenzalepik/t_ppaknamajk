@@ -5,7 +5,7 @@ import { fetchWithAuth } from '@/helpers/fetchWithAuth';
 export const fetchApiKendaraanContentIn = async ({
   limit = 13,
   page = 1,
-  offset = 0,
+  // offset = 0,
   sortBy = 'id',
   sortOrder = 'asc',
   
@@ -16,7 +16,7 @@ export const fetchApiKendaraanContentIn = async ({
   const queryParams = new URLSearchParams({
     limit: limit.toString(),
     page: page.toString(),
-    offset: offset.toString(),
+    // offset: offset.toString(),
     sortBy,
     sortOrder,
   });

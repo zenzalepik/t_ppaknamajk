@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import EvoTable from '@/components/evosist_elements/EvoTable';
 import EditSettlementCashlessForm from './forms/EditForm';
 import { exportExcel } from '@/helpers/exportExcel';
@@ -13,29 +13,26 @@ import {
 } from '@/helpers/dateRangeHelper';
 import { fetchApiKendaraanContentOut } from './api/fetchApiKendaraanContentOut';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import Spinner from '@/components/Spinner';
 import EvoErrorDiv from '@/components/EvoErrorDiv';
 import { getErrorMessage } from '@/utils/errorHandler';
 import EvoExportApiPDF from '@/components/EvoExportApiPDF';
 import EvoExportApiExcel from '@/components/EvoExportApiExcel';
 import EvoExportApiPrint from '@/components/EvoExportApiPrint';
 import EvoNotifCard from '@/components/EvoNotifCard';
+import EvoLoading from '@/components/EvoLoading';
+import { format } from 'date-fns';
+import { id as localeId } from 'date-fns/locale';
 
 const titleSection = 'Kendaraan Sudah Keluar';
 
 export default function KendaraanContentOut() {
+  const [start_date, setStartDate] = React.useState(getDefaultDateAwal());
+  const [end_date, setEndDate] = React.useState(getDefaultDateAkhir());
+
   const urlExport = '/data_kendaraan_keluar/';
   const [modalExportPDFOpen, setModalExportPDFOpen] = useState(false);
   const [modalExportExcel, setModalExportExcel] = useState(false);
   const [modalExportPrint, setModalExportPrint] = useState(false);
-
-  const [startDate, setStartDate] = React.useState(getDefaultDateAwal());
-  const [endDate, setEndDate] = React.useState(getDefaultDateAkhir());
-
-  const handleDateChange = (start, end) => {
-    setStartDate(start);
-    setEndDate(end);
-  };
 
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -47,26 +44,67 @@ export default function KendaraanContentOut() {
   const [notifMessage, setNotifMessage] = useState('');
   const [notifType, setNotifType] = useState('success');
 
+  const formattedStartDate = format(start_date, 'MM-dd-yyyy');
+  const formattedEndDate = format(end_date, 'MM-dd-yyyy');
+
+  const [searchKeyword, setSearchKeyword] = useState('');
+
   const {
     data: laporanKendaraanContentOut,
     error,
     isLoading,
   } = useQuery({
-    queryKey: ['laporanKendaraanContentOut', currentPage],
+    queryKey: [
+      'laporanKendaraanContentOut',
+      currentPage,
+      formattedStartDate,
+      formattedEndDate,
+      searchKeyword,
+    ],
     queryFn: () =>
       fetchApiKendaraanContentOut({
-        limit: 5,
+        limit: 13,
         page: currentPage,
-        offset: (currentPage - 1) * 5,
+        // offset: (currentPage - 1) * 5,
         sortBy: 'id',
         sortOrder: 'desc',
+        start_date: formattedStartDate,
+        end_date: formattedEndDate,
+        search: searchKeyword,
       }),
-    // retry: false,
+    retry: false,
+    keepPreviousData: true,
   });
 
   const handlePageChange = (page) => {
     setCurrentPage(page); // trigger TanStack React Query re-fetch dengan page baru
   };
+
+  const prevDates = React.useRef({ start: start_date, end: end_date });
+
+  const handleDateChange = (start, end) => {
+    setStartDate(start);
+    setEndDate(end);
+
+    // Hanya reset page kalau tanggal bener-bener berubah
+    if (
+      format(prevDates.current.start, 'MM-dd-yyyy') !==
+        format(start, 'MM-dd-yyyy') ||
+      format(prevDates.current.end, 'MM-dd-yyyy') !== format(end, 'MM-dd-yyyy')
+    ) {
+      prevDates.current = { start, end };
+      setResetPage(true);
+    }
+  };
+
+  const [resetPage, setResetPage] = useState(false);
+
+  useEffect(() => {
+    if (resetPage) {
+      setCurrentPage(1);
+      setResetPage(false);
+    }
+  }, [resetPage]);
 
   const handleSubmitData = (data) => {
     console.log('Data baru:', data);
@@ -108,13 +146,13 @@ export default function KendaraanContentOut() {
         }))
       : [];
 
-  if (isLoading)
-    return (
-      <div className="h-full flex flex-col gap-2 justify-center items-center text-center text-primary">
-        <Spinner size={32} color="border-black" />
-        Loading...
-      </div>
-    );
+  // if (isLoading)
+  //   return (
+  //     <div className="h-full flex flex-col gap-2 justify-center items-center text-center text-primary">
+  //       <Spinner size={32} color="border-black" />
+  //       Loading...
+  //     </div>
+  //   );
 
   if (error) {
     return <EvoErrorDiv errorHandlerText={getErrorMessage(error)} />;
@@ -186,14 +224,17 @@ export default function KendaraanContentOut() {
         onClose={handleTutup}
         onSubmit={handleSubmitData}
       />
-      <EvoTable
-        id="tableToPrint"
-        tableData={tableDataKendaraanOut}
-        currentPage={currentPage}
-        totalPages={laporanKendaraanContentOut?.totalPages}
-        onPageChange={handlePageChange}
-        rows={rows}
-      />
+      <div className="relative">
+        {isLoading && <EvoLoading />}
+        <EvoTable
+          id="tableToPrint"
+          tableData={tableDataKendaraanOut}
+          currentPage={currentPage}
+          totalPages={laporanKendaraanContentOut?.totalPages}
+          onPageChange={handlePageChange}
+          rows={rows}
+        />
+      </div>
     </div>
   );
 }
