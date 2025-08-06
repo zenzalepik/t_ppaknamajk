@@ -19,8 +19,9 @@ import Spinner from '@/components/Spinner';
 import { getErrorMessage } from '@/utils/errorHandler';
 import EvoErrorDiv from '@/components/EvoErrorDiv';
 import { getUserId } from '@/utils/db';
-import { fetchApiPengaturanParameterTipeKendaraan } from '@/app/pengaturan/parameter/api/items/fetchApiPengaturanParameterTipeKendaraan';
+import { fetchApiPengaturanParameterTipeKendaraan } from './api/fetchApiPengaturanParameterTipeKendaraan';
 import { ambilLevelPengguna } from '@/utils/levelPenggunaStorage';
+import numbers from '@/utils/numbers';
 
 const titleSection = 'Tarif Parkir';
 
@@ -62,9 +63,8 @@ export default function TarifParkirSection() {
     queryKey: ['pengaturanTarifParkir', currentPage],
     queryFn: () =>
       fetchApiPengaturanTarifParkir({
-        limit: 5,
+        limit: numbers.apiNumLimit,
         page: currentPage,
-        offset: (currentPage - 1) * 5,
         sortBy: 'id',
         sortOrder: 'desc',
       }),
@@ -79,9 +79,11 @@ export default function TarifParkirSection() {
     queryKey: ['pengaturanTipeKendaraan'],
     queryFn: () =>
       fetchApiPengaturanParameterTipeKendaraan({
-        limit: 5,
+        limit: numbers.apiNumLimitExpanded,
       }),
   });
+
+  
 
   const handlePageChange = (page) => {
     setCurrentPage(page); // trigger TanStack React Query re-fetch dengan page baru

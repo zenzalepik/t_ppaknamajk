@@ -128,26 +128,55 @@ export const StatusLabel = {
     );
   },
 
-  
+  status_palang: (status) => {
+    if (status === null || status === undefined) {
+      return <span className="italic text-black/40">*Empty</span>;
+    }
 
-  status_palang:  (status) => {
-  if (status === null || status === undefined) {
-    return <span className="italic text-black/40">*Empty</span>;
+    const isSuccess = status === 'Sukses';
+
+    return (
+      <span
+        className={`px-3 py-1 rounded-[8px] text-label_small_semilight font-semibold ${
+          isSuccess ? 'bg-success/10 text-success' : 'bg-red-100 text-red-600'
+        }`}
+      >
+        {status}
+      </span>
+    );
+  },
+
+  status_member: (id_member) => {
+    if (id_member === null || id_member === undefined) {
+      return (
+        <span className="px-3 py-1 rounded-[8px] text-label_small_semilight font-semibold bg-black/10 text-black">
+          Bukan Member
+        </span>
+      );
+    }
+
+    return (
+      <span className="px-3 py-1 rounded-[8px] text-label_small_semilight font-semibold bg-success/10 text-success">
+        Member
+      </span>
+    );
+  },
+
+  status_transaksi_manual: (id_member) => {
+  if (id_member === null || id_member === undefined) {
+    return (
+      <span className="px-3 py-1 rounded-[8px] text-label_small_semilight font-semibold bg-red-100 text-red-600">
+        Bukan Member
+      </span>
+    );
   }
 
-  const isSuccess = status === 'Sukses';
-
   return (
-    <span
-      className={`px-3 py-1 rounded-[8px] text-label_small_semilight font-semibold ${
-        isSuccess ? 'bg-success/10 text-success' : 'bg-red-100 text-red-600'
-      }`}
-    >
-      {status}
+    <span className="px-3 py-1 rounded-[8px] text-label_small_semilight font-semibold bg-success/10 text-success">
+      Member
     </span>
   );
 },
-
 
   // Menambahkan status untuk kendaraan
   isDendaMember: (isActive) => (

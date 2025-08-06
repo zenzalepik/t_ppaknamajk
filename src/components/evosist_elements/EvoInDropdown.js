@@ -12,6 +12,7 @@ const EvoInDropdown = ({
   name,
   placeholder,
   className = '',
+  disabled = false,
 }) => {
   const [selectedValue, setSelectedValue] = useState(value || '');
 
@@ -42,16 +43,18 @@ const EvoInDropdown = ({
         <select
           name={name}
           // value={value}
-
+          disabled={disabled}
           value={selectedValue}
           // onChange={onChange}
           onChange={handleChange}
-          className={`border rounded-[16px] px-4 py-3 focus:outline-none focus:ring-2 w-full ${
-            error
-              ? 'border-danger focus:ring-danger'
-              : 'border-black/40 focus:ring-primary'
-            // } ${!value ? 'text-black/50' : ''}`}
-          } ${!selectedValue ? 'text-black/50' : ''}`}
+          className={`border rounded-[16px] px-4 py-3 focus:outline-none focus:ring-2 w-full 
+            
+            ${
+              error
+                ? 'border-danger focus:ring-danger'
+                : 'border-black/40 focus:ring-primary'
+              // } ${!value ? 'text-black/50' : ''}`}
+            } ${!selectedValue ? 'text-black/50' : ''}`}
         >
           {/* Jika ada placeholder, render option pertama sebagai placeholder */}
           {placeholder && (

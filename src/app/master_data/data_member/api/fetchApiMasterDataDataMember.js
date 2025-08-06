@@ -6,7 +6,7 @@ export const fetchApiMasterDataDataMember = async (
  {
   limit = 15,
   page = 1,
-  offset = 0,
+  // offset = 0,
   sortBy = 'id',
   sortOrder = 'asc',
 } = {}
@@ -15,7 +15,7 @@ export const fetchApiMasterDataDataMember = async (
   const queryParams = new URLSearchParams({
     limit: limit.toString(),
     page: page.toString(),
-    offset: offset.toString(),
+    // offset: offset.toString(),
     sortBy,
     sortOrder,
   });

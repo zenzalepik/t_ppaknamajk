@@ -1,7 +1,7 @@
 //AuditTransaksiPenggunaanVoucher.js
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import EvoTitleSection from '@/components/EvoTitleSection';
 import EvoCardSection from '@/components/evosist_elements/EvoCardSection';
 import EvoTable from '@/components/evosist_elements/EvoTable';
@@ -23,22 +23,27 @@ import EvoExportApiPDF from '@/components/EvoExportApiPDF';
 import EvoExportApiExcel from '@/components/EvoExportApiExcel';
 import EvoExportApiPrint from '@/components/EvoExportApiPrint';
 import EvoNotifCard from '@/components/EvoNotifCard';
+import EvoLoading from '@/components/EvoLoading';
+import { format } from 'date-fns';
+import { id as localeId } from 'date-fns/locale';
 
 const titleSection = 'Penggunaan Voucher';
 
 export default function AuditTransaksiPenggunaanVoucher() {
+  const [start_date, setStartDate] = React.useState(getDefaultDateAwal());
+  const [end_date, setEndDate] = React.useState(getDefaultDateAkhir());
+
   const urlExport = '/laporan_data_audit_transaksi_penggunaan_voucher/';
   const [modalExportPDFOpen, setModalExportPDFOpen] = useState(false);
   const [modalExportExcel, setModalExportExcel] = useState(false);
   const [modalExportPrint, setModalExportPrint] = useState(false);
 
-  const [startDate, setStartDate] = React.useState(getDefaultDateAwal());
-  const [endDate, setEndDate] = React.useState(getDefaultDateAkhir());
+  const formatDate = (date) => format(date, 'dd-MM-yyyy');
 
-  const handleDateChange = (start, end) => {
-    setStartDate(start);
-    setEndDate(end);
-  };
+  const formattedStartDate = format(start_date, 'MM-dd-yyyy');
+  const formattedEndDate = format(end_date, 'MM-dd-yyyy');
+
+  const [searchKeyword, setSearchKeyword] = useState('');
 
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -55,17 +60,54 @@ export default function AuditTransaksiPenggunaanVoucher() {
     error,
     isLoading,
   } = useQuery({
-    queryKey: ['laporanAuditTransaksiPenggunaanVoucher', currentPage],
+    queryKey: [
+      'laporanAuditTransaksiPenggunaanVoucher',
+      currentPage,
+      formattedStartDate,
+      formattedEndDate,
+      searchKeyword,
+    ],
     queryFn: () =>
       fetchApiAuditTransaksiPenggunaanVoucher({
-        limit: 5,
+        limit: 13,
         page: currentPage,
-        offset: (currentPage - 1) * 5,
-        sortBy: 'id',
+        // offset: (currentPage - 1) * 5,
+        // sortBy: 'id',
         sortOrder: 'desc',
+        start_date: formattedStartDate,
+        end_date: formattedEndDate,
+        search: searchKeyword,
       }),
+    retry: false,
+    keepPreviousData: true,
     // retry: false,
   });
+
+  const prevDates = React.useRef({ start: start_date, end: end_date });
+
+  const handleDateChange = (start, end) => {
+    setStartDate(start);
+    setEndDate(end);
+
+    // Hanya reset page kalau tanggal bener-bener berubah
+    if (
+      format(prevDates.current.start, 'MM-dd-yyyy') !==
+        format(start, 'MM-dd-yyyy') ||
+      format(prevDates.current.end, 'MM-dd-yyyy') !== format(end, 'MM-dd-yyyy')
+    ) {
+      prevDates.current = { start, end };
+      setResetPage(true);
+    }
+  };
+
+  const [resetPage, setResetPage] = useState(false);
+
+  useEffect(() => {
+    if (resetPage) {
+      setCurrentPage(1);
+      setResetPage(false);
+    }
+  }, [resetPage]);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -81,7 +123,9 @@ export default function AuditTransaksiPenggunaanVoucher() {
   };
 
   const handleSearch = (query) => {
-    console.log('Hasil pencarian:', query);
+    // console.log('Hasil pencarian:', query);
+    setSearchKeyword(query); // Simpan kata kunci
+    setCurrentPage(1); // Reset ke halaman pertama
   };
 
   const rows =
@@ -98,13 +142,13 @@ export default function AuditTransaksiPenggunaanVoucher() {
         }))
       : [];
 
-  if (isLoading)
-    return (
-      <div className="h-full flex flex-col gap-2 justify-center items-center text-center text-primary">
-        <Spinner size={32} color="border-black" />
-        Loading...
-      </div>
-    );
+  // if (isLoading)
+  //   return (
+  //     <div className="h-full flex flex-col gap-2 justify-center items-center text-center text-primary">
+  //       <Spinner size={32} color="border-black" />
+  //       Loading...
+  //     </div>
+  //   );
 
   if (error) {
     return <EvoErrorDiv errorHandlerText={getErrorMessage(error)} />;
@@ -123,32 +167,32 @@ export default function AuditTransaksiPenggunaanVoucher() {
       <EvoCardSection className="!p-0 !bg-transparent !shadow-none">
         <EvoTitleSection
           title={titleSection}
-                    onExportPDF={() => setModalExportPDFOpen(true)}
+          onExportPDF={() => setModalExportPDFOpen(true)}
           onExportExcel={() => setModalExportExcel(true)}
           onPrint={() => setModalExportPrint(true)}
-onDateAkhir={getDefaultDateAkhir}
+          onDateAkhir={getDefaultDateAkhir}
           onDateAwal={getDefaultDateAwal}
           onDateChange={handleDateChange}
         />
-          <>
-                  <EvoExportApiPDF
-                    isOpen={modalExportPDFOpen}
-                    onClose={() => setModalExportPDFOpen(false)}
-                    endpoint={urlExport + 'pdf'}
-                    filename={titleSection}
-                  />
-                  <EvoExportApiExcel
-                    isOpen={modalExportExcel}
-                    onClose={() => setModalExportExcel(false)}
-                    endpoint={urlExport + 'excel'}
-                    filename={titleSection}
-                  />
-                  <EvoExportApiPrint
-                    isOpen={modalExportPrint}
-                    onClose={() => setModalExportPrint(false)}
-                    endpoint={urlExport + 'pdf'}
-                  />
-                </>
+        <>
+          <EvoExportApiPDF
+            isOpen={modalExportPDFOpen}
+            onClose={() => setModalExportPDFOpen(false)}
+            endpoint={urlExport + 'pdf'}
+            filename={titleSection}
+          />
+          <EvoExportApiExcel
+            isOpen={modalExportExcel}
+            onClose={() => setModalExportExcel(false)}
+            endpoint={urlExport + 'excel'}
+            filename={titleSection}
+          />
+          <EvoExportApiPrint
+            isOpen={modalExportPrint}
+            onClose={() => setModalExportPrint(false)}
+            endpoint={urlExport + 'pdf'}
+          />
+        </>
         <EvoSearchTabel
           // isFilter={true}
           // FilterComponent={FilterLapAudTranPenggunaanVoucher}
@@ -156,14 +200,17 @@ onDateAkhir={getDefaultDateAkhir}
           onSearch={(data) => console.log('Hasil pencarian:', data)}
         />
 
-        <EvoTable
-          id="tableToPrint"
-          tableData={tableDataAuditTransaksiPenggunaanVoucher}
-          currentPage={currentPage}
-          totalPages={laporanAuditTransaksiPenggunaanVoucher?.totalPages}
-          onPageChange={handlePageChange}
-          rows={rows}
-        />
+        <div className="relative">
+          {isLoading && <EvoLoading />}
+          <EvoTable
+            id="tableToPrint"
+            tableData={tableDataAuditTransaksiPenggunaanVoucher}
+            currentPage={currentPage}
+            totalPages={laporanAuditTransaksiPenggunaanVoucher?.totalPages}
+            onPageChange={handlePageChange}
+            rows={rows}
+          />
+        </div>
       </EvoCardSection>
     </>
   );

@@ -36,13 +36,17 @@ const EvoCardSettingPayment = ({
 
   const getIcon = () => {
     switch (title) {
-      case 'Cash' || 'Tunai':
+      case 'Cash':
+      case 'Tunai':
         return <RiMoneyDollarCircleLine size={72} />;
       case 'Prepaid':
+      case 'Prepaid Card':
         return <RiBankCardLine size={72} />;
       case 'Transfer Bank':
+      case 'Bank':
         return <RiSmartphoneLine size={72} />;
       case 'E-Wallet':
+      case 'QRIS':
         return <RiWallet3Line size={72} />;
       case 'Member':
         return <RiUserStarLine size={72} />;
@@ -53,13 +57,17 @@ const EvoCardSettingPayment = ({
 
   const getBg = () => {
     switch (title) {
-      case 'Cash' || 'Tunai':
+      case 'Cash':
+      case 'Tunai':
         return 'bg-gradientPrimary45';
       case 'Prepaid':
+      case 'Prepaid Card':
         return 'bg-gradientSecondary45';
       case 'Transfer Bank':
+      case 'Bank':
         return 'bg-gradientPrimary45';
       case 'E-Wallet':
+      case 'QRIS':
         return 'bg-gradientSecondary45';
       case 'Member':
         return 'bg-gradientPrimary45';
@@ -72,7 +80,24 @@ const EvoCardSettingPayment = ({
     <div
       className={`flex flex-col p-6 rounded-[20px] ${getBg()} text-white ${className} `}
     >
-      {getIcon()}
+      <div className="flex justify-between items-start mb-2">
+        {getIcon()}
+        {/* Status badge */}
+        <div className="flex justify-between items-center gap-2 mb-2">
+          <span
+            className={`text-[14px]`}>
+          Status:
+          </span>
+          <span
+            className={`flex gap-1 items-center text-xs font-semibold px-1.5 py-0.5 rounded-[8px] ${
+              isActive ? ' text-success bg-white/80' : 'bg-white/30 text-white'
+            }`}
+          >
+            <div className={`${isActive?'bg-success':'bg-white'} h-[8px] w-[8px] rounded-[4px]`}></div>
+            {isActive ? 'Aktif' : 'Nonaktif'}
+          </span>
+        </div>
+      </div>
       <div className="text-title_large mb-3">{title}</div>
       <div className="text-content_medium text-white/40">Updated:</div>
       <div className="text-content_reguler text-white/[0.64]">

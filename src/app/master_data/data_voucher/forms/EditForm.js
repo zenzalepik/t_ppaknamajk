@@ -67,6 +67,8 @@ const EditDataVoucherForm = ({
   const [formData, setFormData] = useState({
     // namaVoucher: '',
     no_tiket_atau_nopol: '',
+    no_tiket: '',
+    nomor_polisi: '',
     kendaraan_id: '',
     keterangan: '',
   });
@@ -84,6 +86,8 @@ const EditDataVoucherForm = ({
         id: initialData.id || '',
 
         no_tiket_atau_nopol: initialData.no_tiket_atau_nopol || '',
+        no_tiket: initialData.no_tiket || '',
+        nomor_polisi: initialData.nomor_polisi || '',
         kendaraan_id: initialData.kendaraan_id || '',
         keterangan: initialData.keterangan || '',
 
@@ -92,7 +96,7 @@ const EditDataVoucherForm = ({
         // periode_akhir: periodeAkhir,
         // periode: initialData.periode,
         // tarif: initialData.tarif || '',
-        // model_bayar: initialData.model_bayar || '',
+        // model_bayar: initialData.model_pembayaran  || '',
         // verifikasi: initialData.verifikasi || '',
 
         ////////////////////////////////////////////////
@@ -116,6 +120,9 @@ const EditDataVoucherForm = ({
   // ✅ Fungsi untuk mereset pilihan saat modal ditutup
   const handleCloseModal = () => {
     setFormData({
+      no_tiket_atau_nopol: '',
+      no_tiket: '',
+      nomor_polisi: '',
       nama: '',
       periode_mulai: '',
       periode_akhir: '',
@@ -128,6 +135,8 @@ const EditDataVoucherForm = ({
       biaya_kartu: '',
       biaya_ganti_nopol: '',
       status: false,
+      kendaraan_id: '',
+      keterangan: '',
     });
     setErrors({});
     setNotifMessage('');
@@ -137,6 +146,12 @@ const EditDataVoucherForm = ({
 
   const handleSelectVoucher = (voucher) => {
     setSelectedVoucher(voucher);
+    setFormData((prev) => ({
+      ...prev,
+      kendaraan_id: '',
+      list_id_kendaraan: [],
+      nomor_polisi: '',
+    }));
     setModalVoucherOpen(false);
   };
 
@@ -171,8 +186,19 @@ const EditDataVoucherForm = ({
     // }
 
     const newErrors = {
-      no_tiket_atau_nopol:
-        formData.no_tiket_atau_nopol === '' ? 'Kontak wajib diisi' : '',
+      // no_tiket_atau_nopol:
+      //   formData.no_tiket_atau_nopol === '' ? 'Kontak wajib diisi' : '',
+
+      no_tiket:
+        selectedVoucher.metode_verifikasi === 'Tiket' &&
+        formData.no_tiket === ''
+          ? 'Nomor tiket wajib'
+          : '',
+      nomor_polisi:
+        selectedVoucher.metode_verifikasi === 'Nopol' &&
+        formData.nomor_polisi === ''
+          ? 'Nomor Polisi wajib diisi'
+          : '',
       kendaraan_id:
         formData.kendaraan_id === '' ? 'Jenis Kendaraan wajib diisi' : '',
       keterangan: formData.keterangan === '' ? 'Keterangan wajib diisi' : '',
@@ -188,6 +214,8 @@ const EditDataVoucherForm = ({
 
     const finalData = {
       ...formData,
+
+      no_tiket_atau_nopol: formData.no_tiket + '_' + formData.nomor_polisi,
       produk_voucher_id: selectedVoucher.id,
       tarif: selectedVoucher.tarif || '',
       model_bayar: selectedVoucher.model_pembayaran || '',
@@ -239,7 +267,7 @@ const EditDataVoucherForm = ({
       <EvoModal
         isOpen={isOpen}
         onClose={handleCloseModal}
-        title="Tambah Voucher"
+        title="Edit Data Voucher"
       >
         <EvoForm
           onSubmit={handleSubmit}
@@ -267,13 +295,30 @@ const EditDataVoucherForm = ({
           <div className="text-title_small">
             <span className="text-primary">B.</span> Data Voucher
           </div>
-          <EvoInText
+          {/* <EvoInText
             name="no_tiket_atau_nopol"
             label="Nomor Tiket / Nomor Polisi"
             placeholder="Masukkan nomor tiket / nomor polisi"
             value={formData.no_tiket_atau_nopol || ''}
             onChange={handleChange}
             error={errors.no_tiket_atau_nopol}
+          /> */}
+
+          <EvoInText
+            name="no_tiket"
+            label="Nomor Tiket"
+            placeholder="Masukkan nomor tiket"
+            value={formData.no_tiket || ''}
+            onChange={handleChange}
+            error={errors.no_tiket}
+          />
+          <EvoInText
+            name="nomor_polisi"
+            label="Nomor Polisi"
+            placeholder="Masukkan nomor polisi"
+            value={formData.nomor_polisi || ''}
+            onChange={handleChange}
+            error={errors.nomor_polisi}
           />
           <EvoInDropdown
             name="kendaraan_id"

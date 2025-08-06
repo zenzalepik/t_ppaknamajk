@@ -10,16 +10,19 @@ import EvoInDropdown from '@/components/evosist_elements/EvoInDropdown';
 import EvoInRadio from '@/components/evosist_elements/EvoInRadio';
 import EvoInDatePicker from '@/components/evosist_elements/EvoInDatePicker';
 import strings from '@/utils/strings';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getUserId } from '@/utils/db';
 import { fetchApiBantuanTiketCreate } from '../api/fetchApiBantuanTiketCreate';
+import numbers from '@/utils/numbers';
+import { fetchApiMasterDataPOS } from '../api/fetchApiMasterDataPOS';
 
 const AddPengaduanForm = ({ isOpen, onClose, onSubmit }) => {
   const [errors, setErrors] = useState({});
   const [notifMessage, setNotifMessage] = useState('');
   const [notifType, setNotifType] = useState('success');
   const queryClient = useQueryClient();
-  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const [formData, setFormData] = useState({
     judul_permasalahan: '',
@@ -30,7 +33,7 @@ const AddPengaduanForm = ({ isOpen, onClose, onSubmit }) => {
     penyebab_permasalahan: '',
     keterangan_permasalahan: '',
     nama_pelapor: '',
-    tanggal_permasalahan: '',
+    tanggal_permasalahan: null,
     status_permasalahan: 'Pending',
 
     // Tambahan field sesuai API
@@ -49,13 +52,13 @@ const AddPengaduanForm = ({ isOpen, onClose, onSubmit }) => {
       judul_permasalahan: '',
       kategori_permasalahan: '',
       pos_id: '',
-      pos_id: '',
+
       hardware_atau_alat: '',
       penyebab_permasalahan: '',
       keterangan_permasalahan: '',
       nama_pelapor: '',
       status_permasalahan: 'Pending',
-      // tanggal_permasalahan: '',
+      tanggal_permasalahan: null,
 
       // Tambahan field sesuai API
       tanggal_perbaikan: '',
@@ -65,6 +68,7 @@ const AddPengaduanForm = ({ isOpen, onClose, onSubmit }) => {
       keterangan_penanganan: '',
       nama_yang_menangani: '',
     }));
+    setSelectedDate(null);
     setErrors({});
     setNotifMessage('');
     onClose();
@@ -73,6 +77,35 @@ const AddPengaduanForm = ({ isOpen, onClose, onSubmit }) => {
   useEffect(() => {
     // console.log('Form Data Updated:', formData);
   }, [formData]);
+
+  const formatTanggal = (date) => {
+    const d = new Date(date);
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
+
+  const {
+    data: masterDataPOS,
+    error,
+    isLoading,
+  } = useQuery({
+    queryKey: ['masterDataPOS', currentPage],
+    queryFn: () =>
+      fetchApiMasterDataPOS({
+        limit: numbers.apiNumLimitExpanded,
+        page: currentPage,
+        sortBy: 'id',
+        sortOrder: 'desc',
+      }),
+  });
+
+  const posOptions =
+    masterDataPOS?.data?.map((pos) => ({
+      label: pos.keterangan || `Pos ${pos.id}`,
+      value: String(pos.id),
+    })) || [];
 
   const [selectedOptions, setSelectedOptions] = useState({
     kategori_permasalahan: '',
@@ -143,28 +176,20 @@ const AddPengaduanForm = ({ isOpen, onClose, onSubmit }) => {
       return;
     }
 
-    onSubmit?.(formData);
+    const formattedData = {
+      ...formData,
+      tanggal_permasalahan: formatTanggal(formData.tanggal_permasalahan),
+    };
+
+    // onSubmit?.(formData);
 
     // ✅ Cetak JSON ke console sebelum submit
-    console.log('Form Data (JSON):', JSON.stringify(formData, null, 2));
+    // console.log('Form Data (JSON):', JSON.stringify(formData, null, 2));
+    console.log('Form Data (JSON):', JSON.stringify(formattedData, null, 2));
 
     try {
-      await fetchApiBantuanTiketCreate(formData);
-      //       await fetchApiBantuanTiketCreate({
-      //   kategori: "Pengaduan",
-      //   produk: "Kartu Member",
-      //   tipe_masalah: "Tidak bisa tap",
-      //   tanggal_masalah: "2025-06-04",
-      //   jam_masalah: "14:30",
-      //   deskripsi: "Kartu tidak terdeteksi saat digunakan di gerbang masuk.",
-      //   pos_id: "1",
-      //   nama_pelapor: "Andi Saputra",
-      //   status: "Pending",
-      //   penanganan: "",
-      //   keterangan_penanganan: "",
-      //   nama_yang_menangani: ""
-      // }
-      // );
+      // await fetchApiBantuanTiketCreate(formData);
+      await fetchApiBantuanTiketCreate(formattedData);
 
       queryClient.invalidateQueries(['bantuanTiketPermasalahanPerbaikan']); // Refresh tabel setelah tambah data
 
@@ -241,23 +266,11 @@ const AddPengaduanForm = ({ isOpen, onClose, onSubmit }) => {
             label="Tanggal Masalah"
             value={selectedDate}
             placeholder="Pilih tanggal masalah"
-            // onChange={(date) => {
-            //   setSelectedDate(date);
-            //   setFormData((prev) => ({ ...prev, tanggal_permasalahan: date }));
-            // }}
             onChange={(date) => {
-              const formattedDate = new Intl.DateTimeFormat('id-ID', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric',
-              }).format(new Date(date)); // hasil: "31/05/2021"
-
-              const normalizedDate = formattedDate.replace(/\//g, '-'); // jadi: "31-05-2021"
-
-              setSelectedDate(normalizedDate);
+              setSelectedDate(date); // ⬅️ simpan Date object
               setFormData((prev) => ({
                 ...prev,
-                tanggal_permasalahan: normalizedDate,
+                tanggal_permasalahan: date, // ⬅️ simpan Date object juga
               }));
             }}
             error={errors.tanggal_permasalahan}
@@ -266,10 +279,11 @@ const AddPengaduanForm = ({ isOpen, onClose, onSubmit }) => {
           <EvoInDropdown
             name="pos_id"
             label="Pintu Pos"
-            options={[
-              { label: 'Pintu pos A', value: '1' },
-              { label: 'Pintu pos B', value: '2' },
-            ]}
+            // options={[
+            //   { label: 'Pintu pos A', value: '1' },
+            //   { label: 'Pintu pos B', value: '2' },
+            // ]}
+            options={posOptions}
             value={formData.pos_id}
             onChange={(value) =>
               setFormData((prev) => ({
@@ -277,11 +291,8 @@ const AddPengaduanForm = ({ isOpen, onClose, onSubmit }) => {
                 pos_id: value,
               }))
             }
-            // onChange={(e) =>
-            //   setFormData((prev) => ({ ...prev, pos_id: e.target.value }))
-            // }
             error={errors.pos_id}
-            placeholder="Pilih pintu pos"
+            placeholder={isLoading ? 'Memuat data...' : 'Pilih pintu pos'}
           />
 
           <EvoInDropdown

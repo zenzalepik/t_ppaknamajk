@@ -1,7 +1,7 @@
 //AuditTransaksiTransaksiManual.js
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import EvoTitleSection from '@/components/EvoTitleSection';
 import EvoCardSection from '@/components/evosist_elements/EvoCardSection';
 import EvoTable from '@/components/evosist_elements/EvoTable';
@@ -32,22 +32,20 @@ import EvoExportApiPDF from '@/components/EvoExportApiPDF';
 import EvoExportApiExcel from '@/components/EvoExportApiExcel';
 import EvoExportApiPrint from '@/components/EvoExportApiPrint';
 import EvoNotifCard from '@/components/EvoNotifCard';
+import EvoLoading from '@/components/EvoLoading';
+import { format } from 'date-fns';
+import { id as localeId } from 'date-fns/locale';
 
 const titleSection = 'Laporan Transaksi Manual Tiket';
 
 export default function AuditTransaksiTransaksiManual() {
+  const [start_date, setStartDate] = React.useState(getDefaultDateAwal());
+  const [end_date, setEndDate] = React.useState(getDefaultDateAkhir());
+
   const urlExport = '/laporan_data_audit_transaksi_manual/';
   const [modalExportPDFOpen, setModalExportPDFOpen] = useState(false);
   const [modalExportExcel, setModalExportExcel] = useState(false);
   const [modalExportPrint, setModalExportPrint] = useState(false);
-
-  const [startDate, setStartDate] = React.useState(getDefaultDateAwal());
-  const [endDate, setEndDate] = React.useState(getDefaultDateAkhir());
-
-  const handleDateChange = (start, end) => {
-    setStartDate(start);
-    setEndDate(end);
-  };
 
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -59,22 +57,65 @@ export default function AuditTransaksiTransaksiManual() {
   const [notifMessage, setNotifMessage] = useState('');
   const [notifType, setNotifType] = useState('success');
 
+  const formatDate = (date) => format(date, 'dd-MM-yyyy');
+
+  const formattedStartDate = format(start_date, 'MM-dd-yyyy');
+  const formattedEndDate = format(end_date, 'MM-dd-yyyy');
+
+  const [searchKeyword, setSearchKeyword] = useState('');
+
   const {
     data: laporanAuditTransaksiTransaksiManual,
     error,
     isLoading,
   } = useQuery({
-    queryKey: ['laporanAuditTransaksiTransaksiManual', currentPage],
+    queryKey: [
+      'laporanAuditTransaksiTransaksiManual',
+      currentPage,
+      formattedStartDate,
+      formattedEndDate,
+      searchKeyword,
+    ],
     queryFn: () =>
       fetchApiAuditTransaksiTransaksiManual({
-        limit: 5,
+        limit: 13,
         page: currentPage,
-        offset: (currentPage - 1) * 5,
+        // offset: (currentPage - 1) * 5,
         sortBy: 'id',
         sortOrder: 'desc',
+        start_date: formattedStartDate,
+        end_date: formattedEndDate,
+        search: searchKeyword,
       }),
-    // retry: false,
+    retry: false,
+    keepPreviousData: true,
   });
+
+  const prevDates = React.useRef({ start: start_date, end: end_date });
+
+  const handleDateChange = (start, end) => {
+    setStartDate(start);
+    setEndDate(end);
+
+    // Hanya reset page kalau tanggal bener-bener berubah
+    if (
+      format(prevDates.current.start, 'MM-dd-yyyy') !==
+        format(start, 'MM-dd-yyyy') ||
+      format(prevDates.current.end, 'MM-dd-yyyy') !== format(end, 'MM-dd-yyyy')
+    ) {
+      prevDates.current = { start, end };
+      setResetPage(true);
+    }
+  };
+
+  const [resetPage, setResetPage] = useState(false);
+
+  useEffect(() => {
+    if (resetPage) {
+      setCurrentPage(1);
+      setResetPage(false);
+    }
+  }, [resetPage]);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -90,21 +131,25 @@ export default function AuditTransaksiTransaksiManual() {
   };
 
   const handleSearch = (query) => {
-    console.log('Hasil pencarian:', query);
+    // console.log('Hasil pencarian:', query);
+    setSearchKeyword(query); // Simpan kata kunci
+    setCurrentPage(1); // Reset ke halaman pertama
   };
 
   const rows =
     laporanAuditTransaksiTransaksiManual?.data?.length > 0
-      ? laporanAuditTransaksiTransaksiManual.data.map((row, index) => ({
-          no: index + 1,
-          // noTiket: <b>{row.noTiket != null ? row.noTiket : <i>*empty</i>}</b>,
-          // id: row.id || <i>*empty</i>,
-          id: row.id || <i>*empty</i>,
-          pos: row.pos || <i>*empty</i>,
-          namaPetugas: row.namaPetugas || <i>*empty</i>,
-          qtyTransaksi: row.qtyTransaksi || <i>*empty</i>,
-          totalNominal: row.totalNominal || <i>*empty</i>,
-        }))
+      ? laporanAuditTransaksiTransaksiManual.data.map((row, index) => {
+          return {
+            no: index + 1,
+            // noTiket: <b>{row.noTiket != null ? row.noTiket : <i>*empty</i>}</b>,
+            // id: row.id || <i>*empty</i>,
+            id: row.id || <i>*empty</i>,
+            pos: row.pos || <i>*empty</i>,
+            namaPetugas: row.namaPetugas || <i>*empty</i>,
+            qtyTransaksi: row.qtyTransaksi || <i>*empty</i>,
+            totalNominal: row.totalNominal || <i>*empty</i>,
+          };
+        })
       : [];
 
   if (isLoading)
@@ -165,14 +210,17 @@ export default function AuditTransaksiTransaksiManual() {
           onSearch={(data) => console.log('Hasil pencarian:', data)}
         />
 
-        <EvoTable
-          id="tableToPrint"
-          tableData={tableDataAuditTransaksiTransaksiManual}
-          currentPage={currentPage}
-          totalPages={laporanAuditTransaksiTransaksiManual?.totalPages}
-          onPageChange={handlePageChange}
-          rows={rows}
-        />
+        <div className="relative">
+          {isLoading && <EvoLoading />}
+          <EvoTable
+            id="tableToPrint"
+            tableData={tableDataAuditTransaksiTransaksiManual}
+            currentPage={currentPage}
+            totalPages={laporanAuditTransaksiTransaksiManual?.totalPages}
+            onPageChange={handlePageChange}
+            rows={rows}
+          />
+        </div>
       </EvoCardSection>
     </>
   );

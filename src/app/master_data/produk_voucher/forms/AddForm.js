@@ -38,26 +38,29 @@ const AddProdukVoucherForm = ({ isOpen, onClose, onSubmit }) => {
     periode_akhir: '',
     periode: [],
     list_id_kendaraan: [],
-    model_pembayaran: '',
+    model_pembayaran: 'Check Out',
     metode_verifikasi: '',
-    tarif: '',
+    diskon: '',
+    diskon: 0,
     status: false,
     user_id: null,
   });
 
   // ✅ Fungsi untuk mereset pilihan saat modal ditutup
   const handleCloseModal = () => {
-    setFormData({
+    setFormData((prev) => ({
+      ...prev,
       nama: '',
       periode_mulai: '',
       periode_akhir: '',
       periode: [],
       list_id_kendaraan: [],
-      model_pembayaran: '',
+      model_pembayaran: 'Check Out',
       metode_verifikasi: '',
-      tarif: '',
+      diskon: '',
+      diskon: 0,
       status: false,
-    });
+    }));
     setErrors({});
     setNotifMessage('');
     onClose();
@@ -71,15 +74,14 @@ const AddProdukVoucherForm = ({ isOpen, onClose, onSubmit }) => {
     setErrors((prev) => ({ ...prev, [name]: '' }));
   };
 
-  
-    // Ambil user_id secara async
-    useEffect(() => {
-      const fetchUserId = async () => {
-        const id = await getUserId();
-        setFormData((prev) => ({ ...prev, user_id: id }));
-      };
-      fetchUserId();
-    }, []);
+  // Ambil user_id secara async
+  useEffect(() => {
+    const fetchUserId = async () => {
+      const id = await getUserId();
+      setFormData((prev) => ({ ...prev, user_id: id }));
+    };
+    fetchUserId();
+  }, []);
 
   // useEffect(() => {
   //   setFormData((prev) => ({
@@ -131,8 +133,7 @@ const AddProdukVoucherForm = ({ isOpen, onClose, onSubmit }) => {
     // );
 
     const newErrors = {
-      nama:
-        formData.nama === '' ? 'Nama Produk Voucher wajib diisi' : '',
+      nama: formData.nama === '' ? 'Nama Produk Voucher wajib diisi' : '',
       periode_mulai:
         formData.periode_mulai === '' ? 'Tanggal Mulai wajib diisi' : '',
       periode_akhir:
@@ -143,7 +144,7 @@ const AddProdukVoucherForm = ({ isOpen, onClose, onSubmit }) => {
         formData.metode_verifikasi === ''
           ? 'Metode Verifikasi wajib diisi'
           : '',
-      tarif: formData.tarif === '' ? 'Tarif wajib diisi' : '',
+      diskon: formData.diskon === '' ? 'Diskon wajib diisi' : '',
       // kendaraan: kendaraanTerpilih
       //   ? ''
       //   : 'Minimal satu kendaraan harus dipilih',
@@ -171,7 +172,7 @@ const AddProdukVoucherForm = ({ isOpen, onClose, onSubmit }) => {
     // });
 
     try {
-      console.log(formData);
+      console.log(JSON.stringify(formData));
       // const payload = {
       //   ...formData,
       //   kendaraan: selectedKendaraan,
@@ -185,7 +186,7 @@ const AddProdukVoucherForm = ({ isOpen, onClose, onSubmit }) => {
       queryClient.invalidateQueries(['masterDataProdukVoucher']); // Refresh tabel setelah tambah data
 
       setNotifMessage('Produk Voucher berhasil disimpan!');
-    setNotifType('success');
+      setNotifType('success');
 
       setTimeout(() => handleCloseModal(), 500);
     } catch (error) {
@@ -205,7 +206,11 @@ const AddProdukVoucherForm = ({ isOpen, onClose, onSubmit }) => {
         />
       )}
 
-      <EvoModal isOpen={isOpen} onClose={handleCloseModal} title="Tambah Produk Voucher">
+      <EvoModal
+        isOpen={isOpen}
+        onClose={handleCloseModal}
+        title="Tambah Produk Voucher"
+      >
         <EvoForm
           onSubmit={handleSubmit}
           submitText="Simpan"
@@ -251,7 +256,7 @@ const AddProdukVoucherForm = ({ isOpen, onClose, onSubmit }) => {
                 name="model_pembayaran"
                 label="Model Bayar"
                 options={[
-                  { label: 'Check In', value: 'Check In' },
+                  // { label: 'Check In', value: 'Check In' },
                   { label: 'Check Out', value: 'Check Out' },
                 ]}
                 value={formData.model_pembayaran}
@@ -260,6 +265,7 @@ const AddProdukVoucherForm = ({ isOpen, onClose, onSubmit }) => {
                 }
                 error={errors.model_pembayaran}
                 placeholder="Pilih model bayar"
+                // disabled={true}
               />
             </div>
 
@@ -282,12 +288,12 @@ const AddProdukVoucherForm = ({ isOpen, onClose, onSubmit }) => {
           </div>
           <div className="flex gap-3 relative">
             <EvoInText
-              name="tarif"
-              label="Tarif"
-              placeholder="Masukkan tarif"
-              value={formData.tarif}
+              name="diskon"
+              label="Diskon"
+              placeholder="Masukkan diskon"
+              value={formData.diskon}
               onChange={handleChange}
-              error={errors.tarif}
+              error={errors.diskon}
             />
           </div>
           <EvoInCheckbox

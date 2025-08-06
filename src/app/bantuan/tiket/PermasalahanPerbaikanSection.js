@@ -14,9 +14,9 @@ import AddPengaduanForm from './forms/AddForm';
 import { ambilLevelPengguna } from '@/utils/levelPenggunaStorage';
 import EvoErrorDiv from '@/components/EvoErrorDiv';
 
-const titleSection = 'Pembayaran';
+const titleSection = 'Tiket';
 
-export default function PembayaranSection() {
+export default function TiketSection() {
   const [TableVisible, setTableVisible] = useState(false);
   const [modalOpenPengaduan, setModalOpenPengaduan] = useState(false);
   const handleTambahPengaduan = () => setModalOpenPengaduan(true);

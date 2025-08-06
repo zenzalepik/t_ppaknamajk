@@ -1,24 +1,25 @@
 // api/masterData.js
 
-import { fetchWithAuthDummy } from '@/helpers/fetchWithAuthDummy';
+import { fetchWithAuth } from '@/helpers/fetchWithAuth';
 
 export const fetchApiDashboardKendaraan = async ({
-  limit = 15,
-  page = 1,
-  offset = 0,
-  sortBy = 'id',
-  sortOrder = 'asc',
+  // limit = 15,
+  // page = 1,
+  // offset = 0,
+  // sortBy = 'id',
+  // sortOrder = 'asc',
 } = {}) => {
   const queryParams = new URLSearchParams({
-    limit: limit.toString(),
-    page: page.toString(),
-    offset: offset.toString(),
-    sortBy,
-    sortOrder,
+    // limit: limit.toString(),
+    // page: page.toString(),
+    // offset: offset.toString(),
+    // sortBy,
+    // sortOrder,
   });
 
-  return await fetchWithAuthDummy({
+  return await fetchWithAuth({
     method: 'get',
-    endpoint: `/dashboard_kendaraan?${queryParams.toString()}`,
+    // endpoint: `/dashboard_kendaraan?${queryParams.toString()}`,
+    endpoint: `/dashboard/grafik/tipe-kendaraan`
   });
 };

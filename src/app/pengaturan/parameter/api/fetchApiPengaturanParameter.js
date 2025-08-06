@@ -5,14 +5,14 @@ import { fetchWithAuth } from '@/helpers/fetchWithAuth';
 export const fetchApiPengaturanParameter = async ({
   limit = 15,
   page = 1,
-  offset = 0,
+  // offset = 0,
   sortBy = 'id',
-  sortOrder = 'asc',
+  sortOrder = 'desc',
 } = {}) => {
   const queryParams = new URLSearchParams({
     limit: limit.toString(),
     page: page.toString(),
-    offset: offset.toString(),
+    // offset: offset.toString(),
     sortBy,
     sortOrder,
   });

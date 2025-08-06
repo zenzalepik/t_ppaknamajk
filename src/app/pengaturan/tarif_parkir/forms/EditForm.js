@@ -107,6 +107,7 @@ const EditTarifParkirForm = ({
     // console.log(formData);
 
     try {
+      console.log('formData'+JSON.stringify(formData));
       await fetchApiPengaturanTarifParkirUpdate(formData);
 
       queryClient.invalidateQueries(['masterDataPerusahaan']); // Refresh tabel setelah tambah data

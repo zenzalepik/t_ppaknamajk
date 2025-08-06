@@ -32,6 +32,7 @@ import EvoErrorDiv from '@/components/EvoErrorDiv';
 import EvoExportApiPDF from '@/components/EvoExportApiPDF';
 import EvoExportApiExcel from '@/components/EvoExportApiExcel';
 import EvoExportApiPrint from '@/components/EvoExportApiPrint';
+import numbers from '@/utils/numbers';
 
 const titleSection = 'Data Pengguna';
 
@@ -97,9 +98,9 @@ export default function DataPenggunaSection() {
     queryKey: ['masterDataDataPengguna', currentPage],
     queryFn: () =>
       fetchApiMasterDataDataPengguna({
-        limit: 5,
+        limit: numbers.apiNumLimit,
         page: currentPage,
-        offset: (currentPage - 1) * 5,
+        // offset: (currentPage - 1) * 5,
         sortBy: 'id',
         sortOrder: 'desc',
       }),
@@ -114,9 +115,9 @@ export default function DataPenggunaSection() {
     queryKey: ['masterDataPerusahaan', currentPage],
     queryFn: () =>
       fetchApiMasterDataPerusahaan({
-        limit: 905,
+        limit: numbers.apiNumLimitExpanded,
         page: currentPage,
-        offset: (currentPage - 1) * 5,
+        // offset: (currentPage - 1) * 5,
         sortBy: 'id',
         sortOrder: 'desc',
       }),

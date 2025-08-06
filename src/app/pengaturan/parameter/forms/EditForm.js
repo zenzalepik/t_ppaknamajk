@@ -21,6 +21,7 @@ const EditParameterForm = ({
     id: '',
     nama: '',
     nilai: '',
+    keterangan:''
   });
 
   // ✅ Fungsi untuk mereset pilihan saat modal ditutup
@@ -30,6 +31,7 @@ const EditParameterForm = ({
       id: '',
       nama: '',
       nilai: '',
+      keterangan:''
     }));
     setErrors({});
     setNotifMessage('');
@@ -42,6 +44,7 @@ const EditParameterForm = ({
         id: initialData.id || '',
         nama: initialData.nama || '',
         nilai: initialData.nilai || '',
+        keterangan:initialData.keterangan||''
       });
     }
   }, [initialData]);
@@ -82,7 +85,7 @@ const EditParameterForm = ({
     try {
           await fetchApiPengaturanParameterUpdate(formData);
 
-          queryClient.invalidateQueries(['masterDataPerusahaan']); // Refresh tabel setelah tambah data
+          queryClient.invalidateQueries(['pengaturanParameter']); // Refresh tabel setelah tambah data
 
           setNotifMessage('Data parameter berhasil disimpan!');
           setNotifType('success');
@@ -140,7 +143,8 @@ const EditParameterForm = ({
           <div className="border-dashed p-4 !pt-0">
             <div className="text-card mb-1">Keterangan</div>
             <div className="text-title_content">
-              Pengaturan mekanisme pembayaran untuk member
+              {/* Pengaturan mekanisme pembayaran untuk member */}
+              {formData.keterangan}
             </div>
           </div>
         </EvoForm>

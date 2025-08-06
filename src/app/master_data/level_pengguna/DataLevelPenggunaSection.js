@@ -21,6 +21,7 @@ import EvoNotifCard from '@/components/EvoNotifCard';
 import EditLevelPenggunaForm from './forms/EditForm';
 import PengaturanLevelPenggunaForm from './forms/PengaturanForm';
 import { ambilLevelPengguna } from '@/utils/levelPenggunaStorage';
+import numbers from '@/utils/numbers';
 
 const titleSection = 'Level Pengguna';
 
@@ -62,7 +63,7 @@ export default function DataLevelPenggunaSection() {
     queryKey: ['masterDataLevelPengguna', currentPage],
     queryFn: () =>
       fetchApiMasterDataLevelPengguna({
-        limit: 5,
+        limit: numbers.apiNumLimit,
         page: currentPage,
         // offset: (currentPage - 1) * 5,
         sortBy: 'id',

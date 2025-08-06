@@ -14,6 +14,7 @@ import Spinner from '@/components/Spinner';
 import EvoErrorDiv from '@/components/EvoErrorDiv';
 import { fetchApiDashboardKendaraan } from './api/fetchApiDashboardKendaraan';
 import EvoNotifCard from '@/components/EvoNotifCard';
+import { getErrorMessage } from '@/utils/errorHandler';
 
 export default function KendaraanSection() {
   const [startDate, setStartDate] = React.useState(getDefaultDateAwal());
@@ -36,13 +37,15 @@ export default function KendaraanSection() {
   } = useQuery({
     queryKey: ['dashboardKendaraan', currentPage],
     queryFn: () =>
-      fetchApiDashboardKendaraan({
-        limit: 5,
-        page: currentPage,
-        offset: (currentPage - 1) * 5,
-        sortBy: 'id',
-        sortOrder: 'desc',
-      }),
+      fetchApiDashboardKendaraan(
+        // {
+        // limit: 5,
+        // page: currentPage,
+        // offset: (currentPage - 1) * 5,
+        // sortBy: 'id',
+        // sortOrder: 'desc',
+      // }
+    ),
     // retry: false,
   });
 

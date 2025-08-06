@@ -1,7 +1,7 @@
 //AuditTransaksiPembatalanTransaksi.js
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import EvoTitleSection from '@/components/EvoTitleSection';
 import EvoCardSection from '@/components/evosist_elements/EvoCardSection';
 import EvoTable from '@/components/evosist_elements/EvoTable';
@@ -32,22 +32,20 @@ import EvoExportApiPDF from '@/components/EvoExportApiPDF';
 import EvoExportApiExcel from '@/components/EvoExportApiExcel';
 import EvoExportApiPrint from '@/components/EvoExportApiPrint';
 import EvoNotifCard from '@/components/EvoNotifCard';
+import EvoLoading from '@/components/EvoLoading';
+import { format } from 'date-fns';
+import { id as localeId } from 'date-fns/locale';
 
 const titleSection = 'Pembatalan Transaksi';
 
 export default function AuditTransaksiPembatalanTransaksi() {
+  const [start_date, setStartDate] = React.useState(getDefaultDateAwal());
+  const [end_date, setEndDate] = React.useState(getDefaultDateAkhir());
+
   const urlExport = '/laporan_data_audit_transaksi_pembatalan_transaksi/';
   const [modalExportPDFOpen, setModalExportPDFOpen] = useState(false);
   const [modalExportExcel, setModalExportExcel] = useState(false);
   const [modalExportPrint, setModalExportPrint] = useState(false);
-
-  const [startDate, setStartDate] = React.useState(getDefaultDateAwal());
-  const [endDate, setEndDate] = React.useState(getDefaultDateAkhir());
-
-  const handleDateChange = (start, end) => {
-    setStartDate(start);
-    setEndDate(end);
-  };
 
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -59,6 +57,13 @@ export default function AuditTransaksiPembatalanTransaksi() {
   const [notifMessage, setNotifMessage] = useState('');
   const [notifType, setNotifType] = useState('success');
 
+  const formatDate = (date) => format(date, 'dd-MM-yyyy');
+
+  const formattedStartDate = format(start_date, 'MM-dd-yyyy');
+  const formattedEndDate = format(end_date, 'MM-dd-yyyy');
+
+  const [searchKeyword, setSearchKeyword] = useState('');
+
   const {
     data: laporanAuditTransaksiPembatalanTransaksi,
     error,
@@ -67,14 +72,47 @@ export default function AuditTransaksiPembatalanTransaksi() {
     queryKey: ['laporanAuditTransaksiPembatalanTransaksi', currentPage],
     queryFn: () =>
       fetchApiAuditTransaksiPembatalanTransaksi({
-        limit: 5,
+        limit: 13,
         page: currentPage,
-        offset: (currentPage - 1) * 5,
-        sortBy: 'id',
+        formattedStartDate,
+        formattedEndDate,
+        searchKeyword,
+        // offset: (currentPage - 1) * 5,
+        // sortBy: 'id',
         sortOrder: 'desc',
+        start_date: formattedStartDate,
+        end_date: formattedEndDate,
+        search: searchKeyword,
       }),
-    // retry: false,
+    retry: false,
+    keepPreviousData: true,
   });
+
+  const prevDates = React.useRef({ start: start_date, end: end_date });
+
+  const handleDateChange = (start, end) => {
+    setStartDate(start);
+    setEndDate(end);
+
+    // Hanya reset page kalau tanggal bener-bener berubah
+    if (
+      format(prevDates.current.start, 'MM-dd-yyyy') !==
+        format(start, 'MM-dd-yyyy') ||
+      format(prevDates.current.end, 'MM-dd-yyyy') !== format(end, 'MM-dd-yyyy')
+    ) {
+      prevDates.current = { start, end };
+      setResetPage(true);
+    }
+  };
+
+  const [resetPage, setResetPage] = useState(false);
+
+  useEffect(() => {
+    if (resetPage) {
+      setCurrentPage(1);
+      setResetPage(false);
+    }
+  }, [resetPage]);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -90,7 +128,27 @@ export default function AuditTransaksiPembatalanTransaksi() {
   };
 
   const handleSearch = (query) => {
-    console.log('Hasil pencarian:', query);
+    // console.log('Hasil pencarian:', query);
+    setSearchKeyword(query); // Simpan kata kunci
+    setCurrentPage(1); // Reset ke halaman pertama
+    
+  };
+
+  const formatRupiah = (value) => {
+    if (value === null || value === undefined) {
+      return <i>*empty</i>;
+    }
+
+    // Pastikan angka 0 tetap diformat sebagai Rp. 0
+    if (typeof value === 'number' || !isNaN(Number(value))) {
+      return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0,
+      }).format(Number(value));
+    }
+
+    return <i>*empty</i>;
   };
 
   const rows =
@@ -101,19 +159,19 @@ export default function AuditTransaksiPembatalanTransaksi() {
 
           // id: row.id ||<i>*empty</i>,
           pos: row.pos || <i>*empty</i>,
-          petugas: row.petugas || <i>*empty</i>,
-          qty: row.qty || <i>*empty</i>,
-          totalNominal: row.totalNominal || <i>*empty</i>,
+          petugas: row.nama_petugas || <i>*empty</i>,
+          qty: row.qty_transaksi_dibatalkan + 'transaksi' || <i>*empty</i>,
+          totalNominal: formatRupiah(row.total_nominal_pembatalan),
         }))
       : [];
 
-  if (isLoading)
-    return (
-      <div className="h-full flex flex-col gap-2 justify-center items-center text-center text-primary">
-        <Spinner size={32} color="border-black" />
-        Loading...
-      </div>
-    );
+  // if (isLoading)
+  //   return (
+  //     <div className="h-full flex flex-col gap-2 justify-center items-center text-center text-primary">
+  //       <Spinner size={32} color="border-black" />
+  //       Loading...
+  //     </div>
+  //   );
 
   if (error) {
     return <EvoErrorDiv errorHandlerText={getErrorMessage(error)} />;
@@ -165,14 +223,17 @@ export default function AuditTransaksiPembatalanTransaksi() {
           onSearch={(data) => console.log('Hasil pencarian:', data)}
         />
 
-        <EvoTable
-          id="tableToPrint"
-          tableData={tableDataAuditTransaksiPembatalanTransaksi}
-          currentPage={currentPage}
-          totalPages={laporanAuditTransaksiPembatalanTransaksi?.totalPages}
-          onPageChange={handlePageChange}
-          rows={rows}
-        />
+        <div className="relative">
+          {isLoading && <EvoLoading />}
+          <EvoTable
+            id="tableToPrint"
+            tableData={tableDataAuditTransaksiPembatalanTransaksi}
+            currentPage={currentPage}
+            totalPages={laporanAuditTransaksiPembatalanTransaksi?.totalPages}
+            onPageChange={handlePageChange}
+            rows={rows}
+          />
+        </div>
       </EvoCardSection>
     </>
   );

@@ -10,6 +10,7 @@ import { getErrorMessage } from '@/utils/errorHandler';
 import EvoErrorDiv from '@/components/EvoErrorDiv';
 import { getUserId } from '@/utils/db';
 import EvoNotifCard from '@/components/EvoNotifCard';
+import EvoEmpty from '@/components/EvoEmpty';
 
 const EvoTicketVoucher = ({ voucher, onSendListIdKendaraan }) => {
   const queryClient = useQueryClient();
@@ -113,11 +114,11 @@ const EvoTicketVoucher = ({ voucher, onSendListIdKendaraan }) => {
 
         <div className="border-t border-dashed border-primary my-2" />
 
-        <div className="text-black/[0.64] text-xs">Tarif:</div>
+        <div className="text-black/[0.64] text-xs">Diskon:</div>
         <div className="text-title_large text-primary">
           Rp{' '}
-          {voucher.tarif
-            ? new Intl.NumberFormat('id-ID').format(voucher.tarif)
+          {voucher.diskon
+            ? new Intl.NumberFormat('id-ID').format(voucher.diskon)
             : '-'}
         </div>
         <div className="border-t border-dashed border-primary my-2" />
@@ -140,23 +141,29 @@ const EvoTicketVoucher = ({ voucher, onSendListIdKendaraan }) => {
         </div> */}
 
         <div className="flex flex-wrap gap-1">
-          <ul className="list-disc pl-4">
-            {voucher.list_id_kendaraan.map((id, index) => {
-              const kendaraan = masterDataKendaraan?.data?.find(
-                (k) => k.id.toString() === id
-              );
-              return (
-                <li key={`${id}-${index}`}>
-                  {kendaraan
-                    ? // ? `${kendaraan.nama_kendaraan} (${kendaraan.tipe_kendaraan})`
+          {Array.isArray(voucher.list_id_kendaraan) &&
+          voucher.list_id_kendaraan.length > 0 ? (
+            <ul className="list-disc pl-4">
+              {voucher.list_id_kendaraan.map((id, index) => {
+                const kendaraan = masterDataKendaraan?.data?.find(
+                  (k) => k.id.toString() === id
+                );
+                return (
+                  <li key={`${id}-${index}`}>
+                    {kendaraan ? (
                       `${kendaraan.nama_kendaraan} (${
                         kendaraan?.tipe_kendaraan?.tipe_kendaraan || '-'
                       })`
-                    : 'Tidak ditemukan'}
-                </li>
-              );
-            })}
-          </ul>
+                    ) : (
+                      <EvoEmpty message="Kendaraan tidak dikenali" />
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <EvoEmpty message="Tidak ada kendaraan yang terhubung dengan voucher ini" />
+          )}
         </div>
 
         <div className="border-t border-dashed border-primary my-2" />

@@ -110,6 +110,8 @@ export default function PembayaranSection() {
     );
   }
 
+  console.log(pengaturanPembayaran);
+  
   const rows =
     pengaturanPembayaran?.data?.length > 0
       ? pengaturanPembayaran.data.map((row, index) => ({
@@ -156,7 +158,7 @@ export default function PembayaranSection() {
           <div className="grid grid-cols-2 gap-6">
             {paymentTypes.map((type, index) => {
               const matchedPayment = dataPembayaran.find(
-                (p) => p.jenis_payment.toLowerCase() === type.toLowerCase()
+                (p) => p.jenis_payment?.toLowerCase() === type.toLowerCase()
               );
               const isActive = matchedPayment?.status === true;
               const isMatched = !!matchedPayment;

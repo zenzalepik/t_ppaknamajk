@@ -71,7 +71,7 @@ export default function PengaduanSection({ onBack, hakAksesBTiket }) {
       fetchApiBantuanTiketPermasalahanPerbaikan({
         limit: 5,
         page: currentPage,
-        offset: (currentPage - 1) * 5,
+        // offset: (currentPage - 1) * 5,
         sortBy: 'id',
         sortOrder: 'desc',
       }),
@@ -156,6 +156,16 @@ export default function PengaduanSection({ onBack, hakAksesBTiket }) {
     // Logika untuk melakukan edit (misalnya membuka form modal)
   };
 
+  const formatTanggal = (tanggal) => {
+    if (!tanggal) return '';
+    const d = new Date(tanggal); // ← akan bekerja karena input '2025-08-27' adalah string ISO sederhana
+    if (isNaN(d)) return tanggal;
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
+
   const handleProsesPerbaikan = (id) => {
     // console.log('Riwayat Transaksi ID:', id);
 
@@ -173,7 +183,9 @@ export default function PengaduanSection({ onBack, hakAksesBTiket }) {
         penyebab_permasalahan: dataDipilih.penyebab_permasalahan || '',
         keterangan_permasalahan: dataDipilih.keterangan_permasalahan || '',
         nama_pelapor: dataDipilih.nama_pelapor || '',
+        jenis_perbaikan: dataDipilih.jenis_perbaikan || '',
         status_permasalahan: dataDipilih.status_permasalahan,
+        // tanggal_perbaikan: dataDipilih.tanggal_perbaikan || '',
         tanggal_perbaikan: dataDipilih.tanggal_perbaikan || '',
         status_perbaikan: dataDipilih.status_perbaikan,
         penanganan: dataDipilih.penanganan || '',
@@ -199,34 +211,47 @@ export default function PengaduanSection({ onBack, hakAksesBTiket }) {
     bantuanTiketPermasalahanPerbaikan?.data?.length > 0
       ? bantuanTiketPermasalahanPerbaikan.data.map((row, index) => ({
           no: index + 1,
-          judul: <b>{row.judul_permasalahan || <i>*empty</i>}</b>,
-          tanggal_masalah: row.tanggal_permasalahan || <i>*empty</i>,
-          // tanggal_masalah: new Date(row.tanggal_permasalahan).toLocaleString() || (
-          //   <i>*empty</i>
-          // ),
-          kategori_masalah: row.kategori_permasalahan || <i>*empty</i>,
-          pos: row.pos ? (
-            row.pos.kode + ' (' + row.pos.tipe_pos + ') ' || <i>*empty</i>
-          ) : (
-            <i>*empty</i>
+          judul: (
+            <b>
+              {row.judul_permasalahan || <i className="text-danger">*empty</i>}
+            </b>
           ),
-          alat_bermasalah: row.hardware_atau_alat || <i>*empty</i>,
+          tanggal_masalah: row.tanggal_permasalahan || (
+            <i className="text-danger">*empty</i>
+          ),
+          // tanggal_masalah: new Date(row.tanggal_permasalahan).toLocaleString() || (
+          //   <i className="text-danger">*empty</i>
+          // ),
+          kategori_masalah: row.kategori_permasalahan || (
+            <i className="text-danger">*empty</i>
+          ),
+          pos: row.pos?.keterangan ? (
+            row.pos.keterangan
+          ) : (
+            <i className="text-danger">*empty</i>
+          ),
+          alat_bermasalah: row.hardware_atau_alat || (
+            <i className="text-danger">*empty</i>
+          ),
           penyebab: row.penyebab_permasalahan || <i>tidak diketahui</i>,
-          keterangan_masalah: row.keterangan_permasalahan || <i>*empty</i>,
-          pelapor: row.nama_pelapor || <i>*empty</i>,
-          tanggal_perbaikan: row.tanggal_perbaikan || '-',
+          keterangan_masalah: row.keterangan_permasalahan || (
+            <i className="text-danger">*empty</i>
+          ),
+          pelapor: row.nama_pelapor || <i className="text-danger">*empty</i>,
+          tanggal_perbaikan: formatTanggal(row.tanggal_perbaikan || '-'),
           jenis_perbaikan: row.jenis_perbaikan || '-',
           penanganan: row.penanganan || '-',
           keterangan_perbaikan: row.keterangan_penanganan || '-',
           yang_menangani: row.nama_yang_menangani || '-',
+          // jenis_perbaikan: row.jenis_perbaikan || '',
           status: StatusLabel.permasalahanPerbaikan(row.status_perbaikan) || (
-            <i>*empty</i>
+            <i className="text-danger">*empty</i>
           ),
           // added: new Date(row.createdAt).toLocaleString() || (
-          //   <i>*empty</i>
+          //   <i className="text-danger">*empty</i>
           // ),
           // updated: new Date(row.updatedAt).toLocaleString() || (
-          //   <i>*empty</i>
+          //   <i className="text-danger">*empty</i>
           // ),
           aksi: (
             <EvoActionButtons

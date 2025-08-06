@@ -20,12 +20,13 @@ const strings = {
     //   profile: 'Profil Pengguna',
   },
   userName: 'Administrator',
-  // apiUrl:'http://localhost:4000',
+  apiUrl: 'http://localhost:4000',
   // apiUrlDummy: 'http://localhost:3001',
-  apiUrl: 'https://evolusipark-backend.onrender.com',
+  // apiUrl: 'https://evolusipark-backend.onrender.com',
   apiUrlDummy: 'https://api-dummy-evolusipark.onrender.com',
   options: {
-    paymentTypes: ['Cash', 'Prepaid', 'Transfer Bank', 'E-Wallet', 'Member'],
+    paymentTypes: ['Tunai', 'Bank', 'QRIS', 'Member'],
+    // paymentTypes: ['Cash', 'Prepaid', 'Transfer Bank', 'E-Wallet', 'Member'],
   },
 };
 

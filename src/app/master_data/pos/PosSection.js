@@ -30,6 +30,7 @@ import { ambilLevelPengguna } from '@/utils/levelPenggunaStorage';
 import EvoExportApiPDF from '@/components/EvoExportApiPDF';
 import EvoExportApiExcel from '@/components/EvoExportApiExcel';
 import EvoExportApiPrint from '@/components/EvoExportApiPrint';
+import numbers from '@/utils/numbers';
 
 const titleSection = 'Data Pos';
 
@@ -78,9 +79,9 @@ export default function PosSection() {
     queryKey: ['masterDataPOS', currentPage],
     queryFn: () =>
       fetchApiMasterDataPOS({
-        limit: 5,
+        limit: numbers.apiNumLimit,
         page: currentPage,
-        offset: (currentPage - 1) * 5,
+        // offset: (currentPage - 1) * 5,
         sortBy: 'id',
         sortOrder: 'desc',
       }),
@@ -95,9 +96,9 @@ export default function PosSection() {
     queryKey: ['pengaturanParameterTipeKendaraan', currentPageTipeKendaraan],
     queryFn: () =>
       fetchApiPengaturanParameterTipeKendaraan({
-        limit: 5,
+        limit: numbers.apiNumLimitExpanded,
         page: currentPageTipeKendaraan,
-        offset: (currentPageTipeKendaraan - 1) * 5,
+        // offset: (currentPageTipeKendaraan - 1) * 5,
         sortBy: 'id',
         sortOrder: 'desc',
       }),

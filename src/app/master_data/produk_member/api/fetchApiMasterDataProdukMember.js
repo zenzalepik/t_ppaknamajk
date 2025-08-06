@@ -5,7 +5,7 @@ import { fetchWithAuth } from '@/helpers/fetchWithAuth';
 export const fetchApiMasterDataProdukMember = async ({
   limit = 15,
   page = 1,
-  offset = 0,
+  // offset = 0,
   sortBy = 'id',
   sortOrder = 'asc',
 } = {}) => {
@@ -13,7 +13,7 @@ export const fetchApiMasterDataProdukMember = async ({
   const queryParams = new URLSearchParams({
     limit: limit.toString(),
     page: page.toString(),
-    offset: offset.toString(),
+    // offset: offset.toString(),
     sortBy,
     sortOrder,
   });

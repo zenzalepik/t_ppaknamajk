@@ -22,11 +22,12 @@ import { fetchApiMasterDataProdukMember } from '@/app/master_data/produk_member/
 import TiketProdukMemberForm from './TiketProdukMemberForm';
 import EvoTicketMember from '@/components/EvoTicketMember';
 import { fetchApiMasterDataDataKendaraan } from '@/app/master_data/data_kendaraan/api/fetchApiMasterDataDataKendaraan';
-import { fetchApiPengaturanParameterTipeKendaraan } from '@/app/pengaturan/parameter/api/items/fetchApiPengaturanParameterTipeKendaraan';
+import { fetchApiPengaturanParameterTipeKendaraan } from '../api/fetchApiPengaturanParameterTipeKendaraan';
 import { getUserId } from '@/utils/db';
 import { fetchApiMasterDataDataMemberCreate } from '../api/fetchApiMasterDataDataMemberCreate';
 import Spinner from '@/components/Spinner';
 import EvoErrorDiv from '@/components/EvoErrorDiv';
+import numbers from '@/utils/numbers';
 // import dataKendaraan from '../data/dataKendaraan';
 
 const AddDataMemberForm = ({ isOpen, onClose, onSubmit }) => {
@@ -53,9 +54,9 @@ const AddDataMemberForm = ({ isOpen, onClose, onSubmit }) => {
     queryKey: ['masterDataPerusahaan', currentPage],
     queryFn: () =>
       fetchApiMasterDataPerusahaan({
-        limit: 305,
+        limit: numbers.apiNumLimitExpanded,
         page: currentPage,
-        offset: (currentPage - 1) * 5,
+        // offset: (currentPage - 1) * 5,
         sortBy: 'id',
         sortOrder: 'desc',
       }),
@@ -72,9 +73,9 @@ const AddDataMemberForm = ({ isOpen, onClose, onSubmit }) => {
     queryKey: ['masterDataProdukMember', currentPage],
     queryFn: () =>
       fetchApiMasterDataProdukMember({
-        limit: 905,
+        limit: numbers.apiNumLimitExpanded,
         page: currentPage,
-        offset: (currentPage - 1) * 5,
+        // offset: (currentPage - 1) * 5,
         sortBy: 'id',
         sortOrder: 'desc',
       }),
@@ -96,9 +97,9 @@ const AddDataMemberForm = ({ isOpen, onClose, onSubmit }) => {
     queryKey: ['masterDataDataKendaraan', currentPage],
     queryFn: () =>
       fetchApiMasterDataDataKendaraan({
-        limit: 905,
+        limit: numbers.apiNumLimitExpanded,
         page: currentPage,
-        offset: (currentPage - 1) * 5,
+        // offset: (currentPage - 1) * 5,
         sortBy: 'id',
         sortOrder: 'desc',
       }),
@@ -310,7 +311,7 @@ const AddDataMemberForm = ({ isOpen, onClose, onSubmit }) => {
     // onSubmit?.(formData);
 
     try {
-      console.log(formData);
+      console.log(JSON.stringify(formData));
       await fetchApiMasterDataDataMemberCreate(formData);
 
       queryClient.invalidateQueries(['masterDataDataMember']); // Refresh tabel setelah tambah data

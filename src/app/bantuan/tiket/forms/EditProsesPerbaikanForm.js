@@ -28,12 +28,12 @@ const EditProsesPerbaikanForm = ({
 
   const [formData, setFormData] = useState({
     tanggal_perbaikan: '',
+    jenis_perbaikan: '',
     status_permasalahan: 'Pending',
     status_perbaikan: 'Pending',
     penanganan: '',
     keterangan_penanganan: '',
     nama_yang_menangani: '',
-    jenis_perbaikan: '',
   });
 
   const [selectedOptions, setSelectedOptions] = useState({
@@ -44,12 +44,12 @@ const EditProsesPerbaikanForm = ({
     setFormData((prev) => ({
       ...prev,
       tanggal_perbaikan: '',
+      jenis_perbaikan: '',
       status_permasalahan: 'Pending',
       status_perbaikan: 'Pending',
       penanganan: '',
       keterangan_penanganan: '',
       nama_yang_menangani: '',
-      jenis_perbaikan: '',
     }));
     setErrors({});
     setNotifMessage('');
@@ -58,16 +58,17 @@ const EditProsesPerbaikanForm = ({
 
   useEffect(() => {
     if (initialData) {
-      setFormData({
+      setFormData((prev) => ({
+        ...prev,
         id: initialData.id || '',
         tanggal_perbaikan: initialData.tanggal_perbaikan || '',
+        jenis_perbaikan: initialData.jenis_perbaikan || '',
         status_permasalahan: initialData.status_permasalahan,
         status_perbaikan: initialData.status_perbaikan,
         penanganan: initialData.penanganan,
         keterangan_penanganan: initialData.keterangan_penanganan || '',
         nama_yang_menangani: initialData.nama_yang_menangani || '',
-        jenis_perbaikan: initialData.jenis_perbaikan || '',
-      });
+      }));
       setSelectedDate(initialData.tanggal_perbaikan);
     }
   }, [initialData]);
@@ -106,6 +107,8 @@ const EditProsesPerbaikanForm = ({
     const newErrors = {
       tanggal_perbaikan:
         selectedDate === '' ? 'Tanggal masalah wajib dipilih' : '',
+      jenis_perbaikan:
+        formData.jenis_perbaikan === '' ? 'Jenis perbaikan wajib diisi' : '',
       status_perbaikan:
         formData.status_perbaikan === '' || formData.status_perbaikan === null
           ? 'Status perbaikan wajib dipilih'
@@ -171,31 +174,47 @@ const EditProsesPerbaikanForm = ({
           onCancel={onClose}
         >
           <div className="flex gap-3 flex-col border border-border rounded-[20px] p-6">
-            <div className="text-title_medium">Komputer Tidak Menyala</div>
+            <div className="text-title_medium">
+              {initialData?.judul_permasalahan || ''}
+            </div>
             <div className="flex gap-1 items-center text-content_medium text-black/[0.72]">
               <RiCalendarEventLine size={16} />
-              24 April 2025
+              {initialData?.tanggal_permasalahan || ''}
             </div>
 
-            <EvoButton
+            {/* <EvoButton
               outlined={true}
               icon={<RiArrowRightLine size={16} />}
               isReverse={true}
               buttonText="Lihat detail masalah"
               className="!w-fit px-4 py-3"
               onClick={() => {}}
-            />
+            /> */}
           </div>
-
+          {/* {formData.tanggal_perbaikan} */}
           <EvoInDatePicker
             name="tanggal_perbaikan"
             label="Tanggal Perbaikan"
             value={selectedDate}
             placeholder="Pilih tanggal perbaikan"
-            onChange={(date) => setSelectedDate(date)}
+            onChange={(date) => {
+              setSelectedDate(date);
+              setFormData((prev) => ({
+                ...prev,
+                tanggal_perbaikan: date,
+              }));
+            }}
             error={errors.tanggal_perbaikan}
           />
 
+          <EvoInText
+            name="jenis_perbaikan"
+            label="Jenis Perbaikan"
+            placeholder="Masukkan jenis perbaikan"
+            value={formData.jenis_perbaikan}
+            onChange={handleChange}
+            error={errors.jenis_perbaikan}
+          />
           <EvoInDropdown
             name="status_perbaikan"
             label="Status Perbaikan"

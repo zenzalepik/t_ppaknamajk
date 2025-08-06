@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import EvoTitleSection from '@/components/EvoTitleSection';
 import EvoTable from '@/components/evosist_elements/EvoTable';
 import { exportExcel } from '@/helpers/exportExcel';
@@ -14,56 +14,95 @@ import {
 } from '@/helpers/dateRangeHelper';
 import { fetchApiTransaksiBatalLaporan } from './api/fetchApiTransaksiBatalLaporan';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import Spinner from '@/components/Spinner';
 import EvoErrorDiv from '@/components/EvoErrorDiv';
 import { getErrorMessage } from '@/utils/errorHandler';
 import EvoExportApiPDF from '@/components/EvoExportApiPDF';
 import EvoExportApiExcel from '@/components/EvoExportApiExcel';
 import EvoExportApiPrint from '@/components/EvoExportApiPrint';
 import EvoNotifCard from '@/components/EvoNotifCard';
+import EvoLoading from '@/components/EvoLoading';
+import { format } from 'date-fns';
+import { id as localeId } from 'date-fns/locale';
 
 const titleSection = 'Laporan Pembatalan Transaksi';
 
 export default function TransaksiBatalContentLaporan() {
+  const [start_date, setStartDate] = React.useState(getDefaultDateAwal());
+  const [end_date, setEndDate] = React.useState(getDefaultDateAkhir());
+
   const urlExport = '/laporan_transaksi_batal_laporan/';
   const [modalExportPDFOpen, setModalExportPDFOpen] = useState(false);
   const [modalExportExcel, setModalExportExcel] = useState(false);
   const [modalExportPrint, setModalExportPrint] = useState(false);
-
-  const [startDate, setStartDate] = React.useState(getDefaultDateAwal());
-  const [endDate, setEndDate] = React.useState(getDefaultDateAkhir());
-
-  const handleDateChange = (start, end) => {
-    setStartDate(start);
-    setEndDate(end);
-  };
 
   const [modalOpen, setModalOpen] = useState(false);
 
   const handleEdit = () => setModalOpen(true);
   const handleTutup = () => setModalOpen(false);
 
+  const formatDate = (date) => format(date, 'dd-MM-yyyy');
+
   const [currentPage, setCurrentPage] = useState(1);
   const queryClient = useQueryClient();
   const [notifMessage, setNotifMessage] = useState('');
   const [notifType, setNotifType] = useState('success');
+
+  const formattedStartDate = format(start_date, 'MM-dd-yyyy');
+  const formattedEndDate = format(end_date, 'MM-dd-yyyy');
+
+  const [searchKeyword, setSearchKeyword] = useState('');
 
   const {
     data: laporanTransaksiBatalLaporan,
     error,
     isLoading,
   } = useQuery({
-    queryKey: ['laporanTransaksiBatalLaporan', currentPage],
+    queryKey: [
+      'laporanTransaksiBatalLaporan',
+      currentPage,
+      formattedStartDate,
+      formattedEndDate,
+      searchKeyword,
+    ],
     queryFn: () =>
       fetchApiTransaksiBatalLaporan({
-        limit: 5,
+        limit: 13,
         page: currentPage,
-        offset: (currentPage - 1) * 5,
+        // offset: (currentPage - 1) * 5,
         sortBy: 'id',
         sortOrder: 'desc',
+        start_date: formattedStartDate,
+        end_date: formattedEndDate,
+        search: searchKeyword,
       }),
     // retry: false,
   });
+
+  const prevDates = React.useRef({ start: start_date, end: end_date });
+
+  const handleDateChange = (start, end) => {
+    setStartDate(start);
+    setEndDate(end);
+
+    // Hanya reset page kalau tanggal bener-bener berubah
+    if (
+      format(prevDates.current.start, 'MM-dd-yyyy') !==
+        format(start, 'MM-dd-yyyy') ||
+      format(prevDates.current.end, 'MM-dd-yyyy') !== format(end, 'MM-dd-yyyy')
+    ) {
+      prevDates.current = { start, end };
+      setResetPage(true);
+    }
+  };
+
+  const [resetPage, setResetPage] = useState(false);
+
+  useEffect(() => {
+    if (resetPage) {
+      setCurrentPage(1);
+      setResetPage(false);
+    }
+  }, [resetPage]);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -79,7 +118,9 @@ export default function TransaksiBatalContentLaporan() {
   };
 
   const handleSearch = (query) => {
-    console.log('Hasil pencarian:', query);
+    // console.log('Hasil pencarian:', query);
+    setSearchKeyword(query); // Simpan kata kunci
+    setCurrentPage(1); // Reset ke halaman pertama
   };
 
   const rows =
@@ -97,13 +138,13 @@ export default function TransaksiBatalContentLaporan() {
         }))
       : [];
 
-  if (isLoading)
-    return (
-      <div className="h-full flex flex-col gap-2 justify-center items-center text-center text-primary">
-        <Spinner size={32} color="border-black" />
-        Loading...
-      </div>
-    );
+  // if (isLoading)
+  //   return (
+  //     <div className="h-full flex flex-col gap-2 justify-center items-center text-center text-primary">
+  //       <Spinner size={32} color="border-black" />
+  //       Loading...
+  //     </div>
+  //   );
 
   if (error) {
     return <EvoErrorDiv errorHandlerText={getErrorMessage(error)} />;
@@ -171,14 +212,17 @@ export default function TransaksiBatalContentLaporan() {
         onSearch={(data) => console.log('Hasil pencarian:', data)}
       />
 
-      <EvoTable
-        id="tableToPrint"
-        tableData={tableDataTransaksiBatalLaporan}
-        currentPage={currentPage}
-        totalPages={laporanTransaksiBatalLaporan?.totalPages}
-        onPageChange={handlePageChange}
-        rows={rows}
-      />
+      <div className="relative">
+        {isLoading && <EvoLoading />}
+        <EvoTable
+          id="tableToPrint"
+          tableData={tableDataTransaksiBatalLaporan}
+          currentPage={currentPage}
+          totalPages={laporanTransaksiBatalLaporan?.totalPages}
+          onPageChange={handlePageChange}
+          rows={rows}
+        />
+      </div>
     </div>
   );
 }

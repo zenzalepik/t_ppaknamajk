@@ -1,24 +1,24 @@
 // api/fetchApiTransaksiBatalLaporan.js
 
-import { fetchWithAuthDummy } from '@/helpers/fetchWithAuthDummy';
+import { fetchWithAuth } from '@/helpers/fetchWithAuth';
 
 export const fetchApiTransaksiBatalLaporan = async ({
-  limit = 15,
+  limit = 13,
   page = 1,
-  offset = 0,
+  // offset = 0,
   sortBy = 'id',
   sortOrder = 'asc',
 } = {}) => {
   const queryParams = new URLSearchParams({
     limit: limit.toString(),
     page: page.toString(),
-    offset: offset.toString(),
+    // offset: offset.toString(),
     sortBy,
     sortOrder,
   });
 
-  return await fetchWithAuthDummy({
+  return await fetchWithAuth({
     method: 'get',
-    endpoint: `/laporan_transaksi_batal_laporan?${queryParams.toString()}`,
+    endpoint: `/laporan-data/kendaraan/kendaraan-in?${queryParams.toString()}`,
   });
 };

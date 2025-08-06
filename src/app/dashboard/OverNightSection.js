@@ -18,11 +18,14 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Spinner from '@/components/Spinner';
 import EvoErrorDiv from '@/components/EvoErrorDiv';
 import { fetchApiDashboardOverNight } from './api/fetchApiDashboardOverNight';
+import { fetchApiDashboardOverNightKendaraanKeluar } from './api/fetchApiDashboardOverNightKendaraanKeluar';
 import EvoNotifCard from '@/components/EvoNotifCard';
+import { getErrorMessage } from '@/utils/errorHandler';
 
 export default function OverNightSection() {
   const [startDate, setStartDate] = React.useState(getDefaultDateAwal());
   const [endDate, setEndDate] = React.useState(getDefaultDateAkhir());
+  const [showOvernightKeluar, setShowOvernightKeluar] = React.useState(false);
 
   const handleDateChange = (start, end) => {
     setStartDate(start);
@@ -40,14 +43,31 @@ export default function OverNightSection() {
     isLoading,
   } = useQuery({
     queryKey: ['dashboardOverNight', currentPage],
-    queryFn: () =>
-      fetchApiDashboardOverNight({
-        limit: 5,
-        page: currentPage,
-        offset: (currentPage - 1) * 5,
-        sortBy: 'id',
-        sortOrder: 'desc',
-      }),
+    queryFn: () => fetchApiDashboardOverNight(),
+    //   {
+    //   limit: 5,
+    //   page: currentPage,
+    //   offset: (currentPage - 1) * 5,
+    //   sortBy: 'id',
+    //   sortOrder: 'desc',
+    // }
+    // retry: false,
+  });
+
+  const {
+    data: dashboardOverNightKendaraanKeluar,
+    errorKendaraanKeluar,
+    isLoadingKendaraanKeluar,
+  } = useQuery({
+    queryKey: ['dashboardOverNightKendaraanKeluar', currentPage],
+    queryFn: () => fetchApiDashboardOverNightKendaraanKeluar(),
+    //   {
+    //   limit: 5,
+    //   page: currentPage,
+    //   offset: (currentPage - 1) * 5,
+    //   sortBy: 'id',
+    //   sortOrder: 'desc',
+    // }
     // retry: false,
   });
 
@@ -56,6 +76,8 @@ export default function OverNightSection() {
   };
 
   const overnightData = dashboardOverNight?.data || [];
+  const overnightDataKendaraanKeluar =
+    dashboardOverNightKendaraanKeluar?.data || [];
 
   const chartData = {
     labels: overnightData.map((item) =>
@@ -74,7 +96,24 @@ export default function OverNightSection() {
     ],
   };
 
-  if (isLoading)
+  const chartDataKendaraanKeluar = {
+    labels: overnightDataKendaraanKeluar.map((item) =>
+      new Date(item.tanggal).toLocaleDateString('en-US', {
+        month: 'long',
+        day: 'numeric',
+      })
+    ),
+    datasets: [
+      {
+        data: overnightDataKendaraanKeluar.map((item) => item.nilai),
+        borderColor: '#FF5B2A',
+        backgroundColor: '#FF5B2A',
+        pointBackgroundColor: 'black',
+      },
+    ],
+  };
+
+  if (isLoading || isLoadingKendaraanKeluar)
     return (
       <div className="h-full flex flex-col gap-2 justify-center items-center text-center text-primary">
         <Spinner size={32} color="border-black" />
@@ -82,12 +121,16 @@ export default function OverNightSection() {
       </div>
     );
 
-  if (error) {
+  if (error || errorKendaraanKeluar) {
     return <EvoErrorDiv errorHandlerText={getErrorMessage(error)} />;
   }
 
   const handleChange = (selectedValue) => {
     // console.log('Selected:', selectedValue);
+  };
+
+  const handleOverKendaraanKeluar = () => {
+    setShowOvernightKeluar((prev) => !prev);
   };
 
   return (
@@ -107,16 +150,49 @@ export default function OverNightSection() {
           onDateAkhir={getDefaultDateAkhir}
           onDateAwal={getDefaultDateAwal}
           onDateChange={handleDateChange}
+          buttonText={`${
+            showOvernightKeluar == false
+              ? 'Kendaraan Sudah Keluar'
+              : 'Hitung Kendaraan Masih di Dalam'
+          }`}
+          onButtonClick={handleOverKendaraanKeluar}
         />
-        {dashboardOverNight?.data?.length > 0 ? (
-          <EvoChartLine
-            // data={chartDataOverNight}
-            data={chartData}
-          />
-        ) : (
-          <div className="text-center text-gray-400">
-            Tidak ada data untuk ditampilkan
+        {showOvernightKeluar == true ? (
+          <div className="mt-4 p-4 rounded-[16px] bg-black">
+            {/* Ganti isi <div> ini dengan komponen aslimu jika sudah ada */}
+            <h3 className="text-lg font-semibold text-gray-200 mb-2">
+              Data Kendaraan Overnight yang Sudah Keluar
+            </h3>
+            <>
+              {dashboardOverNightKendaraanKeluar?.data?.length > 0 ? (
+                <EvoChartLine
+                  // data={chartDataOverNight}
+                  data={chartDataKendaraanKeluar}
+                />
+              ) : (
+                <div className="text-center text-gray-400">
+                  Tidak ada data untuk ditampilkan
+                </div>
+              )}
+            </>
           </div>
+        ) : (
+          <></>
+        )}
+
+        {showOvernightKeluar == false ? (
+          dashboardOverNight?.data?.length > 0 ? (
+            <EvoChartLine
+              // data={chartDataOverNight}
+              data={chartData}
+            />
+          ) : (
+            <div className="text-center text-gray-400">
+              Tidak ada data untuk ditampilkan
+            </div>
+          )
+        ) : (
+          <></>
         )}
       </EvoCardSection>
     </div>

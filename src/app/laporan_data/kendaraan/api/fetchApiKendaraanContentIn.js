@@ -8,10 +8,9 @@ export const fetchApiKendaraanContentIn = async ({
   // offset = 0,
   sortBy = 'id',
   sortOrder = 'asc',
-  
-  
-  start_date,   // <-- tambahkan
-  end_date,     // <-- tambahkan
+
+  start_date, // <-- tambahkan
+  end_date, // <-- tambahkan
 } = {}) => {
   const queryParams = new URLSearchParams({
     limit: limit.toString(),
@@ -21,12 +20,8 @@ export const fetchApiKendaraanContentIn = async ({
     sortOrder,
   });
 
-  
-
-
-  
   if (start_date) queryParams.append('start_date', start_date);
-  if (end_date) queryParams.append('end_date', end_date); 
+  if (end_date) queryParams.append('end_date', end_date);
 
   return await fetchWithAuth({
     method: 'get',

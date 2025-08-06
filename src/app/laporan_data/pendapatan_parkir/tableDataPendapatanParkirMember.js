@@ -4,8 +4,8 @@ export const tableDataPendapatanParkirMember = {
   columns: [
     { label: 'No.' },
     { label: 'Tanggal' },
-    { label: 'Kategori' },
-    { label: 'No. Tiket / ID Transaksi' },
+    // { label: 'Kategori' },
+    { label: 'No. Tiket' },
     { label: 'Nopol' },
     { label: 'Nama Member' },
     { label: 'Tarif Asli' },

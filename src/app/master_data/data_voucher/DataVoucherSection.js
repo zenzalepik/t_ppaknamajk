@@ -29,11 +29,12 @@ import EvoNotifCard from '@/components/EvoNotifCard';
 import dayjs from 'dayjs';
 import EvoEmpty from '@/components/EvoEmpty';
 import EditDataVoucherForm from './forms/EditForm';
-import { fetchApiPengaturanParameterTipeKendaraan } from '@/app/pengaturan/parameter/api/items/fetchApiPengaturanParameterTipeKendaraan';
+import { fetchApiPengaturanParameterTipeKendaraan } from './api/fetchApiPengaturanParameterTipeKendaraan';
 import { ambilLevelPengguna } from '@/utils/levelPenggunaStorage';
 import EvoExportApiPDF from '@/components/EvoExportApiPDF';
 import EvoExportApiExcel from '@/components/EvoExportApiExcel';
 import EvoExportApiPrint from '@/components/EvoExportApiPrint';
+import numbers from '@/utils/numbers';
 
 const titleSection = 'Data Voucher';
 
@@ -75,9 +76,9 @@ export default function DataVoucherSection() {
     queryKey: ['masterDataDataVoucher', currentPage],
     queryFn: () =>
       fetchApiMasterDataDataVoucher({
-        limit: 5,
+        limit: numbers.apiNumLimit,
         page: currentPage,
-        offset: (currentPage - 1) * 5,
+        // offset: (currentPage - 1) * 5,
         sortBy: 'id',
         sortOrder: 'desc',
       }),
@@ -126,8 +127,9 @@ export default function DataVoucherSection() {
       setSelectedEdit({
         json: dataDipilih,
         id: dataDipilih.id,
-
         no_tiket_atau_nopol: dataDipilih.no_tiket_atau_nopol || '',
+        no_tiket: dataDipilih.no_tiket || '',
+        nomor_polisi: dataDipilih.nomor_polisi || '',
         kendaraan_id: dataDipilih.kendaraan_id,
         keterangan: dataDipilih.keterangan,
       });
@@ -231,18 +233,16 @@ export default function DataVoucherSection() {
             : '-',
           produkVoucher: row.produk_voucher.nama || <EvoEmpty />,
           noTiket:
-            row.verifikasi == 'Tiket'
-              ? row.no_tiket_atau_nopol || <EvoEmpty />
-              : '-',
-          nopol:
-            row.verifikasi == 'Nopol'
-              ? row.no_tiket_atau_nopol || <EvoEmpty />
-              : '-',
+            row.verifikasi === 'Tiket' ? row.no_tiket || <EvoEmpty /> : '-',
+
+          nomor_polisi:
+            row.verifikasi === 'Nopol' ? row.nomor_polisi || <EvoEmpty /> : '-',
+
           jenisKendaraan:
-            (row.kendaraan.nama_kendaraan || '-') +
+            (row.kendaraan?.nama_kendaraan || '-') +
             ' (' +
             getNamaTipeKendaraan(
-              row.kendaraan.tipe_kendaraan_id,
+              row.kendaraan?.tipe_kendaraan_id,
               dataApiTipeKendaraan
             ) +
             ') ',
@@ -259,7 +259,7 @@ export default function DataVoucherSection() {
           // Array.isArray(row.periode) && row.periode.length === 2
           //   ? row.periode[0].value + ' s/d ' + row.periode[1].value
           //   : '',
-          tarif: row.tarif ? `Rp${row.tarif.toLocaleString()}` : '-',
+          diskon: `Rp ${row.diskon.toLocaleString()}`,
           masaAktif:
             row.priode == null ? (
               <EvoEmpty />

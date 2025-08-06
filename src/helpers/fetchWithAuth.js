@@ -57,6 +57,26 @@ export async function fetchWithAuth({
 
     return response.data.results;
   } catch (error) {
-    throw new Error(getErrorMessage(error));
+    const apiError = error?.response?.data;
+
+    const messageText =
+      apiError?.message || error.message || 'Terjadi kesalahan.';
+    const detailText = apiError?.detail;
+
+    const combinedMessage = detailText
+      ? `${messageText} — ${detailText}`
+      : messageText;
+
+    throw new Error(DOMPurify.sanitize(combinedMessage));
+
+    // const apiError = error?.response?.data;
+    // const detailMessage =
+    //   apiError?.detail ||
+    //   apiError?.message ||
+    //   error.message ||
+    //   'Terjadi kesalahan';
+    // throw new Error(DOMPurify.sanitize(detailMessage));
+
+    // throw new Error(getErrorMessage(error));
   }
 }

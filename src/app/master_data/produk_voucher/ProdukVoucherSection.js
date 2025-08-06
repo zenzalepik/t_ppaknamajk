@@ -22,7 +22,7 @@ import { exportExcel } from '@/helpers/exportExcel';
 import { exportPDF } from '@/helpers/exportPDF';
 import { exportPrint } from '@/helpers/exportPrint';
 import { fetchApiMasterDataProdukVoucher } from './api/fetchApiMasterDataProdukVoucher';
-import { fetchApiMasterDataDataKendaraan } from '@/app/master_data/data_kendaraan/api/fetchApiMasterDataDataKendaraan';
+import { fetchApiMasterDataDataKendaraan } from './api/fetchApiMasterDataDataKendaraan';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Spinner from '@/components/Spinner';
 import { getErrorMessage } from '@/utils/errorHandler';
@@ -37,6 +37,7 @@ import { ambilLevelPengguna } from '@/utils/levelPenggunaStorage';
 import EvoExportApiPDF from '@/components/EvoExportApiPDF';
 import EvoExportApiExcel from '@/components/EvoExportApiExcel';
 import EvoExportApiPrint from '@/components/EvoExportApiPrint';
+import numbers from '@/utils/numbers';
 
 const titleSection = 'Produk Voucher';
 
@@ -87,7 +88,7 @@ export default function ProdukVoucherSection() {
       setNotifType(notif.type);
     }
   }, [notif]);
-
+//
   const {
     data: masterDataProdukVoucher,
     error: errorProduk,
@@ -96,9 +97,9 @@ export default function ProdukVoucherSection() {
     queryKey: ['masterDataProdukVoucher', currentPage],
     queryFn: () =>
       fetchApiMasterDataProdukVoucher({
-        limit: 5,
+        limit: numbers.apiNumLimit,
         page: currentPage,
-        offset: (currentPage - 1) * 5,
+        // offset: (currentPage - 1) * 5,
         sortBy: 'id',
         sortOrder: 'desc',
       }),
@@ -143,7 +144,7 @@ export default function ProdukVoucherSection() {
         tipe_kendaraan_id: dataDipilih.tipe_kendaraan_id || '',
         model_pembayaran: dataDipilih.model_pembayaran || '',
         metode_verifikasi: dataDipilih.metode_verifikasi || '',
-        tarif: dataDipilih.tarif || '',
+        diskon: dataDipilih.diskon || '',
       });
       // setModalEditOpen(true);
       // setModalEditOpen(true);
@@ -213,26 +214,47 @@ export default function ProdukVoucherSection() {
       periode: row.periode
         ? `${row.periode[0]?.value} s.d. ${row.periode[1]?.value}`
         : '-',
-      kendaraan: (
-        <ul className="list-disc pl-4">
-          {row.list_id_kendaraan.map((id, index) => {
-            const kendaraan = masterDataKendaraan?.data?.find(
-              (k) => k.id.toString() === id
-            );
-            return (
-              <li key={`${id}-${index}`}>
-                {kendaraan
-                  ? // ? `${kendaraan.nama_kendaraan} (${kendaraan.tipe_kendaraan})`
-                    `${kendaraan.nama_kendaraan} (${
-                      kendaraan?.tipe_kendaraan?.tipe_kendaraan || '-'
-                    })`
-                  : 'Tidak ditemukan'}
-              </li>
-            );
-          })}
-        </ul>
-      ),
-      tarif: `Rp ${row.tarif.toLocaleString()}`,
+      kendaraan: 
+      (Array.isArray(row.list_id_kendaraan) ? (
+  <ul className="list-disc pl-4">
+    {row.list_id_kendaraan.map((id, index) => {
+      const kendaraan = masterDataKendaraan?.data?.find(
+        (k) => k.id.toString() === id
+      );
+      return (
+        <li key={`${id}-${index}`}>
+          {kendaraan
+            ? `${kendaraan.nama_kendaraan} (${kendaraan?.tipe_kendaraan?.tipe_kendaraan || '-'})`
+            : 'Tidak ditemukan'}
+        </li>
+      );
+    })}
+  </ul>
+) : (
+  <span>-</span>
+))
+
+      // (
+      //   <ul className="list-disc pl-4">
+      //     {row.list_id_kendaraan.map((id, index) => {
+      //       const kendaraan = masterDataKendaraan?.data?.find(
+      //         (k) => k.id.toString() === id
+      //       );
+      //       return (
+      //         <li key={`${id}-${index}`}>
+      //           {kendaraan
+      //             ? // ? `${kendaraan.nama_kendaraan} (${kendaraan.tipe_kendaraan})`
+      //               `${kendaraan.nama_kendaraan} (${
+      //                 kendaraan?.tipe_kendaraan?.tipe_kendaraan || '-'
+      //               })`
+      //             : 'Tidak ditemukan'}
+      //         </li>
+      //       );
+      //     })}
+      //   </ul>
+      // )
+      ,
+      diskon: `Rp ${row.diskon.toLocaleString()}`,
       modelPembayaran: row.model_pembayaran,
       metodeVerifikasi: row.metode_verifikasi,
       status: StatusLabel.status(row.status),

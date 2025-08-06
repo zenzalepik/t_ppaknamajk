@@ -140,34 +140,38 @@ export default function KendaraanContentIn() {
               .filter(Boolean)
               .join(' ')
           ) : (
-            <i>*empty</i>
+            <i className="text-danger">*empty</i>
           );
           return {
             no: index + 1,
             noTiket: (
-              <b>{row.nomor_tiket != null ? row.nomor_tiket : <i>*empty</i>}</b>
+              <b>{row.nomor_tiket != null ? row.nomor_tiket : <i className="text-danger">*empty</i>}</b>
             ),
             tanggalMasuk: row.tanggal_masuk ? (
               format(new Date(row.tanggal_masuk), 'dd MMMM yyyy, HH:mm', {
                 locale: localeId,
               })
             ) : (
-              <i>*empty</i>
+              <i className="text-danger">*empty</i>
             ),
-            // tanggalKeluar: row.tanggalKeluar || <i>*empty</i>,
-            nopol: row.nomor_polisi || <i>*empty</i>,
-            jenisKendaraan: row.nama_kendaraan || <i>*empty</i>,
-            pintuMasuk: row.lokasi_gerbang || <i>*empty</i>,
-            // pintuKeluar: row.pintuKeluar || <i>*empty</i>,
+            // tanggalKeluar: row.tanggalKeluar || <i className="text-danger">*empty</i>,
+            nopol: row.nomor_polisi || <i className="text-danger">*empty</i>,
+            jenisKendaraan: row.nama_kendaraan || <i className="text-danger">*empty</i>,
+            pintuMasuk: row.lokasi_gerbang || <i className="text-danger">*empty</i>,
+            // pintuKeluar: row.pintuKeluar || <i className="text-danger">*empty</i>,
             durasiParkir,
-            // tarif: row.tarif || <i>*empty</i>,
-            statusMember: row.data_member?.nama_produk || <i>*empty</i>,
+            // tarif: row.tarif || <i className="text-danger">*empty</i>,
+            statusMember: row.data_member?.nama_produk || <i>-</i>,
+            // asalPerusahaan:
+            //   row.data_member?.nama_perusahaan?.trim() !== '' ? (
+            //     row.data_member.nama_perusahaan
+            //   ) : (
+            //     <i className="text-danger">*empty</i>
+            //   ),
             asalPerusahaan:
-              row.data_member?.nama_perusahaan?.trim() !== '' ? (
-                row.data_member.nama_perusahaan
-              ) : (
-                <i>*empty</i>
-              ),
+              row.data_member?.nama_perusahaan ||
+                <i>-</i>
+              ,
           };
         })
       : [];

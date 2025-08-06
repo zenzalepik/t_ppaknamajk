@@ -30,12 +30,13 @@ import { getUserId } from '@/utils/db';
 import { fetchApiMasterDataDataKendaraanDelete } from './api/fetchApiMasterDataDataKendaraanDelete';
 import EvoNotifCard from '@/components/EvoNotifCard';
 import EditKendaraanForm from './forms/EditForm';
-import { fetchApiPengaturanParameterTipeKendaraan } from '@/app/pengaturan/parameter/api/items/fetchApiPengaturanParameterTipeKendaraan';
+import {fetchApiPengaturanParameterTipeKendaraan} from './api/fetchApiPengaturanParameterTipeKendaraan'
 import { useHookStatusDataKendaraan } from './hooks/useHookStatusDataKendaraan';
 import { ambilLevelPengguna } from '@/utils/levelPenggunaStorage';
 import EvoExportApiPDF from '@/components/EvoExportApiPDF';
 import EvoExportApiExcel from '@/components/EvoExportApiExcel';
 import EvoExportApiPrint from '@/components/EvoExportApiPrint';
+import numbers from '@/utils/numbers';
 
 const titleSection = 'Data Kendaraan';
 
@@ -95,9 +96,9 @@ export default function DataKendaraanSection() {
     queryKey: ['masterDataDataKendaraan', currentPage],
     queryFn: () =>
       fetchApiMasterDataDataKendaraan({
-        limit: 5,
+        limit: numbers.apiNumLimit,
         page: currentPage,
-        offset: (currentPage - 1) * 5,
+        // offset: (currentPage - 1) * 5,
         sortBy: 'id',
         sortOrder: 'desc',
       }),

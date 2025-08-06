@@ -27,6 +27,7 @@ import { ambilLevelPengguna } from '@/utils/levelPenggunaStorage';
 import EvoExportApiPDF from '@/components/EvoExportApiPDF';
 import EvoExportApiExcel from '@/components/EvoExportApiExcel';
 import EvoExportApiPrint from '@/components/EvoExportApiPrint';
+import numbers from '@/utils/numbers';
 
 const titleSection = 'Data Perusahaan';
 
@@ -102,9 +103,9 @@ export default function PerusahaanSection() {
     queryKey: ['masterDataPerusahaan', currentPage],
     queryFn: () =>
       fetchApiMasterDataPerusahaan({
-        limit: 5,
+        limit:  numbers.apiNumLimit,
         page: currentPage,
-        offset: (currentPage - 1) * 5,
+        // offset: (currentPage - 1) * 5,
         sortBy: 'id',
         sortOrder: 'desc',
       }),

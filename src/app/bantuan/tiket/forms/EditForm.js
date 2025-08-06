@@ -10,10 +10,11 @@ import EvoInDropdown from '@/components/evosist_elements/EvoInDropdown';
 import EvoInRadio from '@/components/evosist_elements/EvoInRadio';
 import EvoInDatePicker from '@/components/evosist_elements/EvoInDatePicker';
 import strings from '@/utils/strings';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getUserId } from '@/utils/db';
 import { fetchApiBantuanTiketUpdate } from '../api/fetchApiBantuanTiketUpdate';
-
+import numbers from '@/utils/numbers';
+import { fetchApiMasterDataPOS } from '../api/fetchApiMasterDataPOS';
 
 const EditPengaduanForm = ({
   isOpen,
@@ -25,7 +26,8 @@ const EditPengaduanForm = ({
   const [notifMessage, setNotifMessage] = useState('');
   const [notifType, setNotifType] = useState('success');
   const queryClient = useQueryClient();
-  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
   // const [selectedDate, setSelectedDate] = useState(
   //   initialData.tanggal_permasalahan||''
   // );
@@ -38,7 +40,7 @@ const EditPengaduanForm = ({
     penyebab_permasalahan: '',
     keterangan_permasalahan: '',
     nama_pelapor: '',
-    tanggal_permasalahan: '',
+    tanggal_permasalahan: null,
     // status_permasalahan: 'Pending',
 
     // Tambahan field sesuai API
@@ -61,6 +63,7 @@ const EditPengaduanForm = ({
       penyebab_permasalahan: '',
       keterangan_permasalahan: '',
       nama_pelapor: '',
+      tanggal_permasalahan: null,
       // status_permasalahan: 'Pending',
       // tanggal_permasalahan: '',
 
@@ -79,6 +82,24 @@ const EditPengaduanForm = ({
 
   useEffect(() => {
     if (initialData) {
+      const reformatTanggal = (tanggalStr) => {
+        if (!tanggalStr || typeof tanggalStr !== 'string') return tanggalStr;
+
+        const parts = tanggalStr.split('-');
+        // Jika format adalah dd-MM-yyyy
+        if (
+          parts.length === 3 &&
+          parts[0].length === 2 &&
+          parts[1].length === 2 &&
+          parts[2].length === 4
+        ) {
+          const [dd, MM, yyyy] = parts;
+          return `${MM}-${dd}-${yyyy}`; // ubah jadi MM-dd-yyyy
+        }
+
+        return tanggalStr; // kalau bukan dd-MM-yyyy, biarkan
+      };
+
       setFormData({
         id: initialData.id || '',
         judul_permasalahan: initialData.judul_permasalahan || '',
@@ -88,7 +109,7 @@ const EditPengaduanForm = ({
         penyebab_permasalahan: initialData.penyebab_permasalahan || '',
         keterangan_permasalahan: initialData.keterangan_permasalahan || '',
         nama_pelapor: initialData.nama_pelapor || '',
-        tanggal_permasalahan: initialData.tanggal_permasalahan || '',
+        tanggal_permasalahan: reformatTanggal(initialData.tanggal_permasalahan),
         // status_permasalahan: initialData.status_permasalahan || '',
 
         // Tambahan field sesuai API
@@ -99,13 +120,42 @@ const EditPengaduanForm = ({
         keterangan_penanganan: initialData.keterangan_penanganan || '',
         nama_yang_menangani: initialData.nama_yang_menangani || '',*/
       });
-      setSelectedDate(initialData.tanggal_permasalahan);
+      setSelectedDate(reformatTanggal(initialData.tanggal_permasalahan));
     }
   }, [initialData]);
 
   useEffect(() => {
     // console.log('Form Data Updated:', formData);
   }, [formData]);
+
+  const formatTanggal = (date) => {
+    const d = new Date(date);
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
+
+  const {
+    data: masterDataPOS,
+    error,
+    isLoading,
+  } = useQuery({
+    queryKey: ['masterDataPOS', currentPage],
+    queryFn: () =>
+      fetchApiMasterDataPOS({
+        limit: numbers.apiNumLimitExpanded,
+        page: currentPage,
+        sortBy: 'id',
+        sortOrder: 'desc',
+      }),
+  });
+
+  const posOptions =
+    masterDataPOS?.data?.map((pos) => ({
+      label: pos.keterangan || `Pos ${pos.id}`,
+      value: String(pos.id),
+    })) || [];
 
   const [selectedOptions, setSelectedOptions] = useState({
     kategori_permasalahan: '',
@@ -142,9 +192,7 @@ const EditPengaduanForm = ({
 
     const newErrors = {
       judul_permasalahan:
-        formData.judul_permasalahan === ''
-          ? 'Judul masalah wajib diisi'
-          : '',
+        formData.judul_permasalahan === '' ? 'Judul masalah wajib diisi' : '',
       kategori_permasalahan:
         formData.kategori_permasalahan === ''
           ? 'Kategori masalah wajib dipilih'
@@ -155,9 +203,7 @@ const EditPengaduanForm = ({
           ? 'Alat/Perangkat wajib dipilih'
           : '',
       penyebab_permasalahan:
-        formData.penyebab_permasalahan === ''
-          ? 'Penyebab wajib diisi'
-          : '',
+        formData.penyebab_permasalahan === '' ? 'Penyebab wajib diisi' : '',
       keterangan_permasalahan:
         formData.keterangan_permasalahan === ''
           ? 'Keterangan Permasalahan wajib diisi'
@@ -166,10 +212,15 @@ const EditPengaduanForm = ({
         formData.nama_pelapor === '' ? 'Nama Pelapor wajib diisi' : '',
       // tanggal_permasalahan:
       //   selectedDate === '' ? 'Tanggal masalah wajib dipilih' : '', // Tambahkan validasi tanggal
-      tanggal_permasalahan:
-        formData.tanggal_permasalahan === ''
-          ? 'Tanggal masalah wajib dipilih'
-          : '',
+      // tanggal_permasalahan:
+      //   formData.tanggal_permasalahan === ''
+      //     ? 'Tanggal masalah wajib dipilih'
+      //     : '',
+
+      // Validasi tetap seperti sebelumnya
+      tanggal_permasalahan: !formData.tanggal_permasalahan
+        ? 'Tanggal masalah wajib dipilih'
+        : '',
     };
 
     setErrors(newErrors);
@@ -180,20 +231,35 @@ const EditPengaduanForm = ({
       return;
     }
 
-    onSubmit?.(formData);
+    // Format tanggal sebelum kirim
+    const formattedData = {
+      ...formData,
+      tanggal_permasalahan: formatTanggal(formData.tanggal_permasalahan),
+    };
+
+    // onSubmit?.(formData);
 
     // ✅ Cetak JSON ke console sebelum submit
-    console.log('Form Data (JSON):', JSON.stringify(formData, null, 2));
+    // console.log('Form Data (JSON):', JSON.stringify(formData, null, 2));
+
+    onSubmit?.(formattedData);
+    console.log('Form Data (JSON):', JSON.stringify(formattedData, null, 2));
 
     try {
-      console.log(formData);
-      await fetchApiBantuanTiketUpdate(formData);
+      // console.log(formData);
+      // await fetchApiBantuanTiketUpdate(formData);
 
-      queryClient.invalidateQueries(['bantuanTiketPermasalahanPerbaikan']); // Refresh tabel setelah tambah data
+      // queryClient.invalidateQueries(['bantuanTiketPermasalahanPerbaikan']); // Refresh tabel setelah tambah data
 
+      // setNotifMessage('Laporan masalah berhasil disimpan!');
+      // setNotifType('success');
+
+      // setTimeout(() => handleCloseModal(), 500);
+
+      await fetchApiBantuanTiketUpdate(formattedData);
+      queryClient.invalidateQueries(['bantuanTiketPermasalahanPerbaikan']);
       setNotifMessage('Laporan masalah berhasil disimpan!');
       setNotifType('success');
-
       setTimeout(() => handleCloseModal(), 500);
     } catch (error) {
       setNotifMessage(error.message);
@@ -245,7 +311,7 @@ const EditPengaduanForm = ({
             // value={selectedOptions.kategori_permasalahan}
             value={formData.kategori_permasalahan}
             // onChange={handleDropdownChange}
-           onChange={(value) =>
+            onChange={(value) =>
               setFormData((prev) => ({
                 ...prev,
                 kategori_permasalahan: value,
@@ -255,31 +321,26 @@ const EditPengaduanForm = ({
             placeholder="Pilih kategori masalah"
           />
           {/* <>{formData.tanggal_permasalahan}</> */}
+          {/* {initialData?.tanggal_permasalahan} */}
           <EvoInDatePicker
             name="tanggal_permasalahan"
             label="Tanggal Masalah"
-            value={selectedDate}
+            value={
+              selectedDate instanceof Date
+                ? selectedDate
+                : selectedDate
+                ? new Date(selectedDate)
+                : null
+            }
             // value={formData.tanggal_permasalahan}
 
             // value={formData.judul_permasalahan}
             placeholder="Pilih tanggal masalah"
-            // onChange={(date) => {
-            //   setSelectedDate(date);
-            //   setFormData((prev) => ({ ...prev, tanggal_permasalahan: date }));
-            // }}
             onChange={(date) => {
-              const formattedDate = new Intl.DateTimeFormat('id-ID', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric',
-              }).format(new Date(date)); // hasil: "31/05/2021"
-
-              const normalizedDate = formattedDate.replace(/\//g, '-'); // jadi: "31-05-2021"
-
-              setSelectedDate(normalizedDate);
+              setSelectedDate(date); // ⬅️ Tetap simpan sebagai Date object
               setFormData((prev) => ({
                 ...prev,
-                tanggal_permasalahan: normalizedDate,
+                tanggal_permasalahan: date, // ⬅️ Simpan Date object juga di formData
               }));
             }}
             error={errors.tanggal_permasalahan}
@@ -288,21 +349,22 @@ const EditPengaduanForm = ({
           <EvoInDropdown
             name="pos_id"
             label="Pintu Pos"
-            options={[
-              { label: 'Pintu pos A', value: '1' },
-              { label: 'Pintu pos B', value: '2' },
-            ]}
+            // options={[
+            //   { label: 'Pintu pos A', value: '1' },
+            //   { label: 'Pintu pos B', value: '2' },
+            // ]}
+            options={posOptions}
             // value={selectedOptions.pos_id}
             value={formData.pos_id}
             // onChange={handleDropdownChange}
-           onChange={(value) =>
+            onChange={(value) =>
               setFormData((prev) => ({
                 ...prev,
                 pos_id: value,
               }))
             }
             error={errors.pos_id}
-            placeholder="Pilih pintu pos"
+            placeholder={isLoading ? 'Memuat data...' : 'Pilih pintu pos'}
           />
 
           <EvoInDropdown
@@ -323,7 +385,7 @@ const EditPengaduanForm = ({
             // value={selectedOptions.hardware_atau_alat}
             value={formData.hardware_atau_alat}
             // onChange={handleDropdownChange}
-             onChange={(value) =>
+            onChange={(value) =>
               setFormData((prev) => ({
                 ...prev,
                 hardware_atau_alat: value,

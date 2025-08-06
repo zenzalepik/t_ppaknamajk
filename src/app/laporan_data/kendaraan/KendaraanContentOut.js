@@ -19,6 +19,7 @@ import EvoExportApiPDF from '@/components/EvoExportApiPDF';
 import EvoExportApiExcel from '@/components/EvoExportApiExcel';
 import EvoExportApiPrint from '@/components/EvoExportApiPrint';
 import EvoNotifCard from '@/components/EvoNotifCard';
+import { StatusLabel } from '@/components/StatusLabel';
 import EvoLoading from '@/components/EvoLoading';
 import { format } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
@@ -119,31 +120,134 @@ export default function KendaraanContentOut() {
     console.log('Hasil pencarian:', query);
   };
 
+  const formatRupiah = (value) =>
+    new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+    }).format(value || 0);
+
   const rows =
     laporanKendaraanContentOut?.data?.length > 0
-      ? laporanKendaraanContentOut.data.map((row, index) => ({
-          no: index + 1,
-          noTiket: <b>{row.noTiket != null ? row.noTiket : <i>*empty</i>}</b>,
+      ? laporanKendaraanContentOut.data.map((row, index) => {
+          const durasi = row.durasi;
 
-          isMember: row.isMember || <i>*empty</i>,
-          isManual: row.isManual || <i>*empty</i>,
-          tglMasuk: row.tglMasuk || <i>*empty</i>,
-          tglKeluar: row.tglKeluar || <i>*empty</i>,
-          pintuMasuk: row.pintuMasuk || <i>*empty</i>,
-          pintuKeluar: row.pintuKeluar || <i>*empty</i>,
-          nopol: row.nopol || <i>*empty</i>,
-          kendaraan: row.kendaraan || <i>*empty</i>,
-          interval: row.interval || <i>*empty</i>,
-          tarif: row.tarif || <i>*empty</i>,
-          denda: row.denda || <i>*empty</i>,
-          status: row.status || <i>*empty</i>,
-          tipe: row.tipe || <i>*empty</i>,
-          pembayaran: row.pembayaran || <i>*empty</i>,
-          prepaidCard: row.prepaidCard || <i>*empty</i>,
-          noPrepaidCard: row.noPrepaidCard || <i>*empty</i>,
-          petugas: row.petugas || <i>*empty</i>,
-          shift: row.shift || <i>*empty</i>,
-        }))
+          // Format durasi jika valid
+          const durasiParkir = durasi ? (
+            [
+              durasi.days ? `${durasi.days}hari` : null,
+              durasi.hours ? `${durasi.hours}jam` : null,
+              durasi.minutes ? `${durasi.minutes}menit` : null,
+              durasi.seconds ? `${durasi.seconds}detik` : null,
+            ]
+              .filter(Boolean)
+              .join(' ')
+          ) : (
+            <i className="text-danger">*empty</i>
+          );
+
+          return {
+            no: index + 1,
+            noTiket: (
+              <b>
+                {row.nomor_tiket != null ? (
+                  row.nomor_tiket
+                ) : (
+                  <i className="text-danger">*empty</i>
+                )}
+              </b>
+            ),
+
+            isMember: StatusLabel.status_member(row.id_member),
+            isManual:
+              row.data_transaksi?.is_manual === true ? (
+                'Iya'
+              ) : row.data_transaksi?.is_manual === false ? (
+                'Tidak'
+              ) : (
+                <i className="text-danger">*empty</i>
+              ),
+
+            tglMasuk: row.tanggal_masuk ? (
+              format(new Date(row.tanggal_masuk), 'dd MMMM yyyy, HH:mm', {
+                locale: localeId,
+              })
+            ) : (
+              <i className="text-danger">*empty</i>
+            ),
+            tglKeluar: row.tanggal_keluar ? (
+              format(new Date(row.tanggal_keluar), 'dd MMMM yyyy, HH:mm', {
+                locale: localeId,
+              })
+            ) : (
+              <i className="text-danger">*empty</i>
+            ),
+            pintuMasuk: row.lokasi_gerbang_masuk || (
+              <i className="text-danger">*empty</i>
+            ),
+            pintuKeluar: row.lokasi_gerbang || (
+              <i className="text-danger">*empty</i>
+            ),
+            nopol: row.nomor_polisi || <i className="text-danger">*empty</i>,
+            kendaraan: row.nama_kendaraan || (
+              <i className="text-danger">*empty</i>
+            ),
+            interval:
+              // row.interval
+              durasiParkir || <i className="text-danger">*empty</i>,
+            tarif:
+              row.biaya_parkir != null && row.biaya_parkir !== '' ? (
+                formatRupiah(
+                  typeof row.biaya_parkir === 'string'
+                    ? parseInt(row.biaya_parkir)
+                    : row.biaya_parkir
+                )
+              ) : (
+                <i className="text-danger">*empty</i>
+              ),
+            denda: formatRupiah(
+              (() => {
+                const dendaStnkRaw = row.data_transaksi?.jumlah_denda_stnk;
+                const dendaTiketRaw = row.data_transaksi?.jumlah_denda_tiket;
+
+                const dendaStnk = isNaN(dendaStnkRaw)
+                  ? 0
+                  : typeof dendaStnkRaw === 'string'
+                  ? parseInt(dendaStnkRaw)
+                  : dendaStnkRaw;
+
+                const dendaTiket = isNaN(dendaTiketRaw)
+                  ? 0
+                  : typeof dendaTiketRaw === 'string'
+                  ? parseInt(dendaTiketRaw)
+                  : dendaTiketRaw;
+
+                return dendaStnk + dendaTiket;
+              })()
+            ),
+            // status: row.status || <i className="text-danger">*empty</i>,
+            // tipe: row.tipe || <i className="text-danger">*empty</i>,
+            pembayaran: row.nama_jenis_pembayaran || (
+              <i className="text-danger">*empty</i>
+            ),
+            namaProdukMember:
+              row.data_member?.nama_produk != null &&
+              row.data_member?.nama_produk !== '' ? (
+                row.data_member.nama_produk
+              ) : (
+                <i>-</i>
+              ),
+            noPrepaidCard:
+              row.data_member?.no_kartu != null &&
+              row.data_member?.no_kartu !== '' ? (
+                row.data_member.no_kartu
+              ) : (
+                <i>-</i>
+              ),
+            petugas: row.nama_petugas || <i className="text-danger">*empty</i>,
+            shift: row.shift || <i className="text-danger">*empty</i>,
+          };
+        })
       : [];
 
   // if (isLoading)

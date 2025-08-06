@@ -225,7 +225,7 @@ const AddProdukMemberForm = ({ isOpen, onClose, onSubmit }) => {
     // });
 
     try {
-      console.log(formData);
+      // console.log(JSON.stringify(formData));
       await fetchApiMasterDataProdukMemberCreate(formData);
 
       queryClient.invalidateQueries(['masterDataProdukVoucher']); // Refresh tabel setelah tambah data

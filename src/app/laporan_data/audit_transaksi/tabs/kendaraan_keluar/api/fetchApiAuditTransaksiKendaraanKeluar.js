@@ -1,24 +1,29 @@
 // api/fetchApiAuditTransaksiKendaraanKeluar.js
 
-import { fetchWithAuthDummy } from '@/helpers/fetchWithAuthDummy';
+import { fetchWithAuth } from '@/helpers/fetchWithAuth';
 
 export const fetchApiAuditTransaksiKendaraanKeluar = async ({
-  limit = 15,
+  limit = 13,
   page = 1,
-  offset = 0,
+  // offset = 0,
   sortBy = 'id',
   sortOrder = 'asc',
+  start_date, // <-- tambahkan
+  end_date, // <-- tambahkan
 } = {}) => {
   const queryParams = new URLSearchParams({
     limit: limit.toString(),
     page: page.toString(),
-    offset: offset.toString(),
+    // offset: offset.toString(),
     sortBy,
     sortOrder,
   });
 
-  return await fetchWithAuthDummy({
+  if (start_date) queryParams.append('start_date', start_date);
+  if (end_date) queryParams.append('end_date', end_date);
+
+  return await fetchWithAuth({
     method: 'get',
-    endpoint: `/laporan_data_audit_transaksi_kendaraan_keluar?${queryParams.toString()}`,
+    endpoint: `/laporan-data/audit-transaksi/audit-transaksi-kendaraan-yang-sering-keluar?${queryParams.toString()}`,
   });
 };

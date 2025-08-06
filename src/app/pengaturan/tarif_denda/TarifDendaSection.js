@@ -25,8 +25,9 @@ import EvoErrorDiv from '@/components/EvoErrorDiv';
 import { getUserId } from '@/utils/db';
 import { useHookStatusTarifDenda } from './hooks/useHookStatusTarifDenda';
 import EvoNotifCard from '@/components/EvoNotifCard';
-import { fetchApiPengaturanParameterTipeKendaraan } from '@/app/pengaturan/parameter/api/items/fetchApiPengaturanParameterTipeKendaraan';
+import { fetchApiPengaturanParameterTipeKendaraan } from './api/fetchApiPengaturanParameterTipeKendaraan';
 import { ambilLevelPengguna } from '@/utils/levelPenggunaStorage';
+import numbers from '@/utils/numbers';
 
 const titleSection = 'Tarif Denda';
 
@@ -78,7 +79,7 @@ export default function TarifDendaSection() {
     queryKey: ['pengaturanTipeKendaraan'],
     queryFn: () =>
       fetchApiPengaturanParameterTipeKendaraan({
-        limit: 5,
+        limit: numbers.apiNumLimitExpanded,
       }),
   });
 
@@ -90,9 +91,9 @@ export default function TarifDendaSection() {
     queryKey: ['pengaturanTarifDenda', currentPage],
     queryFn: () =>
       fetchApiPengaturanTarifDenda({
-        limit: 5,
+        limit: numbers.apiNumLimit,
         page: currentPage,
-        offset: (currentPage - 1) * 5,
+        // offset: (currentPage - 1) * 5,
         sortBy: 'id',
         sortOrder: 'desc',
       }),

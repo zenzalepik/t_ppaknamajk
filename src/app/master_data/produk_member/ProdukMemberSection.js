@@ -22,7 +22,7 @@ import { exportExcel } from '@/helpers/exportExcel';
 import { exportPDF } from '@/helpers/exportPDF';
 import { exportPrint } from '@/helpers/exportPrint';
 import { fetchApiMasterDataProdukMember } from './api/fetchApiMasterDataProdukMember';
-import { fetchApiMasterDataDataKendaraan } from '@/app/master_data/data_kendaraan/api/fetchApiMasterDataDataKendaraan';
+import { fetchApiMasterDataDataKendaraan } from './api/fetchApiMasterDataDataKendaraan';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Spinner from '@/components/Spinner';
 import { getErrorMessage } from '@/utils/errorHandler';
@@ -31,13 +31,14 @@ import { getUserId } from '@/utils/db';
 import EvoNotifCard from '@/components/EvoNotifCard';
 import { fetchApiMasterDataProdukMemberDelete } from './api/fetchApiMasterDataProdukMemberDelete';
 import EvoEmpty from '@/components/EvoEmpty';
-import { fetchApiPengaturanParameterTipeKendaraan } from '@/app/pengaturan/parameter/api/items/fetchApiPengaturanParameterTipeKendaraan';
+import { fetchApiPengaturanParameterTipeKendaraan } from './api/fetchApiPengaturanParameterTipeKendaraan';
 import EditProdukMemberForm from './forms/EditForm';
 import { useHookStatusProdukMember } from './hooks/useHookStatusProdukMember';
 import { ambilLevelPengguna } from '@/utils/levelPenggunaStorage';
 import EvoExportApiPDF from '@/components/EvoExportApiPDF';
 import EvoExportApiExcel from '@/components/EvoExportApiExcel';
 import EvoExportApiPrint from '@/components/EvoExportApiPrint';
+import numbers from '@/utils/numbers';
 
 const titleSection = 'Produk Member';
 
@@ -95,9 +96,9 @@ export default function ProdukMemberSection() {
     queryKey: ['masterDataProdukMember', currentPage],
     queryFn: () =>
       fetchApiMasterDataProdukMember({
-        limit: 5,
+        limit: numbers.apiNumLimit,
         page: currentPage,
-        offset: (currentPage - 1) * 5,
+        // offset: (currentPage - 1) * 5,
         sortBy: 'id',
         sortOrder: 'desc',
       }),
@@ -227,7 +228,7 @@ export default function ProdukMemberSection() {
       return acc;
     }, {}) || {};
 
-  // console.log('Data Perusahaan:', masterDataProdukMember.pageSize);
+  // console.log('Data Perusahaan:', masterDataProdukMember);
   const dataApi = masterDataProdukMember || {};
 
   const rows =
