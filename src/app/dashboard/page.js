@@ -47,11 +47,11 @@ export default function Dashboard() {
     queryKey: ['dashboardPendapatan', currentPage],
     queryFn: () =>
       fetchApiDashboardPendapatan({
-        limit: 5,
-        page: currentPage,
-        offset: (currentPage - 1) * 5,
-        sortBy: 'id',
-        sortOrder: 'desc',
+        // limit: 5,
+        // page: currentPage,
+        // offset: (currentPage - 1) * 5,
+        // sortBy: 'id',
+        // sortOrder: 'desc',
       }),
     // retry: false,
   });
@@ -87,7 +87,7 @@ export default function Dashboard() {
             autoClose={true}
           />
         )}
-        <div className="flex gap-3">
+        <div className="flex gap-0">
           <div className="flex justify-center items-center w-2/3 pl-6 max-h-80">
             <Image
               src="/images/png/img_illustration_pendapatan_parkir.png"
@@ -97,7 +97,8 @@ export default function Dashboard() {
               className=" w-full h-full object-cover rounded-[40px] overflow-hidden"
             />
           </div>
-          <DashboardCard dataApi={dashboardPendapatan?.data[0] || []} />
+          {/* {JSON.stringify(dashboardPendapatan?.data)} */}
+          <DashboardCard dataApi={dashboardPendapatan?.data || []} />
         </div>
       </>
       <ActivitySection />
