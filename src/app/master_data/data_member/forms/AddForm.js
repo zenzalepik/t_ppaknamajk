@@ -610,7 +610,7 @@ const AddDataMemberForm = ({ isOpen, onClose, onSubmit }) => {
           )}
 
           <div className="text-title_small mt-4">
-            <span className="text-primary">D.</span> Data Kendaraan/Nomor Polisi
+            <span className="text-primary">D.</span> Data Nomor Polisi
           </div>
 
           <div className="overflow-x-auto">
@@ -677,7 +677,7 @@ const AddDataMemberForm = ({ isOpen, onClose, onSubmit }) => {
             </table>
             {selectedProdukMember?.max_kendaraan > dataKendaraan.length ? (
               <EvoButton
-                buttonText="Tambah Kendaraan"
+                buttonText="Tambah Nomor Polisi"
                 icon={<RiAddLine size={24} />}
                 outlined={true}
                 onClick={() => {

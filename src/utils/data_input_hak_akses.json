@@ -13,6 +13,16 @@
     "nama_menu": "Master Data",
     "nama_sub_menu": [
       {
+        "nama": "Tenant",
+        "aksi": {
+          "read": true,
+          "create": true,
+          "delete": true,
+          "update": true,
+          "aktif_nonaktif": true
+        }
+      },
+      {
         "nama": "Perusahaan",
         "aksi": {
           "read": true,

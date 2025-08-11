@@ -23,6 +23,9 @@ import EvoNotifCard from '@/components/EvoNotifCard';
 import EvoLoading from '@/components/EvoLoading';
 import { format } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
+import EvoEmpty from '@/components/EvoEmpty';
+import numbers from '@/utils/numbers';
+import hideNotFinished from '@/utils/hideNotFinished';
 
 const titleSection = 'Laporan Pembatalan Transaksi';
 
@@ -66,7 +69,7 @@ export default function TransaksiBatalContentLaporan() {
     ],
     queryFn: () =>
       fetchApiTransaksiBatalLaporan({
-        limit: 13,
+        limit: numbers.apiNumLimit,
         page: currentPage,
         // offset: (currentPage - 1) * 5,
         sortBy: 'id',
@@ -127,14 +130,11 @@ export default function TransaksiBatalContentLaporan() {
     laporanTransaksiBatalLaporan?.data?.length > 0
       ? laporanTransaksiBatalLaporan.data.map((row, index) => ({
           no: index + 1,
-          // noTiket: <b>{row.noTiket != null ? row.noTiket : <i>*empty</i>}</b>,
-          // id: row.id || <i>*empty</i>,
-          noTiket: row.noTiket == null ? <i>*empty</i> : <b>{row.noTiket}</b>,
-          tglMasuk: row.tglMasuk || <i>*empty</i>,
-          pintuMasuk: row.pintuMasuk || <i>*empty</i>,
-          tanggalPembatalan: row.tanggalPembatalan || <i>*empty</i>,
-          alasanPembatalan: row.alasanPembatalan || <i>*empty</i>,
-          user: row.user || <i>*empty</i>,
+          noTiket: row.no_tiket ? <b>{row.no_tiket}</b> : <EvoEmpty />,
+          tglMasuk: row.tanggal_masuk || <EvoEmpty />,
+          pintuMasuk: row.pintu_masuk?.keterangan || <EvoEmpty />, // ✅ ini menampilkan nama pintu          tanggalPembatalan: row.tanggal_pembatalan || <EvoEmpty />,
+          alasanPembatalan: row.alasan_pembatalan || <EvoEmpty />,
+          user: row.user?.nama || <EvoEmpty />,
         }))
       : [];
 
@@ -160,6 +160,7 @@ export default function TransaksiBatalContentLaporan() {
           autoClose={true}
         />
       )}
+      {/* {JSON.stringify(laporanTransaksiBatalLaporan)} */}
       <EvoTitleSection
         title={titleSection}
         onExportPDF={
@@ -205,12 +206,14 @@ export default function TransaksiBatalContentLaporan() {
         />
       </>
       {/* )} */}
-      <EvoSearchTabel
-        // isFilter={true}
-        // FilterComponent={FilterMasProdukMember}
-        placeholder="Ketik nomor tiket..."
-        onSearch={(data) => console.log('Hasil pencarian:', data)}
-      />
+      {!hideNotFinished.evoSearchTabel_TransaksiBatalContentLaporan && (
+        <EvoSearchTabel
+          // isFilter={true}
+          // FilterComponent={FilterMasProdukMember}
+          placeholder="Ketik nomor tiket..."
+          onSearch={(data) => console.log('Hasil pencarian:', data)}
+        />
+      )}
 
       <div className="relative">
         {isLoading && <EvoLoading />}

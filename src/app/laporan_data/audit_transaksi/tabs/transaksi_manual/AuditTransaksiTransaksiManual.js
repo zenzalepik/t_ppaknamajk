@@ -35,6 +35,7 @@ import EvoNotifCard from '@/components/EvoNotifCard';
 import EvoLoading from '@/components/EvoLoading';
 import { format } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
+import numbers from '@/utils/numbers';
 
 const titleSection = 'Laporan Transaksi Manual Tiket';
 
@@ -78,7 +79,7 @@ export default function AuditTransaksiTransaksiManual() {
     ],
     queryFn: () =>
       fetchApiAuditTransaksiTransaksiManual({
-        limit: 13,
+        limit: numbers.apiNumLimit,
         page: currentPage,
         // offset: (currentPage - 1) * 5,
         sortBy: 'id',
@@ -136,18 +137,30 @@ export default function AuditTransaksiTransaksiManual() {
     setCurrentPage(1); // Reset ke halaman pertama
   };
 
-  const rows =
+// Fungsi format rupiah
+const formatRupiah = (angka) => {
+  if (angka === null || angka === undefined || isNaN(angka)) return <i>-</i>;
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+  }).format(angka);
+};
+
+const rows =
     laporanAuditTransaksiTransaksiManual?.data?.length > 0
       ? laporanAuditTransaksiTransaksiManual.data.map((row, index) => {
           return {
             no: index + 1,
             // noTiket: <b>{row.noTiket != null ? row.noTiket : <i>*empty</i>}</b>,
             // id: row.id || <i>*empty</i>,
-            id: row.id || <i>*empty</i>,
-            pos: row.pos || <i>*empty</i>,
-            namaPetugas: row.namaPetugas || <i>*empty</i>,
-            qtyTransaksi: row.qtyTransaksi || <i>*empty</i>,
-            totalNominal: row.totalNominal || <i>*empty</i>,
+            // id: row.id || <i>*empty</i>,
+            pos: row.nama_pos || <i>*empty</i>,
+            namaPetugas: row.nama_petugas || <i>*empty</i>,
+            qtyTransaksi: row.qty_transaksi || <i>*empty</i>,
+            totalBiayaParkir: formatRupiah(row.total_biaya_parkir),
+            totalDiskon: formatRupiah(row.total_diskon),
+            totalBiayaAkhir: formatRupiah(row.total_biaya_akhir)
           };
         })
       : [];
@@ -175,6 +188,7 @@ export default function AuditTransaksiTransaksiManual() {
         />
       )}
       <EvoCardSection className="!p-0 !bg-transparent !shadow-none">
+        {/* {JSON.stringify(laporanAuditTransaksiTransaksiManual?.data)} */}
         <EvoTitleSection
           title={titleSection}
           onExportPDF={() => setModalExportPDFOpen(true)}
@@ -184,6 +198,7 @@ export default function AuditTransaksiTransaksiManual() {
           onDateAwal={getDefaultDateAwal}
           onDateChange={handleDateChange}
         />
+        {/* {JSON.stringify(laporanAuditTransaksiTransaksiManual)} */}
         <>
           <EvoExportApiPDF
             isOpen={modalExportPDFOpen}

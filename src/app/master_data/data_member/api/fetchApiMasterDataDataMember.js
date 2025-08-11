@@ -9,6 +9,7 @@ export const fetchApiMasterDataDataMember = async (
   // offset = 0,
   sortBy = 'id',
   sortOrder = 'asc',
+   search = '',
 } = {}
 ) => {
   
@@ -20,8 +21,12 @@ export const fetchApiMasterDataDataMember = async (
     sortOrder,
   });
 
+  if (search) queryParams.set('search', search);
+  
+
   return await fetchWithAuth({
     method: 'get',
     endpoint: `/master-data/data-member?${queryParams.toString()}`,
+    // endpoint:`/master-data/data-member?search=18919`
   });
 };

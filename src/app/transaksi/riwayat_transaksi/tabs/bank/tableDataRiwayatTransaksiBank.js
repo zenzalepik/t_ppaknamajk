@@ -1,6 +1,6 @@
 'use client';
 
-export const tableDataRiwayatTransaksiPrepaidCard = {
+export const tableDataRiwayatTransaksiBank = {
   columns: [
     { label: 'No.' },
     { label: 'Nomor Tiket' },
@@ -126,7 +126,7 @@ export const tableDataRiwayatTransaksiPrepaidCard = {
       durasiParkir: '1 jam 15 menit',
       denda: 'Rp. 0',
       totalPembayaran: 'Rp. 5.000',
-      jenisTransaksi: 'Prepaid Card',
+      jenisTransaksi: 'Bank',
       added: '17-11-2021 23:29',
       updated: 'Muhtar Lubis Asyari 17-11-2021 23:45',
     },

@@ -11,9 +11,14 @@ import EvoInRadio from '@/components/evosist_elements/EvoInRadio';
 import EvoInDatePicker from '@/components/evosist_elements/EvoInDatePicker';
 import EvoInTimePicker from '@/components/evosist_elements/EvoInTimePicker';
 import EvoInCheckbox from '@/components/evosist_elements/EvoInCheckbox';
-import { RiTimerLine, RiAuctionLine, RiCashLine } from '@remixicon/react';
+import {
+  RiTimerLine,
+  RiAuctionLine,
+  RiCashLine,
+  RiFileAddLine,
+} from '@remixicon/react';
 
-const AddTunaiForm = ({ isOpen, onClose, onSubmit }) => {
+const AddTransaksiForm = ({ isOpen, onClose, onSubmit }) => {
   const [formData, setFormData] = useState({
     // A.
     waktuMasukTanggal: '',
@@ -38,7 +43,7 @@ const AddTunaiForm = ({ isOpen, onClose, onSubmit }) => {
     jenisPembayaran: '',
 
     //E.
-    // keterangan: '',
+    keterangan: '',
   });
 
   const [selectedDate, setSelectedDate] = useState('');
@@ -145,8 +150,8 @@ const AddTunaiForm = ({ isOpen, onClose, onSubmit }) => {
         formData.jenisPembayaran === '' ? 'Jenis pembayaran wajib dipilih' : '',
 
       // E.
-      // keterangan:
-      //   formData.keterangan.trim() === '' ? 'Keterangan wajib diisi' : '',
+      keterangan:
+        formData.keterangan.trim() === '' ? 'Keterangan wajib diisi' : '',
     };
 
     setErrors(newErrors);
@@ -179,10 +184,10 @@ const AddTunaiForm = ({ isOpen, onClose, onSubmit }) => {
       <EvoModal
         isOpen={isOpen}
         onClose={onClose}
-        title="Tambah Transaksi Tunai"
+        title="Tambah Transaksi"
         titleTextColor="!text-white"
-        titleBgColor="!bg-black"
-        titleIcon={<RiCashLine size={72}/>}
+        titleBgColor="!bg-primary"
+        titleIcon={<RiFileAddLine size={72} />}
       >
         <EvoForm
           onSubmit={handleSubmit}
@@ -245,6 +250,29 @@ const AddTunaiForm = ({ isOpen, onClose, onSubmit }) => {
               onChange={handleChange}
               error={errors.nomorTiket}
             />
+          </div>
+
+          <div className="flex flex-col gap-6 border border-border rounded-[20px] p-6 ">
+            <div className=" text-title_small mb-0">
+              <span className="text-primary">B.</span> Tipe Transaksi ?
+            </div>
+
+            <div className="flex gap-3">
+              <div className="w-full">
+                <EvoInCheckbox
+                  label="Is Manual ?"
+                  answers={[
+                    {
+                      label: 'Iya',
+                      value: 'iya',
+                      checked: selectedIsDenda.iya,
+                    },
+                  ]}
+                  onChange={handleCheckboxIsDenda}
+                  error={errors.cameras}
+                />
+              </div>
+            </div>
           </div>
 
           {/* B */}
@@ -444,11 +472,11 @@ const AddTunaiForm = ({ isOpen, onClose, onSubmit }) => {
                 <div className="text-title_large">Rp. 0</div>
               </div>
             </div>
-            {/* <div className="border-t-4 border-dashed border-black w-full my-6"></div> */}
+            <div className="border-t-4 border-dashed border-black w-full my-6"></div>
           </div>
 
           {/* E */}
-          {/* <div className="flex flex-col gap-6 border border-border rounded-[20px] p-6 ">
+          <div className="flex flex-col gap-6 border border-border rounded-[20px] p-6 ">
             <div className=" text-title_small mb-0">
               <span className="text-primary">E.</span> Keterangan/penjelasan
             </div>
@@ -460,11 +488,11 @@ const AddTunaiForm = ({ isOpen, onClose, onSubmit }) => {
               onChange={handleChange}
               error={errors.keterangan}
             />
-          </div> */}
+          </div>
         </EvoForm>
       </EvoModal>
     </>
   );
 };
 
-export default AddTunaiForm;
+export default AddTransaksiForm;

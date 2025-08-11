@@ -1,4 +1,4 @@
-//RiwayatTransaksiPrepaidCard.js
+//RiwayatTransaksiBank.js
 'use client';
 
 import React, { useState } from 'react';
@@ -18,11 +18,11 @@ import { exportPDF } from '@/helpers/exportPDF';
 import { exportPrint } from '@/helpers/exportPrint';
 import { monthNames } from '@/helpers/timeMonth';
 import { currentYear, years } from '@/helpers/timeYear';
-import { tableDataRiwayatTransaksiPrepaidCard } from './tableDataRiwayatTransaksiPrepaidCard';
+import { tableDataRiwayatTransaksiBank } from './tableDataRiwayatTransaksiBank';
 import EvoActionButtons from '@/components/EvoActionButtons';
 import { StatusLabel } from '@/components/StatusLabel';
 import EvoSearchTabel from '@/components/EvoSearchTabel';
-import FilterMasProdukMember from './FilterMasProdukMember';
+import FilterMasProdukMember from './FilterMasBank';
 import EvoButton from '@/components/evosist_elements/EvoButton';
 import EvoTable from '@/components/evosist_elements/EvoTable';
 import colors from '@/utils/colors';
@@ -30,7 +30,7 @@ import {
   getDefaultDateAwal,
   getDefaultDateAkhir,
 } from '@/helpers/dateRangeHelper';
-import { fetchApiRiwayatTransaksiPrepaidCard } from './api/fetchApiRiwayatTransaksiPrepaidCard';
+import { fetchApiRiwayatTransaksiBank } from './api/fetchApiRiwayatTransaksiBank';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Spinner from '@/components/Spinner';
 import EvoErrorDiv from '@/components/EvoErrorDiv';
@@ -39,11 +39,16 @@ import EvoExportApiPDF from '@/components/EvoExportApiPDF';
 import EvoExportApiExcel from '@/components/EvoExportApiExcel';
 import EvoExportApiPrint from '@/components/EvoExportApiPrint';
 import EvoNotifCard from '@/components/EvoNotifCard';
+import numbers from '@/utils/numbers';
+import EvoEmpty from '@/components/EvoEmpty';
+import { format } from 'date-fns';
+import { id } from 'date-fns/locale';
+import EvoLoading from '@/components/EvoLoading';
 
-const titleSection = 'Riwayat Transaksi Prepaid Card';
+const titleSection = 'Riwayat Transaksi Bank';
 
-export default function RiwayatTransaksiPrepaidCard({ onBack }) {
-  const urlExport = '/riwayat_transaksi_prepaid_card/';
+export default function RiwayatTransaksiBank({ onBack }) {
+  const urlExport = '/riwayat_transaksi_bank/';
   const [modalExportPDFOpen, setModalExportPDFOpen] = useState(false);
   const [modalExportExcel, setModalExportExcel] = useState(false);
   const [modalExportPrint, setModalExportPrint] = useState(false);
@@ -61,32 +66,34 @@ export default function RiwayatTransaksiPrepaidCard({ onBack }) {
   const handleTambahPengaduan = () => setModalOpenPengaduan(true);
   const handleTutup = () => setModalOpenPengaduan(false);
 
-   const [currentPage, setCurrentPage] = useState(1);
-    const queryClient = useQueryClient();
-    const [notifMessage, setNotifMessage] = useState('');
-    const [notifType, setNotifType] = useState('success');
-  
-    const {
-      data: laporanRiwayatTransaksiPrepaidCard,
-      error,
-      isLoading,
-    } = useQuery({
-      queryKey: ['laporanRiwayatTransaksiPrepaidCard', currentPage],
-      queryFn: () =>
-        fetchApiRiwayatTransaksiPrepaidCard({
-          limit: 5,
-          page: currentPage,
-          offset: (currentPage - 1) * 5,
-          sortBy: 'id',
-          sortOrder: 'desc',
-        }),
-      // retry: false,
-    });
-  
-    const handlePageChange = (page) => {
-      setCurrentPage(page);
-    };
-  
+  const [currentPage, setCurrentPage] = useState(1);
+  const queryClient = useQueryClient();
+  const [notifMessage, setNotifMessage] = useState('');
+  const [notifType, setNotifType] = useState('success');
+
+  const [searchText, setSearchText] = useState('');
+
+  const {
+    data: laporanRiwayatTransaksiBank,
+    error,
+    isLoading,
+  } = useQuery({
+    queryKey: ['laporanRiwayatTransaksiBank', currentPage,searchText],
+    queryFn: () =>
+      fetchApiRiwayatTransaksiBank({
+        limit: numbers.apiNumLimit,
+        page: currentPage,
+        // offset: (currentPage - 1) * 5,
+        sortBy: 'id',
+        sortOrder: 'desc',
+        search: searchText,
+      }),
+    // retry: false,
+  });
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
 
   const handleSubmitData = (data) => {
     console.log('Data baru:', data);
@@ -143,43 +150,59 @@ export default function RiwayatTransaksiPrepaidCard({ onBack }) {
   };
 
   const handleSearch = (query) => {
-    console.log('Hasil pencarian:', query);
+    // setShowTabel(true);
+    setSearchText(query.searchText); // simpan input pencarian
+    setCurrentPage(1); // reset ke halaman pertama
   };
 
   const rows =
-    laporanRiwayatTransaksiPrepaidCard?.data?.length > 0
-      ? laporanRiwayatTransaksiPrepaidCard.data
-          .filter((row) => row.jenisTransaksi === 'Prepaid Card')
-          .map((row, index) => ({
+    laporanRiwayatTransaksiBank?.data?.length > 0
+      ? laporanRiwayatTransaksiBank.data
+          // .filter((row) => row.jenisTransaksi === 'Bank')
+          .map((row, index) => {
+                const formatTanggal = (value) => {
+                          return value ? (
+                            format(new Date(value), 'dd MMMM yyyy - HH:mm', { locale: id })
+                          ) : (
+                            <EvoEmpty />
+                          );
+                        };
+            
+                        const formatRupiah = (value) => {
+                          return value !== null && value !== undefined
+                            ? new Intl.NumberFormat('id-ID', {
+                                style: 'currency',
+                                currency: 'IDR',
+                                minimumFractionDigits: 0,
+                              }).format(value)
+                            : '-';
+                        };
+            
+            return {
             no: index + 1,
-            // id: row.id || <i>*empty</i>,
-            // no: row.no || <i>*empty</i>,
-
-            // id: row.id || <i>*empty</i>,
-            // no: row.no || <i>*empty</i>,
-            nomorTiket: row.nomorTiket || <i>*empty</i>,
-            waktuMasuk: row.waktuMasuk || <i>*empty</i>,
-            gerbangMasuk: row.gerbangMasuk || <i>*empty</i>,
-            jenisKendaraan: row.jenisKendaraan || <i>*empty</i>,
-            nomorPolisi: row.nomorPolisi || <i>*empty</i>,
-            waktuKeluar: row.waktuKeluar || <i>*empty</i>,
-            pintuKeluar: row.pintuKeluar || <i>*empty</i>,
-            durasiParkir: row.durasiParkir || <i>*empty</i>,
-            denda: row.denda || <i>*empty</i>,
-            totalPembayaran: row.totalPembayaran || <i>*empty</i>,
-            jenisTransaksi: row.jenisTransaksi || <i>*empty</i>,
-            added: row.added || <i>*empty</i>,
-            updated: row.updated || <i>*empty</i>,
-          }))
+              nomorTiket: <b>{row.nomor_tiket}</b> || <EvoEmpty />,
+              waktuMasuk: formatTanggal(row?.waktu_masuk),
+              gerbangMasuk: row.gerbang_masuk || <EvoEmpty />,
+              jenisKendaraan: row.jenis_kendaraan || <EvoEmpty />,
+              nomorPolisi: row.nomor_polisi || <EvoEmpty />,
+              waktuKeluar: formatTanggal(row?.waktu_keluar),
+              pintuKeluar: row.pintu_keluar || <EvoEmpty />,
+              durasiParkir: row.durasi_parkir || <EvoEmpty />,
+              denda: formatRupiah(row?.denda),
+              totalPembayaran: formatRupiah(row?.total_pembayaran),
+              jenisTransaksi: row.jenis_transaksi || <EvoEmpty />,
+              added: formatTanggal(row?.added),
+              updated: formatTanggal(row?.updated),   };
+          })
       : [];
 
-  if (isLoading)
-    return (
-      <div className="h-full flex flex-col gap-2 justify-center items-center text-center text-primary">
-        <Spinner size={32} color="border-black" />
-        Loading...
-      </div>
-    );
+  // if (isLoading)
+  //   return (
+  //     <div className="h-full flex flex-col gap-2 justify-center items-center text-center text-primary">
+  //       <Spinner size={32} color="border-black" />
+  //       Loading...
+  //     </div>
+  //   );
 
   if (error) {
     return <EvoErrorDiv errorHandlerText={getErrorMessage(error)} />;
@@ -195,25 +218,25 @@ export default function RiwayatTransaksiPrepaidCard({ onBack }) {
           autoClose={true}
         />
       )}
-    <EvoCardSection className="!p-0 !bg-transparent !shadow-none">
-      <EvoTitleSection
-        title={titleSection}
-        // radioItems={radioItems}
-        // monthNames={monthNames}
-        // years={years}
-        onBack={onBack}
-        handleChange={handleChange}
-        // buttonText={titleSection}
-        // borderTop={true}
-        // onButtonClick={handleTambah}
-        icon={<RiAddLargeLine size={16} />}
+      <EvoCardSection className="!p-0 !bg-transparent !shadow-none">
+        <EvoTitleSection
+          title={titleSection}
+          // radioItems={radioItems}
+          // monthNames={monthNames}
+          // years={years}
+          onBack={onBack}
+          handleChange={handleChange}
+          // buttonText={titleSection}
+          // borderTop={true}
+          // onButtonClick={handleTambah}
+          icon={<RiAddLargeLine size={16} />}
           onExportPDF={() => setModalExportPDFOpen(true)}
           onExportExcel={() => setModalExportExcel(true)}
           onPrint={() => setModalExportPrint(true)}
-        onDateAkhir={getDefaultDateAkhir}
-        onDateAwal={getDefaultDateAwal}
-        onDateChange={handleDateChange}
-      />
+          onDateAkhir={getDefaultDateAkhir}
+          onDateAwal={getDefaultDateAwal}
+          onDateChange={handleDateChange}
+        />
 
         <>
           <EvoExportApiPDF
@@ -235,28 +258,37 @@ export default function RiwayatTransaksiPrepaidCard({ onBack }) {
           />
         </>
 
-      <EvoSearchTabel
-        // isFilter={true}
-        FilterComponent={FilterMasProdukMember}
-        placeholder="Ketik nomor tiket..."
-        onSearch={(data) => console.log('Hasil pencarian:', data)}
-      />
+        <EvoSearchTabel
+          // isFilter={true}
+          FilterComponent={FilterMasProdukMember}
+          placeholder="Ketik nomor tiket..."
+          // onSearch={(data) => console.log('Hasil pencarian:', data)}
+           onSearch={handleSearch}
+        />
 
-      {/* <PembatalanTansaksiForm
+        {/* <PembatalanTansaksiForm
         isOpen={modalOpenPengaduan}
         onClose={handleTutup}
         onSubmit={handleSubmitData}
       /> */}
-
-      <EvoTable
-        id="tableToPrint"
-        tableData={tableDataRiwayatTransaksiPrepaidCard}
-        currentPage={currentPage}
-          totalPages={laporanRiwayatTransaksiPrepaidCard?.totalPages}
+  {/* {searchText == '' ? (
+          <div className="text-2xl text-black/20 text-center bg-black/[0.025] rounded-[20px] py-32">
+            Ketik Pencarian Untuk Menampilkan Data
+          </div>
+        ) : ( */}
+          <div className="relative">
+            {isLoading && <EvoLoading />}
+        <EvoTable
+          id="tableToPrint"
+          tableData={tableDataRiwayatTransaksiBank}
+          currentPage={currentPage}
+          totalPages={laporanRiwayatTransaksiBank?.totalPages}
           onPageChange={handlePageChange}
-        rows={rows}
-      />
-    </EvoCardSection>
+          rows={rows}
+        />
+          </div>
+        {/* )} */}
+      </EvoCardSection>
     </>
   );
 }

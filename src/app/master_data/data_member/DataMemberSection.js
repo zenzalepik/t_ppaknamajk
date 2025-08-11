@@ -33,6 +33,11 @@ import EvoExportApiPDF from '@/components/EvoExportApiPDF';
 import EvoExportApiExcel from '@/components/EvoExportApiExcel';
 import EvoExportApiPrint from '@/components/EvoExportApiPrint';
 import numbers from '@/utils/numbers';
+import hideNotFinished from '@/utils/hideNotFinished';
+import EvoEmpty from '@/components/EvoEmpty';
+import { format } from 'date-fns';
+import { id } from 'date-fns/locale';
+import EvoLoading from '@/components/EvoLoading';
 
 const titleSection = 'Data Member';
 
@@ -55,6 +60,8 @@ export default function DataMemberSection() {
   const [selectedEditData, setSelectedEdit] = useState(null);
   const [modalEditOpen, setModalEditOpen] = useState(false);
   const handleEditTutup = () => setModalEditOpen(false);
+
+  const [searchText, setSearchText] = useState('');
 
   const [
     selectedEditPerpanjangMasaAktifData,
@@ -100,7 +107,7 @@ export default function DataMemberSection() {
     error,
     isLoading,
   } = useQuery({
-    queryKey: ['masterDataDataMember', currentPage],
+    queryKey: ['masterDataDataMember', currentPage, searchText],
     queryFn: () =>
       fetchApiMasterDataDataMember({
         limit: numbers.apiNumLimit,
@@ -108,6 +115,7 @@ export default function DataMemberSection() {
         // offset: (currentPage - 1) * 5,
         sortBy: 'id',
         sortOrder: 'desc',
+        search: searchText,
       }),
     // retry: false,
   });
@@ -135,7 +143,6 @@ export default function DataMemberSection() {
       (item) => item.id === id
     );
 
-    console.log(dataDipilih);
 
     if (dataDipilih) {
       setSelectedEdit({
@@ -188,7 +195,6 @@ export default function DataMemberSection() {
       (item) => item.id === id
     );
 
-    console.log(dataDipilih);
 
     if (dataDipilih) {
       setSelectedEditPerpanjangMasaAktif({
@@ -224,7 +230,7 @@ export default function DataMemberSection() {
       (item) => item.id === id
     );
 
-    console.log(dataDipilih);
+    
 
     if (dataDipilih) {
       setSelectedEditGantiKartu({
@@ -260,8 +266,6 @@ export default function DataMemberSection() {
       (item) => item.id === id
     );
 
-    console.log(dataDipilih);
-
     if (dataDipilih) {
       setSelectedEditNomorPolisi({
         json: dataDipilih || {},
@@ -296,8 +300,6 @@ export default function DataMemberSection() {
       (item) => item.id === id
     );
 
-    console.log(dataDipilih);
-
     if (dataDipilih) {
       setSelectedViewRiwayatTransaksi({
         json: dataDipilih || {},
@@ -329,22 +331,22 @@ export default function DataMemberSection() {
   };
 
   const handleSearch = (query) => {
-    console.log('Hasil pencarian:', query);
+    // setShowTabel(true);
+    setSearchText(query.searchText); // simpan input pencarian
+    setCurrentPage(1); // reset ke halaman pertama
   };
 
-  if (isLoading)
-    return (
-      <div className="h-full flex flex-col gap-2 justify-center items-center text-center text-primary">
-        <Spinner size={32} color="border-black" />
-        Loading...
-      </div>
-    );
+  // if (isLoading)
+  //   return (
+  //     <div className="h-full flex flex-col gap-2 justify-center items-center text-center text-primary">
+  //       <Spinner size={32} color="border-black" />
+  //       Loading...
+  //     </div>
+  //   );
 
   if (error) {
     return <EvoErrorDiv errorHandlerText={getErrorMessage(error)} />; // ✅ Pastikan error ditampilkan di UI
   }
-
-  // console.log('Data Perusahaan:', masterDataDataMember);
 
   const dataApi = masterDataDataMember || {};
 
@@ -353,85 +355,87 @@ export default function DataMemberSection() {
   };
 
   const rows =
-    masterDataDataMember?.data?.map((row, index) => ({
-      no: index + 1,
-      nama: row.nama == null ? '-' : <b>{row.nama || '-'}</b>,
-      kontak: row.no_hp || '-',
-      perusahaan:
-        (row.perusahaan?.nama || '-') +
-        ' (' +
-        (row.perusahaan?.jenis_perusahaan || 'Tidak diketahui') +
-        ')',
-      aksesTiket: StatusLabel.status(row.akses_tiket),
-      aksesKartu: StatusLabel.status(row.akses_kartu),
-      nomorKartu: row.no_kartu || '-',
-      tanggalInput: row.tgl_input
-        ? new Date(row.tgl_input).toLocaleDateString()
-        : '-',
-      produk: row.produk_member?.nama || '-',
-      tarif: row.tarif ? `Rp${row.tarif.toLocaleString()}` : '-',
-      masaAktif:
-        Array.isArray(row.periode) && row.periode.length === 2
-          ? `${row.periode[0].value} s/d ${row.periode[1].value}`
+    masterDataDataMember?.data?.map((row, index) => {
+      return {
+        no: index + 1,
+        nama: row.nama == null ? '-' : <b>{row.nama || '-'}</b>,
+        kontak: row.no_hp || '-',
+        perusahaan:
+          (row.perusahaan?.nama || '-') +
+          ' (' +
+          (row.perusahaan?.jenis_perusahaan || 'Tidak diketahui') +
+          ')',
+        aksesTiket: StatusLabel.status(row.akses_tiket),
+        aksesKartu: StatusLabel.status(row.akses_kartu),
+        nomorKartu: row.no_kartu || '-',
+        tanggalInput: row.tgl_input
+          ? new Date(row.tgl_input).toLocaleDateString()
           : '-',
-      added: row.createdAt ? new Date(row.createdAt).toLocaleString() : '-',
-      aksi: (
-        <EvoActionButtons
-          rowId={row.id}
-          onPerpanjang={
-            hakAksesMDDataMember.perpanjang == true
-              ? () => handlePerpanjang(row.id)
-              : null
-          }
-          isGantiKartu={
-            hakAksesMDDataMember.ganti_kartu == true
-              ? row.akses_kartu || false
-              : false
-          }
-          onGantiKartu={
-            hakAksesMDDataMember.ganti_kartu == true
-              ? () => handleGantiKartu(row.id)
-              : null
-          }
-          isGantiNomorPolisi={
-            hakAksesMDDataMember.ganti_nomor_polisi == true
-              ? row.data_nomor_polisi.length > 0
-                ? true
+        produk: row.produk_member?.nama || '-',
+        tarif: row.tarif ? `Rp${row.tarif.toLocaleString()}` : '-',
+        masaAktif:
+          Array.isArray(row.periode) && row.periode.length === 2
+            ? `${row.periode[0].value} s/d ${row.periode[1].value}`
+            : '-',
+        added: row.createdAt ? new Date(row.createdAt).toLocaleString() : '-',
+        aksi: (
+          <EvoActionButtons
+            rowId={row.id}
+            onPerpanjang={
+              hakAksesMDDataMember.perpanjang == true
+                ? () => handlePerpanjang(row.id)
+                : null
+            }
+            isGantiKartu={
+              hakAksesMDDataMember.ganti_kartu == true
+                ? row.akses_kartu || false
                 : false
-              : false
-          }
-          onGantiNomorPolisi={
-            hakAksesMDDataMember.ganti_nomor_polisi == true
-              ? () => handleGantiNomorPolisi(row.id)
-              : null
-          }
-          onRiwayatTransaksi={
-            hakAksesMDDataMember.riwayat_transaksi == true
-              ? () => handleRiwayatTransaksi(row.id)
-              : null
-          }
-          onEdit={
-            hakAksesMDDataMember.update == true
-              ? () => handleEdit(perusahaan.id)
-              : null
-          }
-          onDelete={
-            hakAksesMDDataMember.delete == true
-              ? () => handleDelete(perusahaan.id)
-              : null
-          }
-          isActive={true}
-          moreAction={
-            hakAksesMDDataMember.perpanjang != true &&
-            hakAksesMDDataMember.ganti_kartu != true &&
-            hakAksesMDDataMember.ganti_nomor_polisi != true &&
-            hakAksesMDDataMember.riwayat_transaksi != true
-              ? ''
-              : titleSection
-          }
-        />
-      ),
-    })) || [];
+            }
+            onGantiKartu={
+              hakAksesMDDataMember.ganti_kartu == true
+                ? () => handleGantiKartu(row.id)
+                : null
+            }
+            isGantiNomorPolisi={
+              hakAksesMDDataMember.ganti_nomor_polisi == true
+                ? row.data_nomor_polisi.length > 0
+                  ? true
+                  : false
+                : false
+            }
+            onGantiNomorPolisi={
+              hakAksesMDDataMember.ganti_nomor_polisi == true
+                ? () => handleGantiNomorPolisi(row.id)
+                : null
+            }
+            onRiwayatTransaksi={
+              hakAksesMDDataMember.riwayat_transaksi == true
+                ? () => handleRiwayatTransaksi(row.id)
+                : null
+            }
+            onEdit={
+              hakAksesMDDataMember.update == true
+                ? () => handleEdit(perusahaan.id)
+                : null
+            }
+            onDelete={
+              hakAksesMDDataMember.delete == true
+                ? () => handleDelete(perusahaan.id)
+                : null
+            }
+            isActive={true}
+            moreAction={
+              hakAksesMDDataMember.perpanjang != true &&
+              hakAksesMDDataMember.ganti_kartu != true &&
+              hakAksesMDDataMember.ganti_nomor_polisi != true &&
+              hakAksesMDDataMember.riwayat_transaksi != true
+                ? ''
+                : titleSection
+            }
+          />
+        ),
+      };
+    }) || [];
 
   if (tidakPunyaAkses) {
     return (
@@ -502,12 +506,21 @@ export default function DataMemberSection() {
         )}
 
         {hakAksesMDDataMember.read == true && (
-          <EvoSearchTabel
-            isFilter={true}
-            FilterComponent={FilterMasProdukMember}
-            placeholder="Ketik nama member atau nomor handphone member..."
-            onSearch={(data) => console.log('Hasil pencarian:', data)}
-          />
+          <>
+            {!hideNotFinished.evoSearchTabel_DataMemberSection && (
+              <EvoSearchTabel
+                isFilter={
+                  hideNotFinished.evoSearchTabel_Filter_DataMemberSection ==
+                  false
+                    ? true
+                    : false
+                }
+                FilterComponent={FilterMasProdukMember}
+                placeholder="Ketik nama member atau no. handphone member atau no. kartu..."
+                onSearch={handleSearch}
+              />
+            )}
+          </>
         )}
         {hakAksesMDDataMember.create == true && (
           <AddDataMemberForm
@@ -559,14 +572,17 @@ export default function DataMemberSection() {
           />
         )}
         {hakAksesMDDataMember.read == true && (
-          <EvoTable
-            id="tableToPrint"
-            tableData={tableDataMember}
-            currentPage={currentPage}
-            totalPages={dataApi?.totalPages}
-            onPageChange={handlePageChange}
-            rows={rows}
-          />
+          <div className="relative">
+            {isLoading && <EvoLoading />}
+            <EvoTable
+              id="tableToPrint"
+              tableData={tableDataMember}
+              currentPage={currentPage}
+              totalPages={dataApi?.totalPages}
+              onPageChange={handlePageChange}
+              rows={rows}
+            />
+          </div>
         )}
       </EvoCardSection>
     </>

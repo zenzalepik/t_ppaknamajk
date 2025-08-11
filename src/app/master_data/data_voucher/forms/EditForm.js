@@ -312,14 +312,6 @@ const EditDataVoucherForm = ({
             onChange={handleChange}
             error={errors.no_tiket}
           />
-          <EvoInText
-            name="nomor_polisi"
-            label="Nomor Polisi"
-            placeholder="Masukkan nomor polisi"
-            value={formData.nomor_polisi || ''}
-            onChange={handleChange}
-            error={errors.nomor_polisi}
-          />
           <EvoInDropdown
             name="kendaraan_id"
             label="Kendaraan"
@@ -347,7 +339,14 @@ const EditDataVoucherForm = ({
             error={errors.kendaraan_id}
             placeholder="Pilih jenis kendaraan"
           />
-
+          <EvoInText
+            name="nomor_polisi"
+            label="Nomor Polisi"
+            placeholder="Masukkan nomor polisi"
+            value={formData.nomor_polisi || ''}
+            onChange={handleChange}
+            error={errors.nomor_polisi}
+          />
           <EvoInText
             name="keterangan"
             label="Keterangan"

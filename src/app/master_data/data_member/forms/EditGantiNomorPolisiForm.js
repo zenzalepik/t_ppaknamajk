@@ -4,25 +4,8 @@ import EvoForm from '@/components/EvoForm';
 import EvoInText from '@/components/evosist_elements/EvoInText';
 import EvoNotifCard from '@/components/EvoNotifCard';
 import EvoInDropdown from '@/components/evosist_elements/EvoInDropdown';
-import EvoInCheckbox from '@/components/evosist_elements/EvoInCheckbox';
-import EvoInDatePicker from '@/components/evosist_elements/EvoInDatePicker';
-import {
-  RiAddLine,
-  RiDeleteBin2Line,
-  RiCalendarEventLine,
-  RiFileEditLine,
-  RiCalendarEventFill,
-} from '@remixicon/react';
-import EvoButton from '@/components/evosist_elements/EvoButton';
-import colors from '@/utils/colors';
-import KendaraanForm from './KendaraanForm';
-import { fetchApiMasterDataPerusahaan } from '@/app/master_data/perusahaan/api/fetchApiMasterDataPerusahaan';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { fetchApiMasterDataProdukMember } from '@/app/master_data/produk_member/api/fetchApiMasterDataProdukMember';
-import TiketProdukMemberForm from './TiketProdukMemberForm';
 import EvoTicketMember from '@/components/EvoTicketMember';
-import { fetchApiMasterDataDataKendaraan } from '@/app/master_data/data_kendaraan/api/fetchApiMasterDataDataKendaraan';
-import { fetchApiPengaturanParameterTipeKendaraan } from '@/app/pengaturan/parameter/api/items/fetchApiPengaturanParameterTipeKendaraan';
 import { getUserId } from '@/utils/db';
 import { fetchApiMasterDataDataMemberUpdateGantiNomorPolisi } from '../api/fetchApiMasterDataDataMemberUpdateGantiNomorPolisi';
 import EvoInTextarea from '@/components/evosist_elements/EvoInTextarea';
@@ -36,123 +19,29 @@ const EditGantiNomorPolisiForm = ({
   onSubmit,
   initialData = null,
 }) => {
-  const [modalKendaraanOpen, setModalKendaraanOpen] = useState(false);
   const [editKendaraan, setEditKendaraan] = useState(null);
-  const [dataKendaraan, setDataKendaraan] = useState([]); // daftar kendaraan milik member
+  const [dataKendaraan, setDataKendaraan] = useState([]);
 
   const [errors, setErrors] = useState({});
   const [notifMessage, setNotifMessage] = useState('');
   const [notifType, setNotifType] = useState('success');
 
-  const [currentPage, setCurrentPage] = useState(1);
-
-  const [modalProdukMemberOpen, setModalProdukMemberOpen] = useState(false);
   const [selectedProdukMember, setSelectedProdukMember] = useState(null);
 
   const queryClient = useQueryClient();
 
-  const {
-    data: masterDataPerusahaan,
-    errorPerusahaan,
-    isLoadingPerusahaan,
-  } = useQuery({
-    queryKey: ['masterDataPerusahaan', currentPage],
-    queryFn: () =>
-      fetchApiMasterDataPerusahaan({
-        limit: 305,
-        page: currentPage,
-        offset: (currentPage - 1) * 5,
-        sortBy: 'id',
-        sortOrder: 'desc',
-      }),
-    // retry: false,
-  });
-
-  const dataApiPerusahaan = masterDataPerusahaan?.data || [];
-
-  const {
-    data: masterDataProdukMember,
-    errorProdukMember,
-    isLoadingProdukMember,
-  } = useQuery({
-    queryKey: ['masterDataProdukMember', currentPage],
-    queryFn: () =>
-      fetchApiMasterDataProdukMember({
-        limit: 905,
-        page: currentPage,
-        offset: (currentPage - 1) * 5,
-        sortBy: 'id',
-        sortOrder: 'desc',
-      }),
-    // retry: false,
-  });
-
-  const dataApiProdukMember = masterDataProdukMember?.data || [];
-
-  const handleSelectProdukMember = (voucher) => {
-    setSelectedProdukMember(voucher);
-    setModalProdukMemberOpen(false);
-  };
-
-  const {
-    data: masterDataDataKendaraan,
-    error,
-    isLoading,
-  } = useQuery({
-    queryKey: ['masterDataDataKendaraan', currentPage],
-    queryFn: () =>
-      fetchApiMasterDataDataKendaraan({
-        limit: 905,
-        page: currentPage,
-        offset: (currentPage - 1) * 5,
-        sortBy: 'id',
-        sortOrder: 'desc',
-      }),
-    // retry: false,
-  });
-
-  const {
-    data: dataTipeKendaraan,
-    error: errorTipeKendaraan,
-    isLoading: isLoadingTipeKendaraan,
-  } = useQuery({
-    queryKey: ['pengaturanTipeKendaraan'],
-    queryFn: () => fetchApiPengaturanParameterTipeKendaraan(),
-  });
-
-  const handleDeleteKendaraan = (nomor_polisi) => {
-    setDataKendaraan((prev) =>
-      prev.filter((item) => item.nomor_polisi !== nomor_polisi)
-    );
-  };
-
   const [formData, setFormData] = useState({
-    id: '',
-    nama: '',
-    no_hp: '',
-    perusahaan_id: '',
-    akses_tiket: false,
-    akses_kartu: false,
-    no_kartu: '',
-    tgl_input: '',
-    produk_id: '',
-    tarif: '',
-    biaya_member: '',
-    biaya_kartu: '',
-    user_id: '',
-    periode: [],
-    data_nomor_polisi: [],
-
+    data_member_id: '',
     nomor_polisi_lama: '',
     nomor_polisi_baru: '',
-    kendaraan_id: '',
     keterangan: '',
+    kendaraan_lama_id: '',
+    kendaraan_baru_id: '',
+    user_id: '',
   });
 
   useEffect(() => {
     if (initialData) {
-      console.log(initialData.json);
-
       setSelectedProdukMember(initialData.json.produk_member);
 
       const periodeMulai = initialData.periode?.[0]?.value || '';
@@ -179,8 +68,9 @@ const EditGantiNomorPolisiForm = ({
         data_nomor_polisi: initialData?.json?.data_nomor_polisi || [],
         //////////////////
 
-        nomor_polisi_lama: initialData.nomor_polisi_lama || '',
-        nomor_polisi_baru: initialData.nomor_polisi_baru || '',
+        data_member_id: initialData.id || '',
+        // nomor_polisi_lama: initialData.nomor_polisi_lama || '',
+        // nomor_polisi_baru: initialData.nomor_polisi_baru || '',
         kendaraan_id: initialData.kendaraan_id || '',
         keterangan: initialData.keterangan || '',
       }));
@@ -189,9 +79,7 @@ const EditGantiNomorPolisiForm = ({
     }
   }, [initialData]);
 
-  useEffect(() => {
-    // console.log('Form Data Updated:', formData);
-  }, [formData]);
+  useEffect(() => {}, [formData]);
 
   // Ambil user_id secara async
   useEffect(() => {
@@ -215,13 +103,6 @@ const EditGantiNomorPolisiForm = ({
     }
   }, [dataKendaraan]);
 
-  // useEffect(() => {
-  //   setFormData((prev) => ({
-  //     ...prev,
-  //     data_nomor_polisi: dataKendaraan.map((item) => item.kendaraan_id),
-  //   }));
-  // }, [dataKendaraan]);
-
   useEffect(() => {
     if (selectedProdukMember) {
       const periodeArray =
@@ -233,52 +114,30 @@ const EditGantiNomorPolisiForm = ({
             ]
           : ['', ''];
 
-      setFormData((prev) => ({
-        ...prev,
-        produk_id: selectedProdukMember.id,
-        tarif: selectedProdukMember?.tarif,
-        biaya_member: selectedProdukMember?.tarif,
-        biaya_kartu: selectedProdukMember?.biaya_kartu,
-        periode: periodeArray,
-      }));
+      // setFormData((prev) => ({
+      //   ...prev,
+      // data_member_id: 43,
+      // nomor_polisi_lama: 'ajkakjppopj',
+      // nomor_polisi_baru: 'ajkakjppop',
+      // keterangan: 'Ganti karena pindah alamat',
+      // kendaraan_lama_id: 1,
+      // kendaraan_baru_id: 3,
+      // user_id: 1,
+      // }));
     }
   }, [selectedProdukMember]);
-
-  useEffect(() => {
-    const today = new Date();
-    const formatted =
-      String(today.getMonth() + 1).padStart(2, '0') +
-      '-' + // bulan
-      String(today.getDate()).padStart(2, '0') +
-      '-' + // tanggal
-      today.getFullYear(); // tahun
-
-    setFormData((prev) => ({
-      ...prev,
-      tgl_input: formatted,
-    }));
-  }, []); // kosong berarti hanya dijalankan sekali saat mount
 
   // ✅ Fungsi untuk mereset pilihan saat modal ditutup
   const handleCloseModal = () => {
     setFormData((prev) => ({
       ...prev,
-      nama: '',
-      no_hp: '',
-      perusahaan_id: '',
-      akses_tiket: false,
-      akses_kartu: false,
-      no_kartu: '',
-      // tgl_input: '',
-      produk_id: '',
-      tarif: '',
-      biaya_member: '',
-      biaya_kartu: '',
-      // user_id: '',
-      periode: [],
-      periode_mulai: '',
-      periode_akhir: '',
-      data_nomor_polisi: [],
+      data_member_id: '',
+      nomor_polisi_lama: '',
+      nomor_polisi_baru: '',
+      keterangan: '',
+      kendaraan_lama_id: '',
+      kendaraan_baru_id: '',
+      // user_id: 1,
     }));
     setEditKendaraan(null);
     setDataKendaraan([]);
@@ -286,19 +145,6 @@ const EditGantiNomorPolisiForm = ({
     setNotifMessage('');
     setSelectedProdukMember(null);
     onClose();
-  };
-
-  const [selectedIsMenggunakanKartu, setSelectedIsMenggunakanKartu] = useState({
-    iya: false,
-  });
-
-  const handleCheckboxChange = (e, answer) => {
-    const { checked } = e.target;
-    setSelectedKendaraan((prev) => ({
-      ...prev,
-      [answer.value]: checked,
-    }));
-    setErrors((prev) => ({ ...prev, kendaraan: '' }));
   };
 
   const handleChange = (e) => {
@@ -313,21 +159,8 @@ const EditGantiNomorPolisiForm = ({
     }));
   };
 
-  useEffect(() => {
-    if (!formData.akses_kartu) {
-      setFormData((prev) => ({
-        ...prev,
-        no_kartu: '',
-      }));
-    }
-  }, [formData.akses_kartu]);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    console.log(formData.data_nomor_polisi);
-
-    console.log('error' + JSON.stringify(errors));
 
     if (!selectedProdukMember) {
       setErrors((prev) => ({
@@ -340,6 +173,16 @@ const EditGantiNomorPolisiForm = ({
     }
 
     const newErrors = {
+      data_member_id:
+        formData.data_member_id === '' ? 'Data member tidak ditemukan' : '',
+      kendaraan_lama_id:
+        formData.kendaraan_lama_id === ''
+          ? 'Tipe kendaraan lama tidak ditemukan'
+          : '',
+      kendaraan_baru_id:
+        formData.kendaraan_baru_id === ''
+          ? 'Tipe kendaraan baru tidak ditemukan'
+          : '',
       nomor_polisi_lama:
         formData.nomor_polisi_lama === ''
           ? 'Nomor polisi lama wajib dipilih'
@@ -348,8 +191,6 @@ const EditGantiNomorPolisiForm = ({
         formData.nomor_polisi_baru === ''
           ? 'Nomor polisi baru wajib diisi'
           : '',
-      kendaraan_id:
-        formData.kendaraan_id === '' ? 'Jenis kendaraan wajib Dipilih' : '',
       keterangan: formData.keterangan === '' ? 'Keterangan wajib diisi' : '',
     };
 
@@ -369,7 +210,7 @@ const EditGantiNomorPolisiForm = ({
 
       queryClient.invalidateQueries(['masterDataDataMember']); // Refresh tabel setelah tambah data
 
-      setNotifMessage('Data member berhasil disimpan!');
+      setNotifMessage('Nomor polisi baru berhasil disimpan!');
       setNotifType('success');
 
       setTimeout(() => handleCloseModal(), 500);
@@ -378,18 +219,6 @@ const EditGantiNomorPolisiForm = ({
       setNotifType('error');
     }
   };
-
-  if (isLoadingPerusahaan || isLoadingProdukMember)
-    return (
-      <div className="h-full flex flex-col gap-2 justify-center items-center text-center text-primary">
-        <Spinner size={32} color="border-black" />
-        Loading...
-      </div>
-    );
-
-  if (errorPerusahaan || errorProdukMember) {
-    return <EvoErrorDiv errorHandlerText={getErrorMessage(error)} />; // ✅ Pastikan error ditampilkan di UI
-  }
 
   return (
     <>
@@ -406,13 +235,24 @@ const EditGantiNomorPolisiForm = ({
         isOpen={isOpen}
         onClose={handleCloseModal}
         title="Ganti Nomor Polisi"
-      >
+      > 
         <EvoForm
           onSubmit={handleSubmit}
           submitText="Simpan"
           cancelText="Batal"
           onCancel={handleCloseModal}
         >
+          {/* data_member_id:{JSON.stringify(formData.data_member_id)}
+          <br />
+          kendaraan_baru_id:{JSON.stringify(formData.kendaraan_baru_id)}
+          <br />
+          kendaraan_lama_id:{JSON.stringify(formData.kendaraan_lama_id)}
+          <br />
+          keterangan:{JSON.stringify(formData.keterangan)}
+          <br />
+          nomor_polisi_baru:{JSON.stringify(formData.nomor_polisi_baru)}
+          <br />
+          nomor_polisi_lama:{JSON.stringify(formData.nomor_polisi_lama)} */}
           <div className="text-title_small mt-4">
             <span className="text-primary">A.</span> Data Produk
           </div>
@@ -425,22 +265,16 @@ const EditGantiNomorPolisiForm = ({
               />
             )}
           </div>
-
           {errors.produk && (
             <p className="text-red-500 text-sm">{errors.produk}</p>
           )}
-
           {/* Selected Produk Member */}
           {selectedProdukMember && (
             <div className="flex flex-col gap-2 border border-primary/40 p-6 rounded-[24px] w-full shadow-card">
               <div className="flex flex-col gap-1">
-                 <p className="text-black/80 text-card">
-                  Nama Member:
-                </p>
+                <p className="text-black/80 text-card">Nama Member:</p>
                 <div className="text-black text-content mb-2">
-                  <b>Rp{' '}
-                  {initialData?.json?.nama
-                  }</b>
+                  <b>Rp {initialData?.json?.nama}</b>
                 </div>
                 <hr className="border border-primaryTransparent mb-5" />
                 <p className="text-black/80 text-card">
@@ -460,20 +294,76 @@ const EditGantiNomorPolisiForm = ({
               </div>
             </div>
           )}
-
           <div className="text-title_small mt-4">
             <span className="text-primary">B.</span> Data Kendaraan/Nomor Polisi
+          </div>
+          {/* {JSON.stringify(dataKendaraan)} */}
+          <div className="mt-4 border border-primary/40 p-6 rounded-[24px] w-full shadow-card">
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr>
+                  <th
+                    style={{
+                      borderBottom: '1px solid #ccc',
+                      textAlign: 'left',
+                      padding: '8px',
+                    }}
+                  >
+                    Nomor Polisi
+                  </th>
+                  <th
+                    style={{
+                      borderBottom: '1px solid #ccc',
+                      textAlign: 'left',
+                      padding: '8px',
+                    }}
+                  >
+                    Kendaraan
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {(initialData?.json?.data_nomor_polisi || []).map((nopol) => (
+                  <tr key={nopol.id}>
+                    <td
+                      style={{ borderBottom: '1px solid #eee', padding: '8px' }}
+                    >
+                      <b className="text-primary">{nopol.nomor_polisi}</b>
+                    </td>
+                    <td
+                      style={{ borderBottom: '1px solid #eee', padding: '8px' }}
+                    >
+                      {nopol.kendaraan?.nama_kendaraan ||
+                        'Data kendaraan tidak ditemukan'}
+                      {nopol.kendaraan?.tipe_kendaraan?.tipe_kendaraan
+                        ? ` (${nopol.kendaraan.tipe_kendaraan.tipe_kendaraan})`
+                        : ''}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
           <EvoInDropdown
             name="nomor_polisi_lama"
             label="Nomor Polisi Lama"
-            options={(dataKendaraan || []).map((item) => ({
-              label: item.nomor_polisi,
-              value: item.nomor_polisi,
-            }))}
+            options={
+              initialData?.json?.data_nomor_polisi?.map((item) => ({
+                value: String(item.nomor_polisi), // atau item.nomor_polisi kalau mau valuenya itu
+                label: `${item.nomor_polisi} - ${item.kendaraan.nama_kendaraan} (${item.kendaraan.tipe_kendaraan.tipe_kendaraan})`,
+              })) || []
+            }
             value={formData.nomor_polisi_lama}
             onChange={(value) => {
-              setFormData((prev) => ({ ...prev, nomor_polisi_lama: value }));
+              const selected = initialData?.json?.data_nomor_polisi?.find(
+                (item) => String(item.nomor_polisi) === String(value)
+              );
+
+              setFormData((prev) => ({
+                ...prev,
+                nomor_polisi_lama: value,
+                kendaraan_lama_id: selected ? selected.kendaraan.id : '',
+              }));
             }}
             error={errors.nomor_polisi_lama}
             placeholder="Pilih nomor polisi lama"
@@ -486,32 +376,28 @@ const EditGantiNomorPolisiForm = ({
             onChange={handleChange}
             error={errors.nomor_polisi_baru}
           />
-          {/* {JSON.stringify(masterDataDataKendaraan?.data)} */}
+          {/* {JSON.stringify(
+            initialData?.json?.produk_member?.list_kendaraan_detail
+          )} */}
           <EvoInDropdown
-            name="kendaraan_id"
-            label="Jenis Kendaraan"
-            options={(
-              initialData?.json?.produk_member?.list_id_kendaraan || []
-            ).map((id) => {
-              const kendaraan = masterDataDataKendaraan?.data?.find(
-                (item) => item.id === Number(id) // cocokkan angka
-              );
-
-              return {
-                label: kendaraan
-                  ? `${kendaraan.nama_kendaraan} (${
-                      kendaraan.tipe_kendaraan?.tipe_kendaraan || 'Tanpa Tipe'
-                    })`
-                  : `ID ${id} (Tidak Ditemukan)`,
-                value: id, // tetap string, supaya cocok dengan formData
-              };
-            })}
-            value={formData.kendaraan_id}
+            name="kendaraan_baru_id"
+            label="Jenis Kendaraan Baru"
+            options={
+              initialData?.json?.produk_member?.list_kendaraan_detail?.map(
+                (kendaraan) => ({
+                  value: kendaraan.id,
+                  label: `${kendaraan.nama_kendaraan} - ${
+                    kendaraan.tipe_kendaraan?.tipe_kendaraan || ''
+                  }`,
+                })
+              ) || []
+            }
+            value={formData.kendaraan_baru_id}
             onChange={(value) => {
-              setFormData((prev) => ({ ...prev, kendaraan_id: value }));
+              setFormData((prev) => ({ ...prev, kendaraan_baru_id: value }));
             }}
-            error={errors.kendaraan_id}
-            placeholder="Pilih Jenis Kendaraan"
+            error={errors.kendaraan_baru_id}
+            placeholder="Pilih Jenis Kendaraan Baru"
           />
           {/* {JSON.stringify(initialData?.json?.produk_member?.list_id_kendaraan)} */}
           {/* {JSON.stringify( dataTipeKendaraan?.data)} */}

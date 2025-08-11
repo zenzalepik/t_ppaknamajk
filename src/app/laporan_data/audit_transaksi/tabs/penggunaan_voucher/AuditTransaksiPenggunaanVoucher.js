@@ -135,10 +135,10 @@ export default function AuditTransaksiPenggunaanVoucher() {
           // noTiket: <b>{row.noTiket != null ? row.noTiket : <i>*empty</i>}</b>,
           // id: row.id || <i>*empty</i>,
           // id: row.id || <i>*empty</i>,
-          namaVoucher: row.namaVoucher || <i>*empty</i>,
-          potongan: row.potongan || <i>*empty</i>,
-          petugas: row.petugas || <i>*empty</i>,
-          qtyDigunakan: row.qtyDigunakan || <i>*empty</i>,
+          namaVoucher: row.nama_voucher || <i>*empty</i>,
+          potongan: row.potongan_voucher || <i>*empty</i>,
+          petugas: row.nama_petugas_pos || <i>*empty</i>,
+          qtyDigunakan: row.quantity_voucher_digunakan || <i>*empty</i>,
         }))
       : [];
 
@@ -165,6 +165,7 @@ export default function AuditTransaksiPenggunaanVoucher() {
         />
       )}
       <EvoCardSection className="!p-0 !bg-transparent !shadow-none">
+        {/* {JSON.stringify(laporanAuditTransaksiPenggunaanVoucher)} */}
         <EvoTitleSection
           title={titleSection}
           onExportPDF={() => setModalExportPDFOpen(true)}

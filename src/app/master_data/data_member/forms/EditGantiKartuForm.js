@@ -132,7 +132,7 @@ const EditGantiKartuForm = ({
 
   useEffect(() => {
     if (initialData) {
-      console.log(initialData.json);
+      // console.log(initialData.json);
 
       setSelectedProdukMember(initialData.json.produk_member);
 

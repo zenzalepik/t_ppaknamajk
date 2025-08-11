@@ -22,7 +22,7 @@ import { fetchApiMasterDataProdukMember } from '@/app/master_data/produk_member/
 import TiketProdukMemberForm from './TiketProdukMemberForm';
 import EvoTicketMember from '@/components/EvoTicketMember';
 import { fetchApiMasterDataDataKendaraan } from '@/app/master_data/data_kendaraan/api/fetchApiMasterDataDataKendaraan';
-import { fetchApiPengaturanParameterTipeKendaraan } from '@/app/pengaturan/parameter/api/items/fetchApiPengaturanParameterTipeKendaraan';
+import { fetchApiPengaturanParameterTipeKendaraan } from '../api/fetchApiPengaturanParameterTipeKendaraan';
 import { getUserId } from '@/utils/db';
 import { fetchApiMasterDataDataMemberUpdatePerpanjangMasaAktif } from '../api/fetchApiMasterDataDataMemberUpdatePerpanjangMasaAktif';
 import Spinner from '@/components/Spinner';
@@ -34,6 +34,12 @@ import {
 import dayjs from 'dayjs';
 import 'dayjs/locale/id';
 dayjs.locale('id');
+import numbers from '@/utils/numbers';
+import hideNotFinished from '@/utils/hideNotFinished';
+import EvoEmpty from '@/components/EvoEmpty';
+import { format } from 'date-fns';
+import { id } from 'date-fns/locale';
+import EvoLoading from '@/components/EvoLoading';
 
 const EditPerpanjangMasaAktifForm = ({
   isOpen,
@@ -41,51 +47,27 @@ const EditPerpanjangMasaAktifForm = ({
   onSubmit,
   initialData = null,
 }) => {
-  const [modalKendaraanOpen, setModalKendaraanOpen] = useState(false);
-  const [editKendaraan, setEditKendaraan] = useState(null);
-  const [dataKendaraan, setDataKendaraan] = useState([]); // daftar kendaraan milik member
-
   const [errors, setErrors] = useState({});
   const [notifMessage, setNotifMessage] = useState('');
   const [notifType, setNotifType] = useState('success');
-
-  const [currentPage, setCurrentPage] = useState(1);
-
   const [modalProdukMemberOpen, setModalProdukMemberOpen] = useState(false);
   const [selectedProdukMember, setSelectedProdukMember] = useState(null);
 
+  const [isUserReady, setIsUserReady] = useState(false);
+
   const queryClient = useQueryClient();
-
-  const {
-    data: masterDataPerusahaan,
-    errorPerusahaan,
-    isLoadingPerusahaan,
-  } = useQuery({
-    queryKey: ['masterDataPerusahaan', currentPage],
-    queryFn: () =>
-      fetchApiMasterDataPerusahaan({
-        limit: 305,
-        page: currentPage,
-        offset: (currentPage - 1) * 5,
-        sortBy: 'id',
-        sortOrder: 'desc',
-      }),
-    // retry: false,
-  });
-
-  const dataApiPerusahaan = masterDataPerusahaan?.data || [];
 
   const {
     data: masterDataProdukMember,
     errorProdukMember,
     isLoadingProdukMember,
   } = useQuery({
-    queryKey: ['masterDataProdukMember', currentPage],
+    queryKey: ['masterDataProdukMember'],
     queryFn: () =>
       fetchApiMasterDataProdukMember({
-        limit: 905,
-        page: currentPage,
-        offset: (currentPage - 1) * 5,
+        limit: numbers.apiNumLimitExpanded,
+        page: 1,
+        // offset: (currentPage - 1) * 5,
         sortBy: 'id',
         sortOrder: 'desc',
       }),
@@ -99,126 +81,60 @@ const EditPerpanjangMasaAktifForm = ({
     setModalProdukMemberOpen(false);
   };
 
-  const {
-    data: masterDataDataKendaraan,
-    error,
-    isLoading,
-  } = useQuery({
-    queryKey: ['masterDataDataKendaraan', currentPage],
-    queryFn: () =>
-      fetchApiMasterDataDataKendaraan({
-        limit: 905,
-        page: currentPage,
-        offset: (currentPage - 1) * 5,
-        sortBy: 'id',
-        sortOrder: 'desc',
-      }),
-    // retry: false,
-  });
-
-  const {
-    data: dataTipeKendaraan,
-    error: errorTipeKendaraan,
-    isLoading: isLoadingTipeKendaraan,
-  } = useQuery({
-    queryKey: ['pengaturanTipeKendaraan'],
-    queryFn: () => fetchApiPengaturanParameterTipeKendaraan(),
-  });
-
-  const handleDeleteKendaraan = (nomor_polisi) => {
-    setDataKendaraan((prev) =>
-      prev.filter((item) => item.nomor_polisi !== nomor_polisi)
-    );
-  };
-
   const [formData, setFormData] = useState({
     id: '',
-    nama: '',
-    no_hp: '',
-    perusahaan_id: '',
-    akses_tiket: false,
-    akses_kartu: false,
-    no_kartu: '',
-    tgl_input: '',
     produk_id: '',
     tarif: '',
-    biaya_member: '',
-    biaya_kartu: '',
-    user_id: '',
     periode: [],
-    data_nomor_polisi: [],
+    user_id: '',
   });
 
   useEffect(() => {
-    if (initialData) {
-      console.log(initialData.json);
+    if (!initialData) return;
 
-      setSelectedProdukMember(initialData.json.produk_member);
+    // console.log(JSON.stringify(initialData));
 
-      const periodeMulai = initialData.periode?.[1]?.value
-        ? dayjs(initialData.periode[1].value).add(1, 'day').format('YYYY-MM-DD')
-        : '';
-      // const periodeAkhir = initialData.periode?.[1]?.value || '';
+    // Ambil periode member dari initialData.json.periode
+    const memberPeriode = Array.isArray(initialData?.json?.periode)
+      ? initialData.json.periode
+      : [];
 
-      setFormData((prev) => ({
-        ...prev,
-        id: initialData.id || '',
-        nama: initialData.nama || '',
-        no_hp: initialData.no_hp || '',
-        perusahaan_id: initialData.perusahaan_id || '',
-        akses_tiket: initialData.akses_tiket || false,
-        akses_kartu: initialData.akses_kartu || false,
-        no_kartu: initialData.no_kartu || '',
-        tgl_input: initialData.tgl_input || '',
-        produk_id: initialData.produk_id || '',
-        tarif: initialData.tarif || '',
-        biaya_member: initialData.biaya_member || '',
-        biaya_kartu: initialData.biaya_kartu || '',
-        user_id: initialData.user_id || '',
-        periode: initialData.periode || [],
-        periode_mulai: periodeMulai, // ✅ tambahkan inisialisasi langsung
-        periode_akhir: '', // ✅ tambahkan inisialisasi langsung
-        ////////////
-        data_nomor_polisi: initialData?.json?.data_nomor_polisi || [],
-        //////////////////
-      }));
+    const periodeMulai = memberPeriode[1]?.value
+      ? dayjs(memberPeriode[1].value).add(1, 'day').format('YYYY-MM-DD')
+      : '';
 
-      setDataKendaraan(initialData?.json?.data_nomor_polisi || []);
+    setFormData((prev) => ({
+      ...prev,
+      id: initialData?.id || '',
+      produk_id: initialData?.produk_id || '',
+      tarif: initialData?.tarif || '',
+      periode: memberPeriode, // pakai periode member, bukan produk
+      user_id: initialData?.user_id || '',
+      periode_mulai: periodeMulai,
+    }));
+
+    // Set selectedProdukMember dari json.produk_member
+    if (initialData?.json?.produk_member) {
+      setSelectedProdukMember({
+        ...initialData.json.produk_member,
+        tarif: initialData.tarif,
+        biaya_kartu: initialData.biaya_kartu,
+        periode: initialData.json.periode,
+      });
     }
   }, [initialData]);
 
-  useEffect(() => {
-    // console.log('Form Data Updated:', formData);
-  }, [formData]);
+  useEffect(() => {}, [formData]);
 
   // Ambil user_id secara async
   useEffect(() => {
     const fetchUserId = async () => {
       const id = await getUserId();
       setFormData((prev) => ({ ...prev, user_id: id }));
+      setIsUserReady(true);
     };
     fetchUserId();
   }, []);
-
-  useEffect(() => {
-    if (dataKendaraan) {
-      const kendaraanIds = dataKendaraan.map(
-        (kendaraan) => kendaraan.kendaraan_id
-      );
-      setFormData((prev) => ({
-        ...prev,
-        // data_nomor_polisi: kendaraanIds,
-        data_nomor_polisi: dataKendaraan,
-      }));
-    }
-  }, [dataKendaraan]);
-
-  // useEffect(() => {
-  //   setFormData((prev) => ({
-  //     ...prev,
-  //     data_nomor_polisi: dataKendaraan.map((item) => item.kendaraan_id),
-  //   }));
-  // }, [dataKendaraan]);
 
   useEffect(() => {
     if (selectedProdukMember) {
@@ -287,25 +203,11 @@ const EditPerpanjangMasaAktifForm = ({
   const handleCloseModal = () => {
     setFormData((prev) => ({
       ...prev,
-      nama: '',
-      no_hp: '',
-      perusahaan_id: '',
-      akses_tiket: false,
-      akses_kartu: false,
-      no_kartu: '',
-      // tgl_input: '',
+      id: '',
       produk_id: '',
       tarif: '',
-      biaya_member: '',
-      biaya_kartu: '',
-      // user_id: '',
       periode: [],
-      periode_mulai: '',
-      periode_akhir: '',
-      data_nomor_polisi: [],
     }));
-    setEditKendaraan(null);
-    setDataKendaraan([]);
     setErrors({});
     setNotifMessage('');
     setSelectedProdukMember(null);
@@ -319,10 +221,6 @@ const EditPerpanjangMasaAktifForm = ({
     setFormData((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: '' }));
   };
-
-  const [selectedIsMenggunakanKartu, setSelectedIsMenggunakanKartu] = useState({
-    iya: false,
-  });
 
   useEffect(() => {
     setFormData((prev) => ({
@@ -343,19 +241,14 @@ const EditPerpanjangMasaAktifForm = ({
     }));
   };
 
-  useEffect(() => {
-    if (!formData.akses_kartu) {
-      setFormData((prev) => ({
-        ...prev,
-        no_kartu: '',
-      }));
-    }
-  }, [formData.akses_kartu]);
-
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (!isUserReady) {
+      setNotifMessage('User belum siap. Silakan tunggu sebentar.');
+      setNotifType('error');
+      return;
+    }
 
-    console.log(formData.data_nomor_polisi);
+    e.preventDefault();
 
     console.log('error' + JSON.stringify(errors));
 
@@ -370,19 +263,11 @@ const EditPerpanjangMasaAktifForm = ({
     }
 
     const newErrors = {
-      nama: formData.nama === '' ? 'Nama Perusahaan wajib diisi' : '',
-      no_hp: formData.no_hp.trim() === '' ? 'Kontak wajib diisi' : '',
-      perusahaan_id:
-        formData.perusahaan_id === '' ? 'Perusahaan wajib dipilih' : '',
-      no_kartu:
-        formData.akses_kartu && formData.no_kartu === ''
-          ? 'Nomor Kartu wajib diisi'
-          : '',
+      id: formData.id === '' ? 'ID data member tidak ditemukan' : '',
+      tarif: formData.tarif === '' ? 'Tarif belum diisi' : '',
+      periode: formData.periode === '' ? 'Periode wajib ditentukan dahulu' : '',
+      user_id: formData.user_id === '' ? 'User tidak ditemukan' : '',
       produk_id: formData.produk_id === '' ? 'Produk member wajib dipilih' : '',
-      data_nomor_polisi:
-        formData.data_nomor_polisi.length === 0
-          ? 'Kendaraan wajib dipilih'
-          : '',
     };
 
     setErrors(newErrors);
@@ -394,9 +279,9 @@ const EditPerpanjangMasaAktifForm = ({
     }
 
     // onSubmit?.(formData);
-
+    // console.log(JSON.stringify(formData));
     try {
-      console.log(formData);
+      // console.log('formData:' + JSON.stringify(formData));
       await fetchApiMasterDataDataMemberUpdatePerpanjangMasaAktif(formData);
 
       queryClient.invalidateQueries(['masterDataDataMember']); // Refresh tabel setelah tambah data
@@ -411,7 +296,7 @@ const EditPerpanjangMasaAktifForm = ({
     }
   };
 
-  if (isLoadingPerusahaan || isLoadingProdukMember)
+  if (isLoadingProdukMember)
     return (
       <div className="h-full flex flex-col gap-2 justify-center items-center text-center text-primary">
         <Spinner size={32} color="border-black" />
@@ -419,7 +304,7 @@ const EditPerpanjangMasaAktifForm = ({
       </div>
     );
 
-  if (errorPerusahaan || errorProdukMember) {
+  if (errorProdukMember) {
     return <EvoErrorDiv errorHandlerText={getErrorMessage(error)} />; // ✅ Pastikan error ditampilkan di UI
   }
 
@@ -450,7 +335,7 @@ const EditPerpanjangMasaAktifForm = ({
           </div>
           <div className="w-full">
             {/* Pilih Tiket */}
-            <EvoButton
+            {/* <EvoButton
               buttonText={
                 selectedProdukMember == null
                   ? 'Pilih Produk Member'
@@ -460,7 +345,7 @@ const EditPerpanjangMasaAktifForm = ({
               size="large"
               type="button"
               outlined={selectedProdukMember == null ? false : true}
-            />
+            /> */}
             {errors.produk_id && (
               <p className="text-red-500 text-sm">{errors.produk_id}</p>
             )}
@@ -593,15 +478,6 @@ const EditPerpanjangMasaAktifForm = ({
                     <RiCalendarEventLine className="text-black/50" size={28} />
                   </div>
                 </div>
-
-                {/* <EvoInDatePicker
-                  name="periode_akhir"
-                  label="Tanggal Berakhir Otomatis"
-                  placeholder="Tanggal akhir"
-                  value={formData.periode_akhir}
-                  isWidthFull={true}
-                  readOnly
-                /> */}
               </div>
             </div>
           )}

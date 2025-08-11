@@ -21,6 +21,11 @@ import Spinner from '@/components/Spinner';
 import EvoErrorDiv from '@/components/EvoErrorDiv';
 import { getErrorMessage } from '@/utils/errorHandler';
 import EvoNotifCard from '@/components/EvoNotifCard';
+import numbers from '@/utils/numbers';
+import EvoEmpty from '@/components/EvoEmpty';
+import hideNotFinished from '@/utils/hideNotFinished';
+import EvoLoading from '@/components/EvoLoading';
+import { fetchApiProfil } from './api/fetchApiProfil';
 
 const titleSection = 'Kirim Pembatalan Transaksi';
 
@@ -35,23 +40,39 @@ export default function TransaksiBatalContentTambah() {
   const queryClient = useQueryClient();
   const [notifMessage, setNotifMessage] = useState('');
   const [notifType, setNotifType] = useState('success');
+  const [selectedEditData, setSelectedEdit] = useState(null);
+
+  const [searchText, setSearchText] = useState('');
 
   const {
     data: laporanTransaksiBatal,
     error,
     isLoading,
   } = useQuery({
-    queryKey: ['laporanTransaksiBatal', currentPage],
+    queryKey: ['laporanTransaksiBatal', currentPage, searchText],
     queryFn: () =>
       fetchApiTransaksiBatal({
-        limit: 5,
+        limit: numbers.apiNumLimit,
         page: currentPage,
-        offset: (currentPage - 1) * 5,
+        // offset: (currentPage - 1) * 5,
         sortBy: 'id',
         sortOrder: 'desc',
+        search: searchText, // <== ini penting
       }),
     // retry: false,
   });
+
+  const {
+    data: profil,
+    errorProfil,
+    isLoadingProfil,
+  } = useQuery({
+    queryKey: ['profil'],
+    queryFn: fetchApiProfil,
+    // retry: false,
+  });
+
+  const dataProfil = Array.isArray(profil) ? profil[0] : {};
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -101,10 +122,28 @@ export default function TransaksiBatalContentTambah() {
     // Logika untuk melakukan edit (misalnya membuka form modal)
   };
 
-  const handleProsesPerbaikan = (id) => {
+  const handlePengajuanBatal = (id) => {
     console.log('Riwayat Transaksi ID:', id);
-    handleTambahPengaduan();
-    // Logika untuk melakukan edit (misalnya membuka form modal)
+    const dataDipilih = laporanTransaksiBatal?.data?.find(
+      (item) => item.id === id
+    );
+
+    // console.log(dataDipilih);
+
+    if (dataDipilih) {
+      setSelectedEdit({
+        user_id: dataProfil.id,
+        no_tiket_atau_nomor_polisi: dataDipilih.no_tiket || '',
+        dataDipilih: dataDipilih ||{}
+      });
+      console.log("===============================================")
+      console.log('dataProfil.user_id: ' + dataProfil.id);
+      // console.log('dataDipilih.no_tiket: ' + dataDipilih.no_tiket);
+      // setModalEditOpen(true);
+
+      handleTambahPengaduan();
+      // Logika untuk melakukan edit (misalnya membuka form modal)
+    }
   };
 
   const handleChange = (selectedValue) => {
@@ -113,89 +152,68 @@ export default function TransaksiBatalContentTambah() {
 
   const handleSearch = (query) => {
     setShowTabel(true);
-    console.log('Hasil pencarian:', query);
+    setSearchText(query.searchText); // simpan input pencarian
+    setCurrentPage(1); // reset ke halaman pertama
   };
-
-  /*const rows = tableDataTransaksiBatal.rows.map((row) => ({
-    ...row,
-    status: StatusLabel.status(row.status), // Konversi status menjadi elemen visual
-    member: row.member ? 'Ya' : 'Tidak',
-    manualInput: row.manualInput ? 'Ya' : 'Tidak',
-    kartuMember: row.kartuMember ? 'Ya' : 'Tidak',
-    namaBank: row.namaBank ?? '-',
-    nomorRekening: row.nomorRekening ?? '-',
-    namaEwallet: row.namaEwallet ?? '-',
-    nomorEwallet: row.nomorEwallet ?? '-',
-    foto: row.foto ? (
-      <EvoButton
-        key={`prosesPerbaikan-${row.no}`}
-        outlined={true}
-        icon={<RiImageLine />}
-        onClick={() => window.open(row.foto, '_blank', 'noopener,noreferrer')}
-        buttonText={'Lihat Foto'}
-      />
-    ) : (
-      '-'
-    ),
-
-    aksi: (
-      <EvoActionButtons
-        rowId={row.no}
-        moreAction={titleSection}
-        customButtons={[
-          <EvoButton
-            key={`prosesPerbaikan-${row.no}`}
-            onClick={() => handleProsesPerbaikan(row.no)}
-            fillColor={colors.danger}
-            buttonText={'Batalkan Transaksi'}
-          />,
-        ]}
-      />
-    ),
-  }));*/
 
   const rows =
     laporanTransaksiBatal?.data?.length > 0
       ? laporanTransaksiBatal.data.map((row, index) => ({
           no: index + 1,
-
-          // id: row.id || <i>*emtpty</i>,
-          nomorTiket: row.nomorTiket == null ? <i>*emtpty</i> : <b>{row.nomorTiket}</b>,
-          nomorPolisi: row.nomorPolisi || <i>*emtpty</i>,
-          jenisKendaraan: row.jenisKendaraan || <i>*emtpty</i>,
-          member: row.member ? 'Ya' : 'Tidak',
-          manualInput: row.manualInput ? 'Ya' : 'Tidak',
-          waktuMasuk: row.waktuMasuk || <i>*emtpty</i>,
-          waktuKeluar: row.waktuKeluar || <i>*emtpty</i>,
-          gerbangMasuk: row.gerbangMasuk || <i>*emtpty</i>,
-          gerbangKeluar: row.gerbangKeluar || <i>*emtpty</i>,
-          durasiParkir: row.durasiParkir || <i>*emtpty</i>,
-          denda: row.denda || <i>*emtpty</i>,
-          totalPembayaran: row.totalPembayaran || <i>*emtpty</i>,
-          status:
-            row.status != null ? (
-              StatusLabel.status(row.status)
+          nomorTiket:
+            row.no_tiket == null ? <EvoEmpty /> : <b>{row.no_tiket}</b>,
+          nomorPolisi: row.nomor_polisi || <EvoEmpty />,
+          jenisKendaraan: row.kendaraan?.nama_kendaraan || <EvoEmpty />,
+          member: row.data_member ? 'Ya' : 'Tidak',
+          manualInput: row.is_manual ? 'Ya' : 'Tidak',
+          waktuMasuk: row.tanggal_masuk || <EvoEmpty />,
+          waktuKeluar: row.tanggal_keluar || <EvoEmpty />,
+          gerbangMasuk: row.pintu_masuk?.keterangan || <EvoEmpty />,
+          gerbangKeluar: row.pintu_keluar?.keterangan || <EvoEmpty />,
+          durasiParkir: row.interval ? `${row.interval} jam` : <EvoEmpty />,
+          denda:
+            row.jumlah_denda_stnk || row.jumlah_denda_tiket ? (
+              `Rp ${(
+                row.jumlah_denda_stnk + row.jumlah_denda_tiket
+              ).toLocaleString()}`
             ) : (
-              <i>*emtpty</i>
+              <i>-</i>
             ),
-          tipe: row.tipe || <i>*emtpty</i>,
-          pembayaran: row.pembayaran || <i>*emtpty</i>,
-          kartuMember: row.kartuMember ? 'Ya' : 'Tidak',
-          namaBank: row.namaBank ?? '-',
-          nomorRekening: row.nomorRekening ?? '-',
-          namaEwallet: row.namaEwallet ?? '-',
-          nomorEwallet: row.nomorEwallet ?? '-',
-          petugas: row.petugas || <i>*emtpty</i>,
-          shift: row.shift || <i>*emtpty</i>,
+          totalPembayaran: row.biaya_parkir ? (
+            `Rp ${Number(row.biaya_parkir).toLocaleString()}`
+          ) : (
+            <EvoEmpty />
+          ),
+          status:
+            row.is_active != null ? (
+              StatusLabel.status(row.is_active)
+            ) : (
+              <EvoEmpty />
+            ),
+          tipe: row.keterangan_atau_penjelasan || <EvoEmpty />,
+
+          pembayaran:
+            row.jenis_pembayaran && row.jenis_pembayaran.jenis_payment ? (
+              row.jenis_pembayaran.jenis_payment
+            ) : (
+              <EvoEmpty />
+            ),
+          kartuMember: row.data_member?.akses_kartu ? 'Ya' : 'Tidak',
+          namaBank: row.nama_bank || '-',
+          nomorRekening: row.nomor_rekening || '-',
+          namaEwallet: row.nama_ewallet || '-',
+          nomorEwallet: row.nomor_ewallet || '-',
+          petugas: row.petugas?.nama || <EvoEmpty />,
+          shift: row.shift?.nama_shift || <EvoEmpty />,
           foto: row.foto ? (
             <EvoButton
-              key={`prosesPerbaikan-${row.no}`}
-              outlined={true}
+              key={`foto-${row.id}`}
+              outlined
               icon={<RiImageLine />}
               onClick={() =>
                 window.open(row.foto, '_blank', 'noopener,noreferrer')
               }
-              buttonText={'Lihat Foto'}
+              buttonText="Lihat Foto"
             />
           ) : (
             '-'
@@ -203,14 +221,14 @@ export default function TransaksiBatalContentTambah() {
 
           aksi: (
             <EvoActionButtons
-              rowId={row.no}
+              rowId={row.id}
               moreAction={titleSection}
               customButtons={[
                 <EvoButton
-                  key={`prosesPerbaikan-${row.no}`}
-                  onClick={() => handleProsesPerbaikan(row.no)}
+                  key={`batalkan-${row.id}`}
+                  onClick={() => handlePengajuanBatal(row.id)}
                   fillColor={colors.danger}
-                  buttonText={'Batalkan Transaksi'}
+                  buttonText="Batalkan Transaksi"
                 />,
               ]}
             />
@@ -218,16 +236,18 @@ export default function TransaksiBatalContentTambah() {
         }))
       : [];
 
-  if (isLoading)
+  // if (isLoading)
+  //   return (
+  //     <div className="h-full flex flex-col gap-2 justify-center items-center text-center text-primary">
+  //       <Spinner size={32} color="border-black" />
+  //       Loading...
+  //     </div>
+  //   );
+ 
+  if (error || errorProfil) {
     return (
-      <div className="h-full flex flex-col gap-2 justify-center items-center text-center text-primary">
-        <Spinner size={32} color="border-black" />
-        Loading...
-      </div>
+      <EvoErrorDiv errorHandlerText={getErrorMessage(error || errorProfil)} />
     );
-
-  if (error) {
-    return <EvoErrorDiv errorHandlerText={getErrorMessage(error)} />;
   }
 
   return (
@@ -240,36 +260,52 @@ export default function TransaksiBatalContentTambah() {
           autoClose={true}
         />
       )}
+
       <EvoTitleSection
         title={titleSection}
         handleChange={handleChange}
         icon={<RiAddLargeLine size={16} />}
       />
-
-      <EvoSearchTabel
-        isFilter={true}
-        FilterComponent={FilterMasProdukMember}
-        placeholder="Ketik nomor tiket..."
-        // onSearch={(data) => console.log('Hasil pencarian:', data)}
-        onSearch={handleSearch}
-      />
-
+      {!hideNotFinished.evoSearchTabel_TransaksiBatalContentTambah && (
+        <EvoSearchTabel
+          isFilter={
+            hideNotFinished.evoSearchTabel_Filter_TransaksiBatalContentTambah ==
+            false
+              ? true
+              : false
+          }
+          FilterComponent={FilterMasProdukMember}
+          placeholder="Ketik nomor tiket atau nomor polisi..."
+          // onSearch={(data) => console.log('Hasil pencarian:', data)}
+          onSearch={handleSearch}
+        />
+      )}
       <PembatalanTansaksiForm
         isOpen={modalOpenPengaduan}
         onClose={handleTutup}
         onSubmit={handleSubmitData}
+        dataForm={selectedEditData}
       />
 
-      {showTabel && (
-        <EvoTable
-          id="tableToPrint"
-          tableData={tableDataTransaksiBatal}
-          currentPage={currentPage}
-          totalPages={laporanTransaksiBatal?.totalPages}
-          onPageChange={handlePageChange}
-          rows={rows}
-        />
+      {/* {showTabel && ( */}
+      {searchText == '' ? (
+        <div className="text-2xl text-black/20 text-center bg-black/[0.025] rounded-[20px] py-32">
+          Ketik Pencarian Untuk Menampilkan Data
+        </div>
+      ) : (
+        <div className="relative">
+          {isLoading && <EvoLoading />}
+          <EvoTable
+            id="tableToPrint"
+            tableData={tableDataTransaksiBatal}
+            currentPage={currentPage}
+            totalPages={laporanTransaksiBatal?.totalPages}
+            onPageChange={handlePageChange}
+            rows={rows}
+          />
+        </div>
       )}
+      {/* )} */}
     </div>
   );
 }

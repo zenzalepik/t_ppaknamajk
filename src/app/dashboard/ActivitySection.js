@@ -22,6 +22,7 @@ import EvoNotifCard from '@/components/EvoNotifCard';
 import { StatusLabel } from '@/components/StatusLabel';
 import EvoLoading from '@/components/EvoLoading';
 import { format } from 'date-fns';
+import numbers from '@/utils/numbers';
 
 const titleSection = 'Aktivitas Gerbang Kendaraan';
 
@@ -54,7 +55,7 @@ export default function ActivitySection() {
     // queryKey: ['dashboardActivity', currentPage, ],
     queryFn: () =>
       fetchApiDashboardActivity({
-        limit: 13,
+        limit: numbers.apiNumLimit,
         page: currentPage,
         sortBy: 'id',
         sortOrder: 'desc',

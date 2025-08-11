@@ -14,7 +14,7 @@ export const tableDataTransaksiBatal = {
     { label: 'Gerbang Keluar' },
     { label: 'Durasi Parkir' },
     { label: 'Denda' },
-    { label: 'Total Pembayaran' },
+    { label: 'Pembayaran' },
     { label: 'Status' },
     { label: 'Tipe' },
     { label: 'Pembayaran' },

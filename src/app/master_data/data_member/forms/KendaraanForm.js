@@ -171,7 +171,7 @@ const KendaraanForm = ({
       <EvoModal
         isOpen={isOpen}
         onClose={handleCloseModal}
-        title={editData ? 'Edit Kendaraan' : 'Tambah Kendaraan'}
+        title={editData ? 'Edit Plat Nomor' : 'Tambah Plat Nomor'}
       >
         <EvoForm
           onSubmit={handleSubmit}

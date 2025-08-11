@@ -1,6 +1,6 @@
 'use client';
 
-export const tableDataRiwayatTransaksiEWallet = {
+export const tableDataRiwayatTransaksiQRIS = {
   columns: [
     { label: 'No.' },
     { label: 'Nomor Tiket' },
@@ -46,7 +46,7 @@ export const tableDataRiwayatTransaksiEWallet = {
       durasiParkir: '1 jam 15 menit',
       denda: 'Rp. 0',
       totalPembayaran: 'Rp. 5.000',
-      jenisTransaksi: 'E-Wallet',
+      jenisTransaksi: 'QRIS',
       added: '17-11-2021 23:29',
       updated: 'Muhtar Lubis Asyari 17-11-2021 23:45',
     },

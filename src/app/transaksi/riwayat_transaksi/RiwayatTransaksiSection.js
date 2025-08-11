@@ -6,8 +6,8 @@ import EvoCardSection from '@/components/evosist_elements/EvoCardSection';
 import EvoTab from '@/components/EvoTab';
 import RiwayatTransaksiManual from './tabs/manual/RiwayatTransaksiManual';
 import RiwayatTransaksiTunai from './tabs/tunai/RiwayatTransaksiTunai';
-import RiwayatTransaksiPrepaidCard from './tabs/prepaid_card/RiwayatTransaksiPrepaidCard';
-import RiwayatTransaksiEWallet from './tabs/ewallet/RiwayatTransaksiEWallet';
+import RiwayatTransaksibank from './tabs/bank/RiwayatTransaksiBank';
+import RiwayatTransaksiQRIS from './tabs/qris/RiwayatTransaksiQRIS';
 import RiwayatTransaksiMember from './tabs/member/RiwayatTransaksiMember';
 import { ambilLevelPengguna } from '@/utils/levelPenggunaStorage';
 import EvoErrorDiv from '@/components/EvoErrorDiv';
@@ -38,16 +38,16 @@ export default function RiwayatTransaksiSection() {
   const tabs = [
     { key: 'manual', label: 'Manual' },
     { key: 'tunai', label: 'Tunai' },
-    { key: 'prepaidCard', label: 'Prepaid Card' },
-    { key: 'eWallet', label: 'E-Wallet' },
+    { key: 'bank', label: 'Bank' },
+    { key: 'qris', label: 'QRIS' },
     { key: 'member', label: 'Member' },
   ];
 
   const tabComponents = {
     manual: RiwayatTransaksiManual,
     tunai: RiwayatTransaksiTunai,
-    prepaidCard: RiwayatTransaksiPrepaidCard,
-    eWallet: RiwayatTransaksiEWallet,
+    bank: RiwayatTransaksibank,
+    qris: RiwayatTransaksiQRIS,
     member: RiwayatTransaksiMember,
   };
 

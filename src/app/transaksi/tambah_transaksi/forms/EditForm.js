@@ -11,9 +11,14 @@ import EvoInRadio from '@/components/evosist_elements/EvoInRadio';
 import EvoInDatePicker from '@/components/evosist_elements/EvoInDatePicker';
 import EvoInTimePicker from '@/components/evosist_elements/EvoInTimePicker';
 import EvoInCheckbox from '@/components/evosist_elements/EvoInCheckbox';
-import { RiTimerLine, RiAuctionLine, RiCashLine, RiFileAddLine } from '@remixicon/react';
+import {
+  RiTimerLine,
+  RiAuctionLine,
+  RiCashLine,
+  RiFileAddLine,
+} from '@remixicon/react';
 
-const AddManualForm = ({ isOpen, onClose, onSubmit }) => {
+const EditTransaksiForm = ({ isOpen, onClose, onSubmit }) => {
   const [formData, setFormData] = useState({
     // A.
     waktuMasukTanggal: '',
@@ -182,7 +187,7 @@ const AddManualForm = ({ isOpen, onClose, onSubmit }) => {
         title="Tambah Transaksi Manual"
         titleTextColor="!text-white"
         titleBgColor="!bg-primary"
-        titleIcon={<RiFileAddLine size={72}/>}
+        titleIcon={<RiFileAddLine size={72} />}
       >
         <EvoForm
           onSubmit={handleSubmit}
@@ -460,7 +465,11 @@ const AddManualForm = ({ isOpen, onClose, onSubmit }) => {
               onChange={handleChange}
               error={errors.keterangan}
             />
-            <div className="bg-danger/20 text-danger italic p-3 rounded-[20px]">* Transaksi manual hanya dilakukan ketika terjadi kendala teknis. Setiap transaksi manual wajib menyertakan penjelasan mengenai kendala yang terjadi.</div>
+            <div className="bg-danger/20 text-danger italic p-3 rounded-[20px]">
+              * Transaksi manual hanya dilakukan ketika terjadi kendala teknis.
+              Setiap transaksi manual wajib menyertakan penjelasan mengenai
+              kendala yang terjadi.
+            </div>
           </div>
         </EvoForm>
       </EvoModal>
@@ -468,4 +477,4 @@ const AddManualForm = ({ isOpen, onClose, onSubmit }) => {
   );
 };
 
-export default AddManualForm;
+export default EditTransaksiForm;

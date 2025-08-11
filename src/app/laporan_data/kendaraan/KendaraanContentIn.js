@@ -23,6 +23,7 @@ import EvoNotifCard from '@/components/EvoNotifCard';
 import EvoLoading from '@/components/EvoLoading';
 import { format } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
+import EvoEmpty from '@/components/EvoEmpty';
 
 const titleSection = 'Kendaraan Masih di Dalam';
 
@@ -140,33 +141,33 @@ export default function KendaraanContentIn() {
               .filter(Boolean)
               .join(' ')
           ) : (
-            <i className="text-danger">*empty</i>
+            <EvoEmpty />
           );
           return {
             no: index + 1,
             noTiket: (
-              <b>{row.nomor_tiket != null ? row.nomor_tiket : <i className="text-danger">*empty</i>}</b>
+              <b>{row.nomor_tiket != null ? row.nomor_tiket : <EvoEmpty />}</b>
             ),
             tanggalMasuk: row.tanggal_masuk ? (
               format(new Date(row.tanggal_masuk), 'dd MMMM yyyy, HH:mm', {
                 locale: localeId,
               })
             ) : (
-              <i className="text-danger">*empty</i>
+              <EvoEmpty />
             ),
-            // tanggalKeluar: row.tanggalKeluar || <i className="text-danger">*empty</i>,
-            nopol: row.nomor_polisi || <i className="text-danger">*empty</i>,
-            jenisKendaraan: row.nama_kendaraan || <i className="text-danger">*empty</i>,
-            pintuMasuk: row.lokasi_gerbang || <i className="text-danger">*empty</i>,
-            // pintuKeluar: row.pintuKeluar || <i className="text-danger">*empty</i>,
+            // tanggalKeluar: row.tanggalKeluar || <EvoEmpty />,
+            nopol: row.nomor_polisi || <EvoEmpty />,
+            jenisKendaraan: row.nama_kendaraan || <EvoEmpty />,
+            pintuMasuk: row.lokasi_gerbang || <EvoEmpty />,
+            // pintuKeluar: row.pintuKeluar || <EvoEmpty />,
             durasiParkir,
-            // tarif: row.tarif || <i className="text-danger">*empty</i>,
+            // tarif: row.tarif || <EvoEmpty />,
             statusMember: row.data_member?.nama_produk || <i>-</i>,
             // asalPerusahaan:
             //   row.data_member?.nama_perusahaan?.trim() !== '' ? (
             //     row.data_member.nama_perusahaan
             //   ) : (
-            //     <i className="text-danger">*empty</i>
+            //     <EvoEmpty />
             //   ),
             asalPerusahaan:
               row.data_member?.nama_perusahaan ||

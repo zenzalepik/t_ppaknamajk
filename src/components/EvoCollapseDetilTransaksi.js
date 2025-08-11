@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
+import {StatusLabel} from '@/components/StatusLabel';
+import EvoEmpty  from'@/components/EvoEmpty';
 
 export default function CollapseDetilTransaksi({ data }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -15,12 +17,14 @@ export default function CollapseDetilTransaksi({ data }) {
       >
         <div className="flex flex-col gap-2 ">
           <h3 className="text-title_small font-bold text-black">
-            {data.nomorTiket}
+            {data.no_tiket || '-'}
           </h3>
           <div className="flex gap-3">
-            <div className="text-black/80">{data.nomorPolisi}</div>
+            <div className="text-black/80">{data.nomor_polisi || '-'}</div>
             <span>-</span>
-            <div className="text-black">{data.jenisKendaraan}</div>
+            <div className="text-black">
+              {data.kendaraan?.nama_kendaraan || '-'}
+            </div>
           </div>
         </div>
         <span className="text-placeholderIcon">{isOpen ? '▲' : '▼'}</span>
@@ -31,58 +35,80 @@ export default function CollapseDetilTransaksi({ data }) {
         <div className="mt-4 border-t pt-3 space-y-2">
           {data.foto && (
             <Image
-              src={data.foto}
+              src={data.foto || '/images/png/logo.png'}
               alt="Foto Kendaraan"
               className="w-full object-cover rounded-md mb-3"
+              width="640"
+              height="640"
             />
           )}
           <div className="flex gap-3 border-t-2 py-2">
             <div className="w-[164px] text-black/[0.72]">Waktu Masuk:</div>
-            <div>{data.waktuMasuk}</div>
+            <div>{data.tanggal_masuk || '-'}</div>
           </div>
           <div className="flex gap-3 border-t-2 py-2">
             <div className="w-[164px] text-black/[0.72]">Waktu Keluar:</div>
-            <div>{data.waktuKeluar}</div>
+            <div>{data.tanggal_keluar || '-'}</div>
           </div>
           <div className="flex gap-3 border-t-2 py-2">
             <div className="w-[164px] text-black/[0.72]">Gerbang Masuk:</div>
-            <div>{data.gerbangMasuk}</div>
+            <div>{data.pintu_masuk?.keterangan || ''}</div>
           </div>
           <div className="flex gap-3 border-t-2 py-2">
             <div className="w-[164px] text-black/[0.72]">Gerbang Keluar:</div>
-            <div>{data.gerbangKeluar}</div>
+            <div>{data.pintu_keluar?.keterangan || '-'}</div>
           </div>
           <div className="flex gap-3 border-t-2 py-2">
             <div className="w-[164px] text-black/[0.72]">Durasi Parkir:</div>
-            <div>{data.durasiParkir}</div>
+            <div>{data.interval || '-'}</div>
+          </div>
+          <div className="flex gap-3 border-t-2 py-2">
+            <div className="w-[164px] text-black/[0.72]">Biaya Parkir:</div>
+            <div>{data.biaya_parkir||'-'}</div>
           </div>
           <div className="flex gap-3 border-t-2 py-2">
             <div className="w-[164px] text-black/[0.72]">Denda:</div>{' '}
-            <div>{data.denda}</div>
+            <div>
+              {data.jumlah_denda_stnk || data.jumlah_denda_tiket ? (
+                `Rp ${(
+                  data.jumlah_denda_stnk + data.jumlah_denda_tiket
+                ).toLocaleString()}`
+              ) : (
+                <i>-</i>
+              )}
+            </div>
           </div>
-          <div className="flex gap-3 border-t-2 py-2">
+          {/* <div className="flex gap-3 border-t-2 py-2">
             <div className="w-[164px] text-black/[0.72]">Total Pembayaran:</div>
-            <div>{data.totalPembayaran}</div>
-          </div>
+            <div>{data.biaya_parkir}</div>
+          </div> */}
           <div className="flex gap-3 border-t-2 py-2">
             <div className="w-[164px] text-black/[0.72]">Status:</div>
-            <div>{data.status ? 'Aktif' : 'Dibatalkan'}</div>
+            <div>{data.is_active != null ? (
+                          StatusLabel.status(data.is_active)
+                        ) : (
+                          <EvoEmpty />
+                        )}</div>
           </div>
-          <div className="flex gap-3 border-t-2 py-2">
+          {/* <div className="flex gap-3 border-t-2 py-2">
             <div className="w-[164px] text-black/[0.72]">Tipe:</div>{' '}
             <div>{data.tipe}</div>
-          </div>
+          </div> */}
           <div className="flex gap-3 border-t-2 py-2">
             <div className="w-[164px] text-black/[0.72]">Pembayaran:</div>
-            <div>{data.pembayaran}</div>
+            <div>{data.jenis_pembayaran && data.jenis_pembayaran.jenis_payment ? (
+                          data.jenis_pembayaran.jenis_payment
+                        ) : (
+                          <EvoEmpty />
+                        )}</div>
           </div>
           <div className="flex gap-3 border-t-2 py-2">
             <div className="w-[164px] text-black/[0.72]">Petugas:</div>{' '}
-            <div>{data.petugas}</div>
+            <div>{data.petugas?.nama||'-'}</div>
           </div>
           <div className="flex gap-3 border-t-2 py-2">
             <div className="w-[164px] text-black/[0.72]">Shift:</div>{' '}
-            <div>{data.shift}</div>
+            <div>{data.shift?.nama_shift||'-'}</div>
           </div>
         </div>
       )}

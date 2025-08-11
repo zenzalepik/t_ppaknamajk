@@ -32,7 +32,7 @@ import { fetchApiMasterDataProdukMember } from '@/app/master_data/produk_member/
 import TiketProdukMemberForm from './TiketProdukMemberForm';
 import EvoTicketMember from '@/components/EvoTicketMember';
 import { fetchApiMasterDataDataKendaraan } from '@/app/master_data/data_kendaraan/api/fetchApiMasterDataDataKendaraan';
-import { fetchApiPengaturanParameterTipeKendaraan } from '@/app/pengaturan/parameter/api/items/fetchApiPengaturanParameterTipeKendaraan';
+import { fetchApiPengaturanParameterTipeKendaraan } from '../api/fetchApiPengaturanParameterTipeKendaraan';
 import { getUserId } from '@/utils/db';
 import { fetchApiMasterDataDataMemberUpdate } from '../api/fetchApiMasterDataDataMemberUpdate';
 import { fetchApiRiwayatTransaksiGantiKartu } from '../api/fetchApiRiwayatTransaksiGantiKartu';
@@ -43,6 +43,7 @@ import { formatTanggalIndo } from '@/helpers/formatTanggal';
 import { formatRupiah } from '@/helpers/formatRupiah';
 import Spinner from '@/components/Spinner';
 import EvoErrorDiv from '@/components/EvoErrorDiv';
+import numbers from '@/utils/numbers';
 
 // import dataKendaraan from '../data/dataKendaraan';
 
@@ -85,9 +86,9 @@ const ViewRiwayatTransaksiForm = ({
     queryKey: ['masterDataPerusahaan', currentPage],
     queryFn: () =>
       fetchApiMasterDataPerusahaan({
-        limit: 305,
+        limit: numbers.apiNumLimitExpanded,
         page: currentPage,
-        offset: (currentPage - 1) * 5,
+        // offset: (currentPage - 1) * 5,
         sortBy: 'id',
         sortOrder: 'desc',
       }),
@@ -104,9 +105,9 @@ const ViewRiwayatTransaksiForm = ({
     queryKey: ['masterDataProdukMember', currentPage],
     queryFn: () =>
       fetchApiMasterDataProdukMember({
-        limit: 905,
+        limit: numbers.apiNumLimitExpanded,
         page: currentPage,
-        offset: (currentPage - 1) * 5,
+        // offset: (currentPage - 1) * 5,
         sortBy: 'id',
         sortOrder: 'desc',
       }),
@@ -128,9 +129,9 @@ const ViewRiwayatTransaksiForm = ({
     queryKey: ['masterDataDataKendaraan', currentPage],
     queryFn: () =>
       fetchApiMasterDataDataKendaraan({
-        limit: 905,
+        limit: numbers.apiNumLimit,
         page: currentPage,
-        offset: (currentPage - 1) * 5,
+        // offset: (currentPage - 1) * 5,
         sortBy: 'id',
         sortOrder: 'desc',
       }),
@@ -145,12 +146,6 @@ const ViewRiwayatTransaksiForm = ({
     queryKey: ['pengaturanTipeKendaraan'],
     queryFn: () => fetchApiPengaturanParameterTipeKendaraan(),
   });
-
-  const handleDeleteKendaraan = (nomor_polisi) => {
-    setDataKendaraan((prev) =>
-      prev.filter((item) => item.nomor_polisi !== nomor_polisi)
-    );
-  };
 
   const [formData, setFormData] = useState({
     id: '',
@@ -172,8 +167,6 @@ const ViewRiwayatTransaksiForm = ({
 
   useEffect(() => {
     if (initialData) {
-      console.log(initialData.json);
-
       setSelectedProdukMember(initialData.json.produk_member);
 
       const periodeMulai = initialData.periode?.[0]?.value || '';
@@ -229,13 +222,6 @@ const ViewRiwayatTransaksiForm = ({
       }));
     }
   }, [dataKendaraan]);
-
-  // useEffect(() => {
-  //   setFormData((prev) => ({
-  //     ...prev,
-  //     data_nomor_polisi: dataKendaraan.map((item) => item.kendaraan_id),
-  //   }));
-  // }, [dataKendaraan]);
 
   useEffect(() => {
     if (selectedProdukMember) {
@@ -340,7 +326,7 @@ const ViewRiwayatTransaksiForm = ({
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    console.log(formData.data_nomor_polisi);
+    // console.log(formData.data_nomor_polisi);
 
     console.log('error' + JSON.stringify(errors));
 
@@ -381,7 +367,6 @@ const ViewRiwayatTransaksiForm = ({
     // onSubmit?.(formData);
 
     try {
-      console.log(formData);
       await fetchApiMasterDataDataMemberUpdate(formData);
 
       queryClient.invalidateQueries(['masterDataDataMember']); // Refresh tabel setelah tambah data
@@ -401,17 +386,25 @@ const ViewRiwayatTransaksiForm = ({
     errorRiwayatTransaksiMember,
     isLoadingRiwayatTransaksiMember,
   } = useQuery({
-    queryKey: ['dataRiwayatTransaksiMember', currentPageRiwayatTransaksiMember],
+    queryKey: [
+      'dataRiwayatTransaksiMember',
+      initialData?.id,
+      currentPageRiwayatTransaksiMember,
+    ],
     queryFn: () =>
-      fetchApiRiwayatTransaksiMember({
-        limit: 905,
+      fetchApiRiwayatTransaksiMember(initialData?.id, {
+        limit: numbers.apiNumLimitMedium,
         page: currentPageRiwayatTransaksiMember,
-        offset: (currentPageRiwayatTransaksiMember - 1) * 5,
+        // offset: (currentPageRiwayatTransaksiMember - 1) * 5,
         sortBy: 'id',
         sortOrder: 'desc',
       }),
     // retry: false,
+
+    enabled: !!initialData?.id,
   });
+
+  // console.log(JSON.stringify(dataRiwayatTransaksiMember));
 
   const {
     data: dataRiwayatTransaksiGantiKartu,
@@ -424,7 +417,7 @@ const ViewRiwayatTransaksiForm = ({
     ],
     queryFn: () =>
       fetchApiRiwayatTransaksiGantiKartu({
-        limit: 905,
+        limit: numbers.apiNumLimit,
         page: currentPageRiwayatTransaksiGantiKartu,
         offset: (currentPageRiwayatTransaksiGantiKartu - 1) * 5,
         sortBy: 'id',
@@ -440,18 +433,22 @@ const ViewRiwayatTransaksiForm = ({
   } = useQuery({
     queryKey: [
       'dataRiwayatTransaksiGantiNopol',
+      initialData?.id,
       currentPageRiwayatTransaksiGantiNopol,
     ],
     queryFn: () =>
-      fetchApiRiwayatTransaksiGantiNopol({
-        limit: 905,
+      fetchApiRiwayatTransaksiGantiNopol(initialData?.id, {
+        limit: numbers.apiNumLimit,
         page: currentPageRiwayatTransaksiGantiNopol,
-        offset: (currentPageRiwayatTransaksiGantiNopol - 1) * 5,
+        // offset: (currentPageRiwayatTransaksiGantiNopol - 1) * 5,
         sortBy: 'id',
         sortOrder: 'desc',
       }),
     // retry: false,
+
+    enabled: !!initialData?.id,
   });
+
 
   if (
     isLoadingPerusahaan ||
@@ -552,80 +549,89 @@ const ViewRiwayatTransaksiForm = ({
                         Data Transaksi Member
                       </h2>
                       {/*  */}
-                      {dataRiwayatTransaksiMember?.data.map((item, index) => (
-                        <div
-                          key={item.id + '-' + index}
-                          className="mb-2 rounded-xl border border-slate-200 bg-gradient-to-br from-white to-indigo-50 p-6 shadow-lg hover:shadow-xl transition-all duration-300"
-                        >
-                          <div className="flex flex-col gap-y-2 gap-x-6 text-sm text-slate-700">
-                            <div className="flex justify-between">
-                              <div className="flex rounded-[12px] bg-primaryTransparent h-8 w-8 text-primary font-medium justify-center items-center">
-                                {index + 1}
+                      {isLoadingRiwayatTransaksiMember ? (
+                        <div className="h-full flex flex-col gap-2 justify-center items-center text-center text-primary">
+                          <Spinner size={32} color="border-black" />
+                          Loading...
+                        </div>
+                      ) : (
+                        dataRiwayatTransaksiMember?.data.map((item, index) => (
+                          <div
+                            key={item.id + '-' + index}
+                            className="mb-2 rounded-xl border border-slate-200 bg-gradient-to-br from-white to-indigo-50 p-6 shadow-lg hover:shadow-xl transition-all duration-300"
+                          >
+                            <div className="flex flex-col gap-y-2 gap-x-6 text-sm text-slate-700">
+                              <div className="flex justify-between">
+                                <div className="flex rounded-[12px] bg-primaryTransparent h-8 w-8 text-primary font-medium justify-center items-center">
+                                  {index + 1}
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                  <span className="text-label_medium_semibold font-normal text-black/[0.64]">
+                                    Masa Aktif:{' '}
+                                  </span>
+                                  <span className="flex gap-2 px-3 py-1 bg-black/10 text-xs font-semibold rounded-full">
+                                    {Array.isArray(item.masa_aktif) &&
+                                    item.masa_aktif.length === 2 ? (
+                                      <>
+                                        {formatTanggalIndo(item.masa_aktif[0])}{' '}
+                                        -{' '}
+                                        {formatTanggalIndo(item.masa_aktif[1])}
+                                      </>
+                                    ) : (
+                                      'Tidak tersedia'
+                                    )}
+                                  </span>
+                                </div>
+                              </div>
+
+                              <hr className="mt-1 mb-2" />
+
+                              <div className="flex items-center gap-2">
+                                <RiCalendar2Line className="w-4 h-4 text-black/[0.64]" />
+                                <div className="w-[120px] text-black/[0.64]">
+                                  Tanggal:
+                                </div>{' '}
+                                {item.tgl_transaksi != null &&
+                                item.tgl_transaksi != undefined
+                                  ? formatTanggalIndo(item.tgl_transaksi)
+                                  : '-'}
                               </div>
 
                               <div className="flex items-center gap-2">
-                                <span className="text-label_medium_semibold font-normal text-black/[0.64]">
-                                  Masa Aktif:{' '}
-                                </span>
-                                <span className="flex gap-2 px-3 py-1 bg-black/10 text-xs font-semibold rounded-full">
-                                  {Array.isArray(item.masa_aktif) &&
-                                  item.masa_aktif.length === 2 ? (
-                                    <>
-                                      {formatTanggalIndo(item.masa_aktif[0])} -{' '}
-                                      {formatTanggalIndo(item.masa_aktif[1])}
-                                    </>
-                                  ) : (
-                                    'Tidak tersedia'
-                                  )}
-                                </span>
+                                <RiMoneyDollarCircleLine className="w-4 h-4 text-black/[0.64]" />
+                                <div className="w-[120px] text-black/[0.64]">
+                                  Tarif:
+                                </div>{' '}
+                                <div className="text-primary">
+                                  <b>
+                                    {item.tarif != null &&
+                                    item.tarif != undefined
+                                      ? formatRupiah(item.tarif)
+                                      : '-'}
+                                  </b>
+                                </div>
                               </div>
-                            </div>
 
-                            <hr className="mt-1 mb-2" />
-
-                            <div className="flex items-center gap-2">
-                              <RiCalendar2Line className="w-4 h-4 text-black/[0.64]" />
-                              <div className="w-[120px] text-black/[0.64]">
-                                Tanggal:
-                              </div>{' '}
-                              {item.tgl_transaksi != null &&
-                              item.tgl_transaksi != undefined
-                                ? formatTanggalIndo(item.tgl_transaksi)
-                                : '-'}
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                              <RiMoneyDollarCircleLine className="w-4 h-4 text-black/[0.64]" />
-                              <div className="w-[120px] text-black/[0.64]">
-                                Tarif:
-                              </div>{' '}
-                              <div className="text-primary">
-                                <b>
-                                  {item.tarif != null && item.tarif != undefined
-                                    ? formatRupiah(item.tarif)
-                                    : '-'}
-                                </b>
+                              <div className="col-span-2 flex items-center gap-2">
+                                <RiBox3Line className="w-4 h-4 text-black/[0.64]" />
+                                <div className="w-[120px] text-black/[0.64]">
+                                  Produk:
+                                </div>{' '}
+                                <b>{item?.produk_member?.nama || '-'}</b>
                               </div>
-                            </div>
 
-                            <div className="col-span-2 flex items-center gap-2">
-                              <RiBox3Line className="w-4 h-4 text-black/[0.64]" />
-                              <div className="w-[120px] text-black/[0.64]">
-                                Produk:
-                              </div>{' '}
-                              <b>{item.produk_member.nama || '-'}</b>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                              <RiUser3Line className="w-4 h-4 text-black/[0.64]" />
-                              <div className="w-[120px] text-black/[0.64]">
-                                User:
-                              </div>{' '}
-                              {item.user.nama || '-'}
+                              <div className="flex items-center gap-2">
+                                <RiUser3Line className="w-4 h-4 text-black/[0.64]" />
+                                <div className="w-[120px] text-black/[0.64]">
+                                  User:
+                                </div>{' '}
+                                {item.data_member?.user?.nama || '-'}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        ))
+                      )}
                     </div>
                   </div>
                 ),
@@ -723,72 +729,75 @@ const ViewRiwayatTransaksiForm = ({
                         </span>{' '}
                         Data Transaksi Ganti Nopol
                       </h2>
-                      {dataRiwayatTransaksiGantiNopol?.data.map((item,index) => (
-                        <div
-                          key={item.no+'-'+index}
-                          className="mb-2 rounded-xl border border-slate-200 bg-gradient-to-br from-white to-emerald-50 p-6 shadow-lg hover:shadow-xl transition-all duration-300"
-                        >
-                          <div className="flex flex-col gap-y-2 gap-x-6 text-sm text-slate-700">
-                            <div className="flex justify-between">
-                              <div className="flex rounded-[12px] bg-primaryTransparent h-8 w-8 text-primary font-medium justify-center items-center">
-                                {index+1}
+                      {dataRiwayatTransaksiGantiNopol?.data.map(
+                        (item, index) => (
+                          <div
+                            key={item.no + '-' + index}
+                            className="mb-2 rounded-xl border border-slate-200 bg-gradient-to-br from-white to-emerald-50 p-6 shadow-lg hover:shadow-xl transition-all duration-300"
+                          >
+                            <div className="flex flex-col gap-y-2 gap-x-6 text-sm text-slate-700">
+                              <div className="flex justify-between">
+                                <div className="flex rounded-[12px] bg-primaryTransparent h-8 w-8 text-primary font-medium justify-center items-center">
+                                  {index + 1}
+                                </div>
                               </div>
-                            </div>
 
-                            <hr className="mt-1 mb-2" />
+                              <hr className="mt-1 mb-2" />
 
-                            <div className="flex items-center gap-2">
-                              <RiCalendar2Line className="w-4 h-4 text-black/[0.64]" />
-                              <div className="w-[120px] text-black/[0.64]">
-                                Tanggal:
-                              </div>
-                               {item.tgl_transaksi !== null &&
-                                item.tgl_transaksi != undefined
-                                  ? formatTanggalIndo(item.tgl_transaksi)
+                              <div className="flex items-center gap-2">
+                                <RiCalendar2Line className="w-4 h-4 text-black/[0.64]" />
+                                <div className="w-[120px] text-black/[0.64]">
+                                  Tanggal:
+                                </div>
+                                {item.tgl_ganti !== null &&
+                                item.tgl_ganti != undefined
+                                  ? formatTanggalIndo(item.tgl_ganti)
                                   : '-'}
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                              <RiCarLine className="w-4 h-4 text-black/[0.64]" />
-                              <div className="w-[120px] text-black/[0.64]">
-                                Nopol Lama:
                               </div>
-                              <b>{item.nomor_polisi_lama||'-'}</b>
-                            </div>
 
-                            <div className="flex items-center gap-2">
-                              <RiCarLine className="w-4 h-4 text-black/[0.64]" />
-                              <div className="w-[120px] text-black/[0.64]">
-                                Nopol Baru:
+                              <div className="flex items-center gap-2">
+                                <RiCarLine className="w-4 h-4 text-black/[0.64]" />
+                                <div className="w-[120px] text-black/[0.64]">
+                                  Nopol Lama:
+                                </div>
+                                <b>{item.nomor_polisi_lama || '-'}</b>
                               </div>
-                              <b>{item.nomor_polisi_baru||'-'}</b>
-                            </div>
 
-                            <div className="flex items-center gap-2">
-                              <RiMoneyDollarCircleLine className="w-4 h-4 text-black/[0.64]" />
-                              <div className="w-[120px] text-black/[0.64]">
-                                Tarif:
+                              <div className="flex items-center gap-2">
+                                <RiCarLine className="w-4 h-4 text-black/[0.64]" />
+                                <div className="w-[120px] text-black/[0.64]">
+                                  Nopol Baru:
+                                </div>
+                                <b>{item.nomor_polisi_baru || '-'}</b>
                               </div>
-                              <div className="text-primary">
-                                <b>
+
+                              <div className="flex items-center gap-2">
+                                <RiMoneyDollarCircleLine className="w-4 h-4 text-black/[0.64]" />
+                                <div className="w-[120px] text-black/[0.64]">
+                                  Tarif:
+                                </div>
+                                <div className="text-primary">
+                                  <b>
                                     {item.tarif != undefined &&
                                     item.tarif != null
                                       ? formatRupiah(item.tarif)
                                       : ''}
                                   </b>
+                                </div>
                               </div>
-                            </div>
 
-                            <div className="flex items-center gap-2">
-                              <RiUser3Line className="w-4 h-4 text-black/[0.64]" />
-                              <div className="w-[120px] text-black/[0.64]">
-                                User:
+                              <div className="flex items-center gap-2">
+                                <RiUser3Line className="w-4 h-4 text-black/[0.64]" />
+                                <div className="w-[120px] text-black/[0.64]">
+                                  User:
+                                </div>
+                                {/* {item.user.nama || '-'} */}
+                                {item.data_member?.user?.nama || '-'}
                               </div>
-                              {item.user.nama||'-'}
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        )
+                      )}
                     </div>
                   </div>
                 ),

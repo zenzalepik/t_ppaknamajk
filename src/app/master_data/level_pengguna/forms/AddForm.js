@@ -7,12 +7,10 @@ import EvoTable from '@/components/evosist_elements/EvoTable';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getUserId } from '@/utils/db';
 import EvoNotifCard from '@/components/EvoNotifCard';
-import companyTypes from '@/utils/companyTypes';
 import dataCheckBoxLevelPengguna from '@/app/master_data/level_pengguna/data/dataCheckBoxLevelPengguna';
 import EvoInDropdown from '@/components/evosist_elements/EvoInDropdown';
-import { fetchApiMasterDataPerusahaan } from '@/app/master_data/perusahaan/api/fetchApiMasterDataPerusahaan';
 import { fetchApiMasterDataLevelPenggunaCreate } from '../api/fetchApiMasterDataLevelPenggunaCreate';
-import flattenHakAksesToForm from '@/helpers/flattenHakAksesToForm';
+import { fetchApiMasterDataPerusahaan } from '../../perusahaan/api/fetchApiMasterDataPerusahaan';
 
 const AddLevelPenggunaForm = ({ isOpen, onClose, onSubmit }) => {
   const [namaHakAkses, setNamaHakAkses] = useState('');
@@ -197,7 +195,7 @@ const AddLevelPenggunaForm = ({ isOpen, onClose, onSubmit }) => {
       //   formData.hak_akses.trim() === '' ? 'Keterangan wajib diisi' : '',
 
       perusahaan_id:
-        formData.perusahaan_id === '' ? 'Tipe Manless wajib dipilih' : '',
+        formData.perusahaan_id === '' ? 'Level pengguna wajib dipilih' : '',
     };
 
     setErrors(newErrors);
@@ -418,7 +416,7 @@ const AddLevelPenggunaForm = ({ isOpen, onClose, onSubmit }) => {
             error={errors.nama}
           />
           <EvoInDropdown
-            name="perusahaan"
+            name="perusahaan_id"
             label="Perusahaan"
             // options={[
             //   { label: 'Motor', value: 'Motor' },
@@ -438,7 +436,7 @@ const AddLevelPenggunaForm = ({ isOpen, onClose, onSubmit }) => {
               }))
             }
             error={errors.perusahaan_id}
-            placeholder="Pilih tipe kendaraan"
+            placeholder="Pilih perusahaan"
           />
 
           {/* Gunakan EvoTable */}

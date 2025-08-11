@@ -19,6 +19,6 @@ export const fetchApiTransaksiBatalLaporan = async ({
 
   return await fetchWithAuth({
     method: 'get',
-    endpoint: `/laporan-data/kendaraan/kendaraan-in?${queryParams.toString()}`,
+    endpoint: `/laporan-data/transaksi-batal?${queryParams.toString()}`,
   });
 };

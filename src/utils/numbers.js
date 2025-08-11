@@ -1,6 +1,7 @@
 const numbers = {
   apiNumLimit: 13,
   apiNumLimitExpanded: 999,
+  apiNumLimitMedium: 45,
   // apiNumPage: 1,
   // apiNumOffset: 0,
 

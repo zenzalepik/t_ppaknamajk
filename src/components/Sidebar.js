@@ -93,6 +93,7 @@ export default function Sidebar() {
         { label: 'Produk Voucher', href: routes.masterData.produkVoucher },
         { label: 'Data Voucher', href: routes.masterData.dataVoucher },
         { label: 'Shift', href: routes.masterData.shift },
+        { label: 'Tenant', href: routes.masterData.tenant },
       ],
     },
     {
@@ -203,8 +204,12 @@ export default function Sidebar() {
     //   } h-screen flex flex-col justify-between transition-all duration-300 ease-in-out `}
     // >
     <div
-      className={`evo_sidebar flex-shrink-0 ${   isFullscreen?'max-h-screen ':
-        isElectron ? 'max-h-[calc(100vh-38px)] ' : 'max-h-full '
+      className={`evo_sidebar flex-shrink-0 ${
+        isFullscreen
+          ? 'max-h-screen '
+          : isElectron
+          ? 'max-h-[calc(100vh-38px)] '
+          : 'max-h-full '
       } overflow-auto bg-gradient-to-tr from-[#23364F] via-black via-black via-black via-black to-black text-white ${
         isCollapsed
           ? 'evo_sidebar_collapsed w-14 max-w-14 items-center'

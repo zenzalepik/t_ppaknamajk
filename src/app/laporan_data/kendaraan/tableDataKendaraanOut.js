@@ -21,7 +21,7 @@ export const tableDataKendaraanOut = {
     { label: 'Produk Member' },
     { label: 'No. Prepaid Card' },
     { label: 'Petugas' },
-    { label: 'Shift' },
+    // { label: 'Shift' },
   ],
   rows: [
     {

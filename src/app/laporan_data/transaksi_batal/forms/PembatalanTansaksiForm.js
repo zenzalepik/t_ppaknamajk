@@ -1,6 +1,6 @@
 'use client';
 
-import React, { use, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import EvoModal from '@/components/EvoModal';
 import EvoForm from '@/components/EvoForm';
 import EvoInText from '@/components/evosist_elements/EvoInText';
@@ -10,6 +10,7 @@ import EvoInDropdown from '@/components/evosist_elements/EvoInDropdown';
 import EvoInRadio from '@/components/evosist_elements/EvoInRadio';
 import EvoInDatePicker from '@/components/evosist_elements/EvoInDatePicker';
 import CollapseDetilTransaksi from '@/components/EvoCollapseDetilTransaksi';
+import { fetchApiTransaksiBatalUpdate } from '../api/fetchApiTransaksiBatalUpdate';
 
 const data = {
   no: '1',
@@ -35,15 +36,27 @@ const data = {
   nomorEwallet: null,
   petugas: 'Rangga',
   shift: 'SHIFT 2',
-  foto: 'http://localhost:3000/images/png/logo.png',
+  foto: '/images/png/logo.png',
   aksi: 'Non Aktifkan',
 };
 
-const PembatalanTansaksiForm = ({ isOpen, onClose, onSubmit }) => {
+const PembatalanTansaksiForm = ({ isOpen, onClose, onSubmit, dataForm }) => {
   const [formData, setFormData] = useState({
+    user_id: '',
+    no_tiket_atau_nomor_polisi: '',
     alasanPembatalan: '',
     keteranganTambahan: '',
   });
+
+  useEffect(() => {
+    if (dataForm) {
+      setFormData((prev) => ({
+        ...prev,
+        user_id: dataForm.user_id || '',
+        no_tiket_atau_nomor_polisi: dataForm.no_tiket_atau_nomor_polisi || '',
+      }));
+    }
+  }, [dataForm]);
 
   const [selectedDate, setSelectedDate] = useState('');
 
@@ -63,28 +76,20 @@ const PembatalanTansaksiForm = ({ isOpen, onClose, onSubmit }) => {
     }));
   };
 
-  const handleDropdownChange = (e) => {
-    const { name, value } = e.target;
-    setSelectedOptions((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-    setErrors((prev) => ({
-      ...prev,
-      [name]: '',
-    }));
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
+    console.log(JSON.stringify(formData));
     e.preventDefault();
 
     const newErrors = {
-      alasanPembatalan:
-        formData.alasanPembatalan.trim() === ''
-          ? 'Alasan pembatalan wajib diisi'
+      user_id: formData.user_id === '' ? 'User tidak ditemukan' : '',
+      no_tiket_atau_nomor_polisi:
+        formData.no_tiket_atau_nomor_polisi === ''
+          ? 'Nomor tiket/nomor polisi tidak ditemukan'
           : '',
+      alasanPembatalan:
+        formData.alasanPembatalan === '' ? 'Alasan pembatalan wajib diisi' : '',
       keteranganTambahan:
-        formData.keteranganTambahan.trim() === ''
+        formData.keteranganTambahan === ''
           ? 'Keterangan/penjelasan wajib diisi'
           : '',
     };
@@ -97,12 +102,59 @@ const PembatalanTansaksiForm = ({ isOpen, onClose, onSubmit }) => {
       return;
     }
 
-    onSubmit?.(formData);
+    // onSubmit?.(formData);
 
-    setNotifMessage('Data pengguna berhasil disimpan!');
-    setNotifType('success');
+    try {
+      await fetchApiTransaksiBatalUpdate(formData);
 
-    setTimeout(() => onClose(), 2000);
+      queryClient.invalidateQueries(['laporanTransaksiBatalLaporan']); // Refresh tabel setelah tambah data
+
+      // setNotifMessage('Laporan pembatalan transaksi berhasil dikirim!');
+      // setNotifType('success');
+
+      // Cek isi pesan dari response
+      if (response?.message === 'Transaksi berhasil dibatalkan') {
+        setNotifType('success');
+        setNotifMessage(response.message);
+        setTimeout(() => handleCloseModal(), 500);
+      } else {
+        setNotifMessage(
+          response?.message || 'Terjadi kesalahan saat membatalkan transaksi.'
+        );
+        setNotifType('error');
+        setTimeout(() => handleCloseModal(), 500);
+      }
+
+      setTimeout(() => handleCloseModal(), 500);
+    } catch (error) {
+      if (error?.message === 'Transaksi berhasil dibatalkan') {
+        setNotifType('success');
+        setNotifMessage(error.message);
+        setTimeout(() => handleCloseModal(), 500);
+      } else {
+        setNotifMessage(
+          error?.message || 'Terjadi kesalahan saat membatalkan transaksi.'
+        );
+        setNotifType('error');
+        setTimeout(() => handleCloseModal(), 500);
+      }
+      // setNotifMessage(error.message);
+      // setNotifType('error');
+    }
+  };
+
+  const handleCloseModal = () => {
+    setFormData((prev) => ({
+      ...prev, // Menyimpan data yang sudah ada
+      no_tiket_atau_nomor_polisi: '',
+      alasanPembatalan: '',
+      keteranganTambahan: '',
+    }));
+    setErrors({});
+    setNotifMessage('');
+    onClose();
+    // Refresh browser
+    window.location.reload();
   };
 
   return (
@@ -118,16 +170,19 @@ const PembatalanTansaksiForm = ({ isOpen, onClose, onSubmit }) => {
 
       <EvoModal
         isOpen={isOpen}
-        onClose={onClose}
+        onClose={handleCloseModal}
         title="Anda Yakin Ingin Membatalkan Transaksi Berikut?"
       >
         <EvoForm
           onSubmit={handleSubmit}
           submitText="Simpan"
           cancelText="Batal"
-          onCancel={onClose}
+          onClose={handleCloseModal}
+          onCancel={handleCloseModal}
         >
-          <CollapseDetilTransaksi data={data} />
+          {/* {dataForm?.user_id}
+          {JSON.stringify(dataForm?.dataDipilih)} */}
+          <CollapseDetilTransaksi data={dataForm?.dataDipilih || {}} />
           <EvoInText
             name="alasanPembatalan"
             label="Alasan Pembatalan"

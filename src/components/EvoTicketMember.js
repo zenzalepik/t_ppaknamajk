@@ -178,7 +178,7 @@ const EvoTicketMember = ({
 
         <div className="flex flex-wrap gap-1">
           <div className="list-disc pl-4 w-1/2">
-            {produkMember.list_id_kendaraan.map((id, index) => {
+            {produkMember?.list_id_kendaraan?.map((id, index) => {
               const kendaraan = masterDataKendaraan?.data?.find(
                 (k) => k.id.toString() === id
               );

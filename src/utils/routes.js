@@ -10,6 +10,7 @@ const routes = {
 
   // Master Data
   masterData: {
+    tenant: '/master_data/tenant',
     perusahaan: '/master_data/perusahaan',
     levelPengguna: '/master_data/level_pengguna',
     dataPengguna: '/master_data/data_pengguna',
@@ -19,7 +20,7 @@ const routes = {
     dataMember: '/master_data/data_member',
     produkVoucher: '/master_data/produk_voucher',
     dataVoucher: '/master_data/data_voucher',
-    shift: '/master_data/shift',
+    shift: '/master_data/shift'
   },
 
   // Laporan Data
@@ -32,8 +33,8 @@ const routes = {
     settlementCashless: '/laporan_data/settlement_cashless',
   },
 
-   // Transaksi
-   transaksi: {
+  // Transaksi
+  transaksi: {
     tambahTransaksi: '/transaksi/tambah_transaksi',
     riwayatTransaksi: '/transaksi/riwayat_transaksi',
   },
@@ -47,8 +48,8 @@ const routes = {
     global: '/pengaturan/global',
   },
 
-   // Bantuan
-   bantuan: {
+  // Bantuan
+  bantuan: {
     tiket: '/bantuan/tiket',
   },
 

@@ -44,7 +44,8 @@ const EvoTooltipActionDataMember = ({
       <Popover.Close asChild>
         {onGantiKartu && (
           <EvoBtnGantiKartu
-            onClick={onGantiKartu}
+            onClick={ isGantiKartu
+                ?onGantiKartu:()=>{}}
             className={`cursor-pointer !py-3 !border-none ${
               isGantiKartu
                 ? '!bg-primaryTransparent'
@@ -57,7 +58,7 @@ const EvoTooltipActionDataMember = ({
       <Popover.Close asChild>
         {onGantiNomorPolisi && (
           <EvoBtnGantiNomorPolisi
-            onClick={onGantiNomorPolisi}
+            onClick={isGantiNomorPolisi ? onGantiNomorPolisi : () => {}}
             className={`cursor-pointer !py-3 !border-none ${
               isGantiNomorPolisi
                 ? '!bg-primaryTransparent'

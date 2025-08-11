@@ -14,8 +14,8 @@ export const tableDataRiwayatTransaksiManual = {
     { label: 'Denda' },
     { label: 'Total Pembayaran' },
     { label: 'Jenis Transaksi' }, // Kolom baru untuk jenis transaksi
-    { label: 'Added' },
-    { label: 'Updated' },
+    { label: 'Created At' },
+    { label: 'Updated At' },
   ],
   rows: [
     {

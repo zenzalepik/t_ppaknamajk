@@ -39,6 +39,11 @@ import EvoExportApiPDF from '@/components/EvoExportApiPDF';
 import EvoExportApiExcel from '@/components/EvoExportApiExcel';
 import EvoExportApiPrint from '@/components/EvoExportApiPrint';
 import EvoNotifCard from '@/components/EvoNotifCard';
+import numbers from '@/utils/numbers';
+import EvoEmpty from '@/components/EvoEmpty';
+import { format } from 'date-fns';
+import { id } from 'date-fns/locale';
+import EvoLoading from '@/components/EvoLoading';
 
 const titleSection = 'Riwayat Transaksi Manual';
 
@@ -50,7 +55,6 @@ export default function RiwayatTransaksiManual({ onBack }) {
 
   const [startDate, setStartDate] = React.useState(getDefaultDateAwal());
   const [endDate, setEndDate] = React.useState(getDefaultDateAkhir());
-
 
   const handleDateChange = (start, end) => {
     setStartDate(start);
@@ -67,19 +71,22 @@ export default function RiwayatTransaksiManual({ onBack }) {
   const [notifMessage, setNotifMessage] = useState('');
   const [notifType, setNotifType] = useState('success');
 
+  const [searchText, setSearchText] = useState('');
+
   const {
     data: laporanRiwayatTransaksiManual,
     error,
     isLoading,
   } = useQuery({
-    queryKey: ['laporanRiwayatTransaksiManual', currentPage],
+    queryKey: ['laporanRiwayatTransaksiManual', currentPage, searchText],
     queryFn: () =>
       fetchApiRiwayatTransaksiManual({
-        limit: 5,
+        limit: numbers.apiNumLimit,
         page: currentPage,
-        offset: (currentPage - 1) * 5,
+        // offset: (currentPage - 1) * 5,
         sortBy: 'id',
         sortOrder: 'desc',
+        search: searchText, // <== ini penting
       }),
     // retry: false,
   });
@@ -143,91 +150,60 @@ export default function RiwayatTransaksiManual({ onBack }) {
   };
 
   const handleSearch = (query) => {
-    console.log('Hasil pencarian:', query);
+    // setShowTabel(true);
+    setSearchText(query.searchText); // simpan input pencarian
+    setCurrentPage(1); // reset ke halaman pertama
   };
 
-  /*const rows = tableDataRiwayatTransaksiManual.rows.map((row) => ({
-    ...row,
-    // status: StatusLabel.status(row.status), // Konversi status menjadi elemen visual
-    // member: row.member ? 'Ya' : 'Tidak',
-    // manualInput: row.manualInput ? 'Ya' : 'Tidak',
-    // kartuMember: row.kartuMember ? 'Ya' : 'Tidak',
-    // Menampilkan "-" untuk nilai yang null
-    // namaBank: row.namaBank ?? '-',
-    // nomorRekening: row.nomorRekening ?? '-',
-    // namaEwallet: row.namaEwallet ?? '-',
-    // nomorEwallet: row.nomorEwallet ?? '-',
-    // Tampilkan link jika `row.foto` memiliki isi, jika tidak tampilkan "-"
-    // foto: row.foto ? (
-    //   <EvoButton
-    //     key={`prosesPerbaikan-${row.no}`}
-    //     outlined={true}
-    //     icon={<RiImageLine />}
-    //     onClick={() => window.open(row.foto, '_blank', 'noopener,noreferrer')}
-    //     buttonText={'Lihat Foto'}
-    //   />
-    // ) : (
-    //   '-'
-    // ),
-
-    // aksi: (
-    //   <EvoActionButtons
-    //     rowId={row.no}
-        // onEdit={() => handleEdit(row.no)}
-        // onDelete={() => handleDelete(row.no)}
-        // isActive={Boolean(row.status)} // Pastikan boolean dikirim dengan benar
-    //     moreAction={titleSection}
-    //     customButtons={[
-    //       <EvoButton
-    //         key={`prosesPerbaikan-${row.no}`}
-    //         onClick={() => handleProsesPerbaikan(row.no)}
-    //         fillColor={colors.danger}
-    //         buttonText={'Batalkan Transaksi'}
-    //       />,
-    //     ]}
-    //   />
-    // ),
-  }));*/
-
-  // const rows = tableDataRiwayatTransaksiManual.rows
-
-  //   }));
-
-  // row.jenisTransaksi === 'Manual'
   const rows =
     laporanRiwayatTransaksiManual?.data?.length > 0
       ? laporanRiwayatTransaksiManual.data
-          .filter((row) => row.jenisTransaksi === 'Manual')
-          .map((row, index) => ({
-            no: index + 1,
-            // id: row.id || <i>*empty</i>,
-            // no: row.no || <i>*empty</i>,
+          // .filter((row) => row.jenisTransaksi === 'Manual')
+          .map((row, index) => {
+            const formatTanggal = (value) => {
+              return value ? (
+                format(new Date(value), 'dd MMMM yyyy - HH:mm', { locale: id })
+              ) : (
+                <EvoEmpty />
+              );
+            };
 
-            // id: row.id || <i>*empty</i>,
-            // no: row.no || <i>*empty</i>,
-            nomorTiket: row.nomorTiket || <i>*empty</i>,
-            waktuMasuk: row.waktuMasuk || <i>*empty</i>,
-            gerbangMasuk: row.gerbangMasuk || <i>*empty</i>,
-            jenisKendaraan: row.jenisKendaraan || <i>*empty</i>,
-            nomorPolisi: row.nomorPolisi || <i>*empty</i>,
-            waktuKeluar: row.waktuKeluar || <i>*empty</i>,
-            pintuKeluar: row.pintuKeluar || <i>*empty</i>,
-            durasiParkir: row.durasiParkir || <i>*empty</i>,
-            denda: row.denda || <i>*empty</i>,
-            totalPembayaran: row.totalPembayaran || <i>*empty</i>,
-            jenisTransaksi: row.jenisTransaksi || <i>*empty</i>,
-            added: row.added || <i>*empty</i>,
-            updated: row.updated || <i>*empty</i>,
-          }))
+            const formatRupiah = (value) => {
+              return value !== null && value !== undefined
+                ? new Intl.NumberFormat('id-ID', {
+                    style: 'currency',
+                    currency: 'IDR',
+                    minimumFractionDigits: 0,
+                  }).format(value)
+                : '-';
+            };
+
+            return {
+              no: index + 1,
+              nomorTiket: <b>{row.nomor_tiket}</b> || <EvoEmpty />,
+              waktuMasuk: formatTanggal(row?.waktu_masuk),
+              gerbangMasuk: row.gerbang_masuk || <EvoEmpty />,
+              jenisKendaraan: row.jenis_kendaraan || <EvoEmpty />,
+              nomorPolisi: row.nomor_polisi || <EvoEmpty />,
+              waktuKeluar: formatTanggal(row?.waktu_keluar),
+              pintuKeluar: row.pintu_keluar || <EvoEmpty />,
+              durasiParkir: row.durasi_parkir || <EvoEmpty />,
+              denda: formatRupiah(row?.denda),
+              totalPembayaran: formatRupiah(row?.total_pembayaran),
+              jenisTransaksi: row.jenis_transaksi || <EvoEmpty />,
+              added: formatTanggal(row?.added),
+              updated: formatTanggal(row?.updated),
+            };
+          })
       : [];
 
-  if (isLoading)
-    return (
-      <div className="h-full flex flex-col gap-2 justify-center items-center text-center text-primary">
-        <Spinner size={32} color="border-black" />
-        Loading...
-      </div>
-    );
+  // if (isLoading)
+  //   return (
+  //     <div className="h-full flex flex-col gap-2 justify-center items-center text-center text-primary">
+  //       <Spinner size={32} color="border-black" />
+  //       Loading...
+  //     </div>
+  //   );
 
   if (error) {
     return <EvoErrorDiv errorHandlerText={getErrorMessage(error)} />;
@@ -287,7 +263,8 @@ export default function RiwayatTransaksiManual({ onBack }) {
           // isFilter={true}
           FilterComponent={FilterMasProdukMember}
           placeholder="Ketik nomor tiket..."
-          onSearch={(data) => console.log('Hasil pencarian:', data)}
+          // onSearch={(data) => console.log('Hasil pencarian:', data)}
+          onSearch={handleSearch}
         />
 
         {/* <PembatalanTansaksiForm
@@ -295,15 +272,24 @@ export default function RiwayatTransaksiManual({ onBack }) {
         onClose={handleTutup}
         onSubmit={handleSubmitData}
       /> */}
-
-        <EvoTable
-          id="tableToPrint"
-          tableData={tableDataRiwayatTransaksiManual}
-          currentPage={currentPage}
-          totalPages={laporanRiwayatTransaksiManual?.totalPages}
-          onPageChange={handlePageChange}
-          rows={rows}
-        />
+        {/* {showTabel && ( */}
+        {/* {searchText == '' ? (
+          <div className="text-2xl text-black/20 text-center bg-black/[0.025] rounded-[20px] py-32">
+            Ketik Pencarian Untuk Menampilkan Data
+          </div>
+        ) : ( */}
+          <div className="relative">
+            {isLoading && <EvoLoading />}
+            <EvoTable
+              id="tableToPrint"
+              tableData={tableDataRiwayatTransaksiManual}
+              currentPage={currentPage}
+              totalPages={laporanRiwayatTransaksiManual?.totalPages}
+              onPageChange={handlePageChange}
+              rows={rows}
+            />
+          </div>
+        {/* )} */}
       </EvoCardSection>
     </>
   );

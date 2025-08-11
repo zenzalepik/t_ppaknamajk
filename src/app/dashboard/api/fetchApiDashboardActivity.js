@@ -5,7 +5,7 @@ import { fetchWithAuth } from '@/helpers/fetchWithAuth';
 export const fetchApiDashboardActivity = async ({
   limit = 13,
   page = 1,
-  offset = 0,
+  // offset = 0,
   sortBy = 'id',
   sortOrder = 'desc',
   
@@ -15,7 +15,7 @@ export const fetchApiDashboardActivity = async ({
   const queryParams = new URLSearchParams({
     limit: limit.toString(),
     page: page.toString(),
-    offset: offset.toString(),
+    // offset: offset.toString(),
     sortBy,
     sortOrder,
   });

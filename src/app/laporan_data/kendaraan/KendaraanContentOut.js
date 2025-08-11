@@ -23,6 +23,7 @@ import { StatusLabel } from '@/components/StatusLabel';
 import EvoLoading from '@/components/EvoLoading';
 import { format } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
+import EvoEmpty from '@/components/EvoEmpty';
 
 const titleSection = 'Kendaraan Sudah Keluar';
 
@@ -143,7 +144,7 @@ export default function KendaraanContentOut() {
               .filter(Boolean)
               .join(' ')
           ) : (
-            <i className="text-danger">*empty</i>
+            <EvoEmpty />
           );
 
           return {
@@ -153,7 +154,7 @@ export default function KendaraanContentOut() {
                 {row.nomor_tiket != null ? (
                   row.nomor_tiket
                 ) : (
-                  <i className="text-danger">*empty</i>
+                  <EvoEmpty />
                 )}
               </b>
             ),
@@ -165,7 +166,7 @@ export default function KendaraanContentOut() {
               ) : row.data_transaksi?.is_manual === false ? (
                 'Tidak'
               ) : (
-                <i className="text-danger">*empty</i>
+                <EvoEmpty />
               ),
 
             tglMasuk: row.tanggal_masuk ? (
@@ -173,28 +174,28 @@ export default function KendaraanContentOut() {
                 locale: localeId,
               })
             ) : (
-              <i className="text-danger">*empty</i>
+              <EvoEmpty />
             ),
             tglKeluar: row.tanggal_keluar ? (
               format(new Date(row.tanggal_keluar), 'dd MMMM yyyy, HH:mm', {
                 locale: localeId,
               })
             ) : (
-              <i className="text-danger">*empty</i>
+              <EvoEmpty />
             ),
             pintuMasuk: row.lokasi_gerbang_masuk || (
-              <i className="text-danger">*empty</i>
+              <EvoEmpty />
             ),
             pintuKeluar: row.lokasi_gerbang || (
-              <i className="text-danger">*empty</i>
+              <EvoEmpty />
             ),
-            nopol: row.nomor_polisi || <i className="text-danger">*empty</i>,
+            nopol: row.nomor_polisi || <EvoEmpty />,
             kendaraan: row.nama_kendaraan || (
-              <i className="text-danger">*empty</i>
+              <EvoEmpty />
             ),
             interval:
               // row.interval
-              durasiParkir || <i className="text-danger">*empty</i>,
+              durasiParkir || <EvoEmpty />,
             tarif:
               row.biaya_parkir != null && row.biaya_parkir !== '' ? (
                 formatRupiah(
@@ -203,7 +204,7 @@ export default function KendaraanContentOut() {
                     : row.biaya_parkir
                 )
               ) : (
-                <i className="text-danger">*empty</i>
+                <EvoEmpty />
               ),
             denda: formatRupiah(
               (() => {
@@ -225,10 +226,10 @@ export default function KendaraanContentOut() {
                 return dendaStnk + dendaTiket;
               })()
             ),
-            // status: row.status || <i className="text-danger">*empty</i>,
-            // tipe: row.tipe || <i className="text-danger">*empty</i>,
+            // status: row.status || <EvoEmpty />,
+            // tipe: row.tipe || <EvoEmpty />,
             pembayaran: row.nama_jenis_pembayaran || (
-              <i className="text-danger">*empty</i>
+              <EvoEmpty />
             ),
             namaProdukMember:
               row.data_member?.nama_produk != null &&
@@ -244,8 +245,8 @@ export default function KendaraanContentOut() {
               ) : (
                 <i>-</i>
               ),
-            petugas: row.nama_petugas || <i className="text-danger">*empty</i>,
-            shift: row.shift || <i className="text-danger">*empty</i>,
+            petugas: row.nama_petugas || <EvoEmpty />,
+            shift: row.shift || <EvoEmpty />,
           };
         })
       : [];
