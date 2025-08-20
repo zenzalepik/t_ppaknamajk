@@ -15,7 +15,7 @@ import {
   RiCashLine,
   RiFileAddLine,
 } from '@remixicon/react';
-import { fetchApiMasterDataShift } from '../../../../../../dist/win-unpacked/resources/app/src/app/master_data/shift/api/fetchApiMasterDataShift';
+import { fetchApiMasterDataShift } from '@/app/master_data/shift/api/fetchApiMasterDataShift';
 import { fetchApiMasterDataPOS } from '@/app/bantuan/tiket/api/fetchApiMasterDataPOS';
 import { fetchApiMasterDataUser } from '@/app/master_data/tenant/api/fetchApiMasterDataUser';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
