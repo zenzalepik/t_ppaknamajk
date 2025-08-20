@@ -1,0 +1,29 @@
+'use client';
+
+import React, { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { getToken } from '@/utils/db';
+import routes from '@/utils/routes';
+import DataLevelPenggunaSection from '@/app/master_data/level_pengguna/DataLevelPenggunaSection';
+import EvoLayout from '@/components/EvoLayout';
+
+export default function MasterDataLevelPengguna() {
+  const router = useRouter();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = await getToken();
+      if (!token) {
+        router.push(routes.login); // Redirect ke login jika tidak ada token
+      }
+    };
+
+    checkAuth();
+  }, [router]);
+  
+  return (
+    <EvoLayout pageTitle="Master Data">
+      <DataLevelPenggunaSection />
+    </EvoLayout>
+  );
+}

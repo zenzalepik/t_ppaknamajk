@@ -1,0 +1,12 @@
+[
+  {
+    "nama_menu": "Dashboard",
+    "nama_sub_menu": null,
+    "aksi": {
+      "read": true,
+      "create": null,
+      "delete": null,
+      "update": null
+    }
+  }
+]
