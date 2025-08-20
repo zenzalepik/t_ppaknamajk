@@ -23,13 +23,13 @@ const strings = {
   },
   userName: 'User',
 
-  apiUrl: 'http://localhost:4000',
-  apiUrlDummy: 'http://localhost:3001',
+  // apiUrl: 'http://localhost:4000',
+  // apiUrlDummy: 'http://localhost:3001',
   // apiUrl: 'https://evolusipark-backend.onrender.com',
   // apiUrlDummy: 'https://api-dummy-evolusipark.onrender.com',
 
-  // apiUrl: process.env.NEXT_PUBLIC_API_URL,
-  // apiUrlDummy: 'https://api-dummy-evolusipark.onrender.com',
+  apiUrl: process.env.NEXT_PUBLIC_API_URL,
+  apiUrlDummy: 'https://api-dummy-evolusipark.onrender.com',
   options: {
     paymentTypes: ['Tunai', 'Bank', 'QRIS', 'Member'],
     // paymentTypes: ['Cash', 'Prepaid', 'Transfer Bank', 'E-Wallet', 'Member'],
