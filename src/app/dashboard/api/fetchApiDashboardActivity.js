@@ -27,7 +27,7 @@ export const fetchApiDashboardActivity = async ({
 
   if (search) queryParams.set('search', search);
   
-  // console.log(`/dashboard/aktivitas-gerbang-kendaraan?${queryParams.toString()}`);
+  console.log(`/dashboard/aktivitas-gerbang-kendaraan?${queryParams.toString()}`);
   
   return await fetchWithAuth({
     method: 'get',

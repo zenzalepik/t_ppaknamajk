@@ -27,6 +27,8 @@ import EvoLoading from '@/components/EvoLoading';
 import { format } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
 import numbers from '@/utils/numbers';
+import strings from '@/utils/strings';
+import { formatRupiah } from '@/helpers/formatRupiah';
 
 const titleSection = 'Pendapatan Parkir Casual';
 
@@ -48,11 +50,11 @@ export default function PendapatanParkirCasual() {
   const queryClient = useQueryClient();
   const [notifMessage, setNotifMessage] = useState('');
   const [notifType, setNotifType] = useState('success');
-  const formatDate = (date) => format(date, 'dd-MM-yyyy');
-  const formattedStartDate = format(start_date, 'MM-dd-yyyy');
-  const formattedEndDate = format(end_date, 'MM-dd-yyyy');
+  const formatDate = (date) => format(date, strings.formatDate);
+  const formattedStartDate = format(start_date, strings.formatDate);
+  const formattedEndDate = format(end_date, strings.formatDate);
 
-  const [searchKeyword, setSearchKeyword] = useState('');
+  const [searchText, setSearchText] = useState('');
 
   const {
     data: laporanPendapatanParkirCasual,
@@ -64,7 +66,7 @@ export default function PendapatanParkirCasual() {
       currentPage,
       formattedStartDate,
       formattedEndDate,
-      searchKeyword,
+      searchText,
     ],
     queryFn: () =>
       fetchApiPendapatanParkirCasual({
@@ -75,7 +77,7 @@ export default function PendapatanParkirCasual() {
         sortOrder: 'desc',
         start_date: formattedStartDate,
         end_date: formattedEndDate,
-        search: searchKeyword,
+        search: searchText,
       }),
     retry: false,
     keepPreviousData: true,
@@ -89,9 +91,10 @@ export default function PendapatanParkirCasual() {
 
     // Hanya reset page kalau tanggal bener-bener berubah
     if (
-      format(prevDates.current.start, 'MM-dd-yyyy') !==
-        format(start, 'MM-dd-yyyy') ||
-      format(prevDates.current.end, 'MM-dd-yyyy') !== format(end, 'MM-dd-yyyy')
+      format(prevDates.current.start, strings.formatDate) !==
+        format(start, strings.formatDate) ||
+      format(prevDates.current.end, strings.formatDate) !==
+        format(end, strings.formatDate)
     ) {
       prevDates.current = { start, end };
       setResetPage(true);
@@ -121,8 +124,8 @@ export default function PendapatanParkirCasual() {
   };
 
   const handleSearch = (query) => {
-    console.log('Hasil pencarian:', query);
-    setSearchKeyword(query); // Simpan kata kunci
+    // console.log('Hasil pencarian:', query);
+    setSearchText(query.searchText); // Simpan kata kunci
     setCurrentPage(1); // Reset ke halaman pertama
   };
 
@@ -135,43 +138,44 @@ export default function PendapatanParkirCasual() {
 
           return {
             no: index + 1,
-            // noTiket: <b>{row.noTiket != null ? row.noTiket : <i>*empty</i>}</b>,
-            // id: row.id || <i>*empty</i>,
             tanggal: row.tanggal || <i>*empty</i>,
-            // kategori: row.kategori || <i>*empty</i>,
-            idTransaksi: row.no_tiket || <i>*empty</i>,
+            idTransaksi: <b>{row.no_tiket || <i>*empty</i>}</b>,
             nopol: row.nomor_polisi || <i>*empty</i>,
-            // namaMember: row.namaMember || <i>*empty</i>,
             tarifAsli:
-              row.tarif_asli != null ? (
-                `Rp ${parseInt(row.tarif_asli, 10).toLocaleString('id-ID')}`
+              row.id_data_member == null ? (
+                row.tarif_asli != null && row.tarif_asli !== '' ? (
+                  formatRupiah(
+                    typeof row.tarif_asli === 'string'
+                      ? parseInt(row.tarif_asli)
+                      : row.tarif_asli
+                  )
+                ) : (
+                  <EvoEmpty />
+                )
               ) : (
-                <i>*empty</i>
+                'Rp. 0'
               ),
             namaVoucher: row.nama_voucher || <i>-</i>,
             potonganVoucher:
-              row.potongan_voucher != null ? (
-                `Rp ${potonganVoucherInt.toLocaleString('id-ID')}`
+              row.id_data_member == null ? (
+                row.potongan_voucher != null ? (
+                  `Rp ${potonganVoucherInt.toLocaleString('id-ID')}`
+                ) : (
+                  <i>-</i>
+                )
               ) : (
-                <i>-</i>
+                'Rp. 0'
               ),
-            tarifDibayar: (
-              <span>{`Rp ${tarifDibayarInt.toLocaleString('id-ID')}`}</span>
-            ),
-            pembayaran: 
-            row.pembayaran || <i>*empty</i>
-            ,
+            tarifDibayar:
+              row.id_data_member == null ? (
+                <span>{`Rp ${tarifDibayarInt.toLocaleString('id-ID')}`}</span>
+              ) : (
+                'Rp. 0'
+              ),
+            pembayaran: row.pembayaran || <i>*empty</i>,
           };
         })
       : [];
-
-  // if (isLoading)
-  //   return (
-  //     <div className="h-full flex flex-col gap-2 justify-center items-center text-center text-primary">
-  //       <Spinner size={32} color="border-black" />
-  //       Loading...
-  //     </div>
-  //   );
 
   if (error) {
     return <EvoErrorDiv errorHandlerText={getErrorMessage(error)} />;
@@ -188,6 +192,7 @@ export default function PendapatanParkirCasual() {
         />
       )}
       <EvoCardSection className="!p-0 !bg-transparent !shadow-none">
+        {/* {JSON.stringify(laporanPendapatanParkirCasual?.data)} */}
         <EvoTitleSection
           title={titleSection}
           onExportPDF={
@@ -235,7 +240,8 @@ export default function PendapatanParkirCasual() {
         {/* )} */}
         <EvoSearchTabel
           placeholder="Ketik nomor tiket..."
-          onSearch={(data) => console.log('Hasil pencarian:', data)}
+          buttonText="Pencarian"
+          onSearch={handleSearch}
         />
         <div className="relative">
           {isLoading && <EvoLoading />}

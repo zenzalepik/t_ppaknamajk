@@ -25,6 +25,7 @@ import { format } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
 import EvoEmpty from '@/components/EvoEmpty';
 import numbers from '@/utils/numbers';
+import strings from '@/utils/strings';
 
 const titleSection = 'Kendaraan Masih di Dalam';
 
@@ -32,7 +33,7 @@ export default function KendaraanContentIn() {
   const [start_date, setStartDate] = React.useState(getDefaultDateAwal());
   const [end_date, setEndDate] = React.useState(getDefaultDateAkhir());
 
-  const urlExport = '/data_kendaraan_masuk/';
+  const urlExport = '/laporan-data/kendaraan/kendaraan-in/';
   const [modalExportPDFOpen, setModalExportPDFOpen] = useState(false);
   const [modalExportExcel, setModalExportExcel] = useState(false);
   const [modalExportPrint, setModalExportPrint] = useState(false);
@@ -41,18 +42,18 @@ export default function KendaraanContentIn() {
   const handleEdit = () => setModalOpen(true);
   const handleTutup = () => setModalOpen(false);
 
-  const formatDate = (date) => format(date, 'dd-MM-yyyy');
+  const formatDate = (date) => format(date, strings.formatDate);
 
   const [currentPage, setCurrentPage] = useState(1);
   const queryClient = useQueryClient();
   const [notifMessage, setNotifMessage] = useState('');
   const [notifType, setNotifType] = useState('success');
 
-  const formattedStartDate = format(start_date, 'MM-dd-yyyy');
-  const formattedEndDate = format(end_date, 'MM-dd-yyyy');
+  const formattedStartDate = format(start_date, strings.formatDate);
+  const formattedEndDate = format(end_date, strings.formatDate);
 
-  const [searchText, setsearchText] = useState('');
- 
+  const [searchText, setSearchText] = useState('');
+
   const {
     data: laporanKendaraanContentIn,
     error,
@@ -93,9 +94,9 @@ export default function KendaraanContentIn() {
 
     // Hanya reset page kalau tanggal bener-bener berubah
     if (
-      format(prevDates.current.start, 'MM-dd-yyyy') !==
-        format(start, 'MM-dd-yyyy') ||
-      format(prevDates.current.end, 'MM-dd-yyyy') !== format(end, 'MM-dd-yyyy')
+      format(prevDates.current.start, strings.formatDate) !==
+        format(start, strings.formatDate) ||
+      format(prevDates.current.end, strings.formatDate) !== format(end, strings.formatDate)
     ) {
       prevDates.current = { start, end };
       setResetPage(true);
@@ -122,7 +123,7 @@ export default function KendaraanContentIn() {
 
   const handleSearch = (query) => {
     // console.log('Hasil pencarian:', query);
-    setsearchText(query); // Simpan kata kunci
+    setSearchText(query.searchText); // Simpan kata kunci
     setCurrentPage(1); // Reset ke halaman pertama
   };
 
@@ -170,10 +171,7 @@ export default function KendaraanContentIn() {
             //   ) : (
             //     <EvoEmpty />
             //   ),
-            asalPerusahaan:
-              row.data_member?.nama_perusahaan ||
-                <i>-</i>
-              ,
+            asalPerusahaan: row.data_member?.nama_perusahaan || <i>-</i>,
           };
         })
       : [];
@@ -233,7 +231,7 @@ export default function KendaraanContentIn() {
       {/* )} */}
       <EvoSearchTabel
         placeholder={`Ketik nomor tiket atau nomor polisi...`}
-        onSearch={(data) => console.log('Hasil pencarian:', data)}
+        onSearch={handleSearch}
       />
 
       <EditSettlementCashlessForm

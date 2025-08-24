@@ -1,8 +1,12 @@
-1. seeder level pengguna member, isinya dashbord saja
+==========================================================================
+*Catatan Meeting 10 Agustus 2025*
+==========================================================================
 
-2. url api level pengguna untuk halaman Administrator Client
+<!-- 1. seeder level pengguna member, isinya dashbord saja -->
 
-3. hide data super admin di data tabel pengguna (butuh api khusus)
+<!-- 2. url api level pengguna untuk halaman Administrator Client -->
+
+<!-- 3. hide data super admin di data tabel pengguna (butuh api khusus) -->
 
 4. input data voucher tergantung statusnya member atau non member (kalau non member berarti pakai tiket, kalau member nomor kartu)
 
@@ -11,7 +15,7 @@
 
 7. di transaksi (pintu keluar) ada verifikasi (plat nomor masuk == plat nomor keluar) & (bank masuk == bank keluar)
 
-8. tabel transaksi terpisah untuk member.
+<!-- 8. tabel transaksi terpisah untuk member. -->
 9. voucher member hanya saat pembelian paket member.
 10. tidak ada nominal tarif di gerbang keluar member.
 

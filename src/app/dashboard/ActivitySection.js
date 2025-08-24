@@ -23,6 +23,7 @@ import { StatusLabel } from '@/components/StatusLabel';
 import EvoLoading from '@/components/EvoLoading';
 import { format } from 'date-fns';
 import numbers from '@/utils/numbers';
+import strings from '@/utils/strings';
 import formatTimeStampDDMMYYYY from '@/helpers/formatTimeStampDDMMYYYY';
 
 const titleSection = 'Aktivitas Gerbang Kendaraan';
@@ -36,8 +37,8 @@ export default function ActivitySection() {
   const [notifMessage, setNotifMessage] = useState('');
   const [notifType, setNotifType] = useState('success');
 
-  const formattedStartDate = format(start_date, 'dd-MM-yyyy');
-  const formattedEndDate = format(end_date, 'dd-MM-yyyy');
+  const formattedStartDate = format(start_date, strings.formatDate);
+  const formattedEndDate = format(end_date, strings.formatDate);
 
   const [searchText, setSearchText] = useState('');
 
@@ -80,9 +81,9 @@ export default function ActivitySection() {
 
     // Hanya reset page kalau tanggal bener-bener berubah
     if (
-      format(prevDates.current.start, 'dd-MM-yyyy') !==
-        format(start, 'dd-MM-yyyy') ||
-      format(prevDates.current.end, 'dd-MM-yyyy') !== format(end, 'dd-MM-yyyy')
+      format(prevDates.current.start, strings.formatDate) !==
+        format(start, strings.formatDate) ||
+      format(prevDates.current.end, strings.formatDate) !== format(end, strings.formatDate)
     ) {
       prevDates.current = { start, end };
       setResetPage(true);

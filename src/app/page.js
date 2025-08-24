@@ -11,6 +11,8 @@ import ActivitySection from '@/app/dashboard/ActivitySection';
 import routes from '@/utils/routes'; // Pastikan ini diimpor
 import Image from 'next/image';
 
+// Test
+
 export default function Home() {
   const scrollRef = useRef(null); // Tidak perlu <HTMLDivElement> di JavaScript
   const [isScrolled, setIsScrolled] = useState(false);
@@ -21,7 +23,7 @@ export default function Home() {
       setIsScrolled(scrollRef.current.scrollTop > 0);
     }
   };
-      
+
   const router = useRouter();
   // useEffect(() => {
   //   const checkAuth = async () => {
@@ -35,21 +37,21 @@ export default function Home() {
 
   //   checkAuth();
   // }, [router]);
-  
-useEffect(() => {
-  const checkAuth = async () => {
-    const token = await getToken();
-    if (token) {
-      router.push(routes.dashboard);
-    } else {
-      router.push(routes.login);
-    }
-    setAuthChecked(true);
-  };
-  checkAuth();
-}, [router]);
 
-if (!authChecked) return null;
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = await getToken();
+      if (token) {
+        router.push(routes.dashboard);
+      } else {
+        router.push(routes.login);
+      }
+      setAuthChecked(true);
+    };
+    checkAuth();
+  }, [router]);
+
+  if (!authChecked) return null;
 
   return (
     <div className="flex max-h-screen overflow-hidden">

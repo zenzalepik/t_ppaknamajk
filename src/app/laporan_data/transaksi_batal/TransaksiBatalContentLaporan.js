@@ -26,6 +26,7 @@ import { id as localeId } from 'date-fns/locale';
 import EvoEmpty from '@/components/EvoEmpty';
 import numbers from '@/utils/numbers';
 import hideNotFinished from '@/utils/hideNotFinished';
+import strings from '@/utils/strings';
 
 const titleSection = 'Laporan Pembatalan Transaksi';
 
@@ -43,17 +44,17 @@ export default function TransaksiBatalContentLaporan() {
   const handleEdit = () => setModalOpen(true);
   const handleTutup = () => setModalOpen(false);
 
-  const formatDate = (date) => format(date, 'dd-MM-yyyy');
+  const formatDate = (date) => format(date, strings.formatDate);
 
   const [currentPage, setCurrentPage] = useState(1);
   const queryClient = useQueryClient();
   const [notifMessage, setNotifMessage] = useState('');
   const [notifType, setNotifType] = useState('success');
 
-  const formattedStartDate = format(start_date, 'MM-dd-yyyy');
-  const formattedEndDate = format(end_date, 'MM-dd-yyyy');
+  const formattedStartDate = format(start_date, strings.formatDate);
+  const formattedEndDate = format(end_date, strings.formatDate);
 
-  const [searchKeyword, setSearchKeyword] = useState('');
+  const [searchText, setSearchText] = useState('');
 
   const {
     data: laporanTransaksiBatalLaporan,
@@ -65,7 +66,7 @@ export default function TransaksiBatalContentLaporan() {
       currentPage,
       formattedStartDate,
       formattedEndDate,
-      searchKeyword,
+      searchText,
     ],
     queryFn: () =>
       fetchApiTransaksiBatalLaporan({
@@ -76,7 +77,7 @@ export default function TransaksiBatalContentLaporan() {
         sortOrder: 'desc',
         start_date: formattedStartDate,
         end_date: formattedEndDate,
-        search: searchKeyword,
+        search: searchText,
       }),
     // retry: false,
   });
@@ -89,9 +90,10 @@ export default function TransaksiBatalContentLaporan() {
 
     // Hanya reset page kalau tanggal bener-bener berubah
     if (
-      format(prevDates.current.start, 'MM-dd-yyyy') !==
-        format(start, 'MM-dd-yyyy') ||
-      format(prevDates.current.end, 'MM-dd-yyyy') !== format(end, 'MM-dd-yyyy')
+      format(prevDates.current.start, strings.formatDate) !==
+        format(start, strings.formatDate) ||
+      format(prevDates.current.end, strings.formatDate) !==
+        format(end, strings.formatDate)
     ) {
       prevDates.current = { start, end };
       setResetPage(true);
@@ -122,10 +124,10 @@ export default function TransaksiBatalContentLaporan() {
 
   const handleSearch = (query) => {
     // console.log('Hasil pencarian:', query);
-    setSearchKeyword(query); // Simpan kata kunci
+    setSearchText(query.searchText); // Simpan kata kunci
     setCurrentPage(1); // Reset ke halaman pertama
   };
-console.log(JSON.stringify(laporanTransaksiBatalLaporan));
+  console.log(JSON.stringify(laporanTransaksiBatalLaporan));
   const rows =
     laporanTransaksiBatalLaporan?.data?.length > 0
       ? laporanTransaksiBatalLaporan.data.map((row, index) => ({
@@ -133,8 +135,9 @@ console.log(JSON.stringify(laporanTransaksiBatalLaporan));
           noTiket: row.no_tiket ? <b>{row.no_tiket}</b> : <EvoEmpty />,
           tglMasuk: row.tanggal_masuk || <EvoEmpty />,
           pintuMasuk: row.pintu_masuk?.keterangan || <EvoEmpty />, // ✅ ini menampilkan nama pintu          tanggalPembatalan: row.tanggal_pembatalan || <EvoEmpty />,
-          tanggalPembatalan: row?.tanggal_pembatalan || <EvoEmpty />,
+          tanggalPembatalan: <b>{row?.tanggal_pembatalan || <EvoEmpty />}</b>,
           alasanPembatalan: row.alasan_pembatalan || <EvoEmpty />,
+          penjelasanPembatalan: row.penjelasan_pembatalan || <EvoEmpty />,
           user: row.user?.nama || <EvoEmpty />,
         }))
       : [];
@@ -212,7 +215,8 @@ console.log(JSON.stringify(laporanTransaksiBatalLaporan));
           // isFilter={true}
           // FilterComponent={FilterMasProdukMember}
           placeholder="Ketik nomor tiket..."
-          onSearch={(data) => console.log('Hasil pencarian:', data)}
+          buttonText="Pencarian"
+          onSearch={handleSearch}
         />
       )}
 

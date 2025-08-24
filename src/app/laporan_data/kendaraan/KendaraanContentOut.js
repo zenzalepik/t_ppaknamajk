@@ -21,12 +21,14 @@ import EvoExportApiPrint from '@/components/EvoExportApiPrint';
 import EvoNotifCard from '@/components/EvoNotifCard';
 import { StatusLabel } from '@/components/StatusLabel';
 import EvoLoading from '@/components/EvoLoading';
-import { format } from 'date-fns';
+import { intervalToDuration, parseISO, format } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
 import EvoEmpty from '@/components/EvoEmpty';
+import numbers from '@/utils/numbers';
+import strings from '@/utils/strings';
 
 const titleSection = 'Kendaraan Sudah Keluar';
-
+// SELECT * FROM aktivitas_gerbang_kendaraans WHERE tipe_gerbang = 'Out' AND "createdAt" BETWEEN '2025-08-22 00:00:00' AND '2025-08-22 23:59:59';
 export default function KendaraanContentOut() {
   const [start_date, setStartDate] = React.useState(getDefaultDateAwal());
   const [end_date, setEndDate] = React.useState(getDefaultDateAkhir());
@@ -46,10 +48,10 @@ export default function KendaraanContentOut() {
   const [notifMessage, setNotifMessage] = useState('');
   const [notifType, setNotifType] = useState('success');
 
-  const formattedStartDate = format(start_date, 'MM-dd-yyyy');
-  const formattedEndDate = format(end_date, 'MM-dd-yyyy');
+  const formattedStartDate = format(start_date, strings.formatDate);
+  const formattedEndDate = format(end_date, strings.formatDate);
 
-  const [searchKeyword, setSearchKeyword] = useState('');
+  const [searchKeyword, setSearchText] = useState('');
 
   const {
     data: laporanKendaraanContentOut,
@@ -65,7 +67,7 @@ export default function KendaraanContentOut() {
     ],
     queryFn: () =>
       fetchApiKendaraanContentOut({
-        limit: 13,
+        limit: numbers.apiNumLimit,
         page: currentPage,
         // offset: (currentPage - 1) * 5,
         sortBy: 'id',
@@ -90,9 +92,10 @@ export default function KendaraanContentOut() {
 
     // Hanya reset page kalau tanggal bener-bener berubah
     if (
-      format(prevDates.current.start, 'MM-dd-yyyy') !==
-        format(start, 'MM-dd-yyyy') ||
-      format(prevDates.current.end, 'MM-dd-yyyy') !== format(end, 'MM-dd-yyyy')
+      format(prevDates.current.start, strings.formatDate) !==
+        format(start, strings.formatDate) ||
+      format(prevDates.current.end, strings.formatDate) !==
+        format(end, strings.formatDate)
     ) {
       prevDates.current = { start, end };
       setResetPage(true);
@@ -118,7 +121,9 @@ export default function KendaraanContentOut() {
   };
 
   const handleSearch = (query) => {
-    console.log('Hasil pencarian:', query);
+    // console.log('Hasil pencarian:', query);
+    setSearchText(query.searchText); // Simpan kata kunci
+    setCurrentPage(1); // Reset ke halaman pertama
   };
 
   const formatRupiah = (value) =>
@@ -131,39 +136,52 @@ export default function KendaraanContentOut() {
   const rows =
     laporanKendaraanContentOut?.data?.length > 0
       ? laporanKendaraanContentOut.data.map((row, index) => {
-          const durasi = row.durasi;
+          const masuk = row.tanggal_masuk ? parseISO(row.tanggal_masuk) : null;
+          const keluar = row.tanggal_keluar
+            ? parseISO(row.tanggal_keluar)
+            : null;
 
-          // Format durasi jika valid
-          const durasiParkir = durasi ? (
-            [
-              durasi.days ? `${durasi.days}hari` : null,
-              durasi.hours ? `${durasi.hours}jam` : null,
-              durasi.minutes ? `${durasi.minutes}menit` : null,
-              durasi.seconds ? `${durasi.seconds}detik` : null,
-            ]
-              .filter(Boolean)
-              .join(' ')
-          ) : (
-            <EvoEmpty />
-          );
+          const durasiParkir =
+            masuk && keluar ? (
+              [
+                intervalToDuration({ start: masuk, end: keluar }).days
+                  ? `${
+                      intervalToDuration({ start: masuk, end: keluar }).days
+                    }hari`
+                  : null,
+                intervalToDuration({ start: masuk, end: keluar }).hours
+                  ? `${
+                      intervalToDuration({ start: masuk, end: keluar }).hours
+                    }jam`
+                  : null,
+                intervalToDuration({ start: masuk, end: keluar }).minutes
+                  ? `${
+                      intervalToDuration({ start: masuk, end: keluar }).minutes
+                    }menit`
+                  : null,
+                intervalToDuration({ start: masuk, end: keluar }).seconds
+                  ? `${
+                      intervalToDuration({ start: masuk, end: keluar }).seconds
+                    }detik`
+                  : null,
+              ]
+                .filter(Boolean)
+                .join(' ')
+            ) : (
+              <EvoEmpty />
+            );
 
           return {
             no: index + 1,
             noTiket: (
-              <b>
-                {row.nomor_tiket != null ? (
-                  row.nomor_tiket
-                ) : (
-                  <EvoEmpty />
-                )}
-              </b>
+              <b>{row.no_tiket != null ? row.no_tiket : <EvoEmpty />}</b>
             ),
 
-            isMember: StatusLabel.status_member(row.id_member),
+            isMember: StatusLabel.status_member(row.id_data_member),
             isManual:
-              row.data_transaksi?.is_manual === true ? (
+              row.is_manual === true ? (
                 'Iya'
-              ) : row.data_transaksi?.is_manual === false ? (
+              ) : row.is_manual === false ? (
                 'Tidak'
               ) : (
                 <EvoEmpty />
@@ -183,20 +201,13 @@ export default function KendaraanContentOut() {
             ) : (
               <EvoEmpty />
             ),
-            pintuMasuk: row.lokasi_gerbang_masuk || (
-              <EvoEmpty />
-            ),
-            pintuKeluar: row.lokasi_gerbang || (
-              <EvoEmpty />
-            ),
+            pintuMasuk: row.nama_pintu_masuk || <EvoEmpty />,
+            pintuKeluar: row.nama_pintu_keluar || <EvoEmpty />,
             nopol: row.nomor_polisi || <EvoEmpty />,
-            kendaraan: row.nama_kendaraan || (
-              <EvoEmpty />
-            ),
-            interval:
-              // row.interval
-              durasiParkir || <EvoEmpty />,
-            tarif:
+            kendaraan: row.nama_kendaraan || <EvoEmpty />,
+            interval:durasiParkir,
+            jenisPerhitunganPembayaran:row.jenis_perhitungan_pembayaran|| <EvoEmpty />,
+            tarif:  row.id_data_member == null?
               row.biaya_parkir != null && row.biaya_parkir !== '' ? (
                 formatRupiah(
                   typeof row.biaya_parkir === 'string'
@@ -205,46 +216,44 @@ export default function KendaraanContentOut() {
                 )
               ) : (
                 <EvoEmpty />
-              ),
-            denda: formatRupiah(
-              (() => {
-                const dendaStnkRaw = row.data_transaksi?.jumlah_denda_stnk;
-                const dendaTiketRaw = row.data_transaksi?.jumlah_denda_tiket;
+              )
+                : 'Rp. 0',
+            denda:
+              row.id_data_member == null
+                ? formatRupiah(
+                    (() => {
+                      const dendaStnkRaw =
+                        row.data_transaksi?.jumlah_denda_stnk;
+                      const dendaTiketRaw =
+                        row.data_transaksi?.jumlah_denda_tiket;
 
-                const dendaStnk = isNaN(dendaStnkRaw)
-                  ? 0
-                  : typeof dendaStnkRaw === 'string'
-                  ? parseInt(dendaStnkRaw)
-                  : dendaStnkRaw;
+                      const dendaStnk = isNaN(dendaStnkRaw)
+                        ? 0
+                        : typeof dendaStnkRaw === 'string'
+                        ? parseInt(dendaStnkRaw)
+                        : dendaStnkRaw;
 
-                const dendaTiket = isNaN(dendaTiketRaw)
-                  ? 0
-                  : typeof dendaTiketRaw === 'string'
-                  ? parseInt(dendaTiketRaw)
-                  : dendaTiketRaw;
+                      const dendaTiket = isNaN(dendaTiketRaw)
+                        ? 0
+                        : typeof dendaTiketRaw === 'string'
+                        ? parseInt(dendaTiketRaw)
+                        : dendaTiketRaw;
 
-                return dendaStnk + dendaTiket;
-              })()
-            ),
+                      return dendaStnk + dendaTiket;
+                    })()
+                  )
+                : 'Rp. 0',
             // status: row.status || <EvoEmpty />,
             // tipe: row.tipe || <EvoEmpty />,
-            pembayaran: row.nama_jenis_pembayaran || (
+            pembayaran: row.nama_pembayaran || <EvoEmpty />,
+            namaProdukMember: row.nama_produk_member ? (
+              row.nama_produk_member
+            ) : row.id_data_member != null ? (
               <EvoEmpty />
+            ) : (
+              '-'
             ),
-            namaProdukMember:
-              row.data_member?.nama_produk != null &&
-              row.data_member?.nama_produk !== '' ? (
-                row.data_member.nama_produk
-              ) : (
-                <i>-</i>
-              ),
-            noPrepaidCard:
-              row.data_member?.no_kartu != null &&
-              row.data_member?.no_kartu !== '' ? (
-                row.data_member.no_kartu
-              ) : (
-                <i>-</i>
-              ),
+            noPrepaidCard: row.nomor_kartu_member || <EvoEmpty />,
             petugas: row.nama_petugas || <EvoEmpty />,
             shift: row.shift || <EvoEmpty />,
           };
@@ -321,7 +330,7 @@ export default function KendaraanContentOut() {
       {/* )} */}
       <EvoSearchTabel
         placeholder="Ketik nomor tiket atau nomor polisi..."
-        onSearch={(data) => console.log('Hasil pencarian:', data)}
+        onSearch={handleSearch}
       />
 
       <EditSettlementCashlessForm

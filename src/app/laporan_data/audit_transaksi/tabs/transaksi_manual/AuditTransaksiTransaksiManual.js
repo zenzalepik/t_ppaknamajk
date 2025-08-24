@@ -36,6 +36,7 @@ import EvoLoading from '@/components/EvoLoading';
 import { format } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
 import numbers from '@/utils/numbers';
+import strings from '@/utils/strings';
 
 const titleSection = 'Laporan Transaksi Manual Tiket';
 
@@ -58,12 +59,12 @@ export default function AuditTransaksiTransaksiManual() {
   const [notifMessage, setNotifMessage] = useState('');
   const [notifType, setNotifType] = useState('success');
 
-  const formatDate = (date) => format(date, 'dd-MM-yyyy');
+  const formatDate = (date) => format(date, strings.formatDate);
 
-  const formattedStartDate = format(start_date, 'MM-dd-yyyy');
-  const formattedEndDate = format(end_date, 'MM-dd-yyyy');
+  const formattedStartDate = format(start_date, strings.formatDate);
+  const formattedEndDate = format(end_date, strings.formatDate);
 
-  const [searchKeyword, setSearchKeyword] = useState('');
+  const [searchText, setSearchText] = useState('');
 
   const {
     data: laporanAuditTransaksiTransaksiManual,
@@ -75,7 +76,7 @@ export default function AuditTransaksiTransaksiManual() {
       currentPage,
       formattedStartDate,
       formattedEndDate,
-      searchKeyword,
+      searchText,
     ],
     queryFn: () =>
       fetchApiAuditTransaksiTransaksiManual({
@@ -86,7 +87,7 @@ export default function AuditTransaksiTransaksiManual() {
         sortOrder: 'desc',
         start_date: formattedStartDate,
         end_date: formattedEndDate,
-        search: searchKeyword,
+        search: searchText,
       }),
     retry: false,
     keepPreviousData: true,
@@ -100,9 +101,9 @@ export default function AuditTransaksiTransaksiManual() {
 
     // Hanya reset page kalau tanggal bener-bener berubah
     if (
-      format(prevDates.current.start, 'MM-dd-yyyy') !==
-        format(start, 'MM-dd-yyyy') ||
-      format(prevDates.current.end, 'MM-dd-yyyy') !== format(end, 'MM-dd-yyyy')
+      format(prevDates.current.start, strings.formatDate) !==
+        format(start, strings.formatDate) ||
+      format(prevDates.current.end, strings.formatDate) !== format(end, strings.formatDate)
     ) {
       prevDates.current = { start, end };
       setResetPage(true);
@@ -133,7 +134,7 @@ export default function AuditTransaksiTransaksiManual() {
 
   const handleSearch = (query) => {
     // console.log('Hasil pencarian:', query);
-    setSearchKeyword(query); // Simpan kata kunci
+    setSearchText(query.searchText); // Simpan kata kunci
     setCurrentPage(1); // Reset ke halaman pertama
   };
 
@@ -165,13 +166,13 @@ const rows =
         })
       : [];
 
-  if (isLoading)
-    return (
-      <div className="h-full flex flex-col gap-2 justify-center items-center text-center text-primary">
-        <Spinner size={32} color="border-black" />
-        Loading...
-      </div>
-    );
+  // if (isLoading)
+  //   return (
+  //     <div className="h-full flex flex-col gap-2 justify-center items-center text-center text-primary">
+  //       <Spinner size={32} color="border-black" />
+  //       Loading...
+  //     </div>
+  //   );
 
   if (error) {
     return <EvoErrorDiv errorHandlerText={getErrorMessage(error)} />;
@@ -221,8 +222,9 @@ const rows =
         <EvoSearchTabel
           // isFilter={true}
           // FilterComponent={FilterLapPendapatanParkir}
-          placeholder="Ketik nomor tiket..."
-          onSearch={(data) => console.log('Hasil pencarian:', data)}
+          placeholder="Ketik nama pos atau nama petugas..."
+        buttonText="Pencarian"
+          onSearch={handleSearch}
         />
 
         <div className="relative">

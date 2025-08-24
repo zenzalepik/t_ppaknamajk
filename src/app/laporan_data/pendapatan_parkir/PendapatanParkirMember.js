@@ -36,6 +36,9 @@ import EvoNotifCard from '@/components/EvoNotifCard';
 import EvoLoading from '@/components/EvoLoading';
 import { format } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
+import strings from '@/utils/strings';
+import numbers from '@/utils/numbers';
+import { formatRupiah } from '@/helpers/formatRupiah';
 
 const titleSection = 'Pendapatan Parkir Member';
 
@@ -48,7 +51,7 @@ export default function PendapatanParkirMember() {
   const [modalExportExcel, setModalExportExcel] = useState(false);
   const [modalExportPrint, setModalExportPrint] = useState(false);
 
-  const formatDate = (date) => format(date, 'dd-MM-yyyy');
+  const formatDate = (date) => format(date, strings.formatDate);
 
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -60,10 +63,10 @@ export default function PendapatanParkirMember() {
   const [notifMessage, setNotifMessage] = useState('');
   const [notifType, setNotifType] = useState('success');
 
-  const formattedStartDate = format(start_date, 'MM-dd-yyyy');
-  const formattedEndDate = format(end_date, 'MM-dd-yyyy');
+  const formattedStartDate = format(start_date, strings.formatDate);
+  const formattedEndDate = format(end_date, strings.formatDate);
 
-  const [searchKeyword, setSearchKeyword] = useState('');
+  const [searchText, setSearchText] = useState('');
 
   const {
     data: laporanPendapatanParkirMember,
@@ -75,18 +78,18 @@ export default function PendapatanParkirMember() {
       currentPage,
       formattedStartDate,
       formattedEndDate,
-      searchKeyword,
+      searchText,
     ],
     queryFn: () =>
       fetchApiPendapatanParkirMember({
-        limit: 13,
+        limit: numbers.apiNumLimit,
         page: currentPage,
         // offset: (currentPage - 1) * 5,
         sortBy: 'id',
         sortOrder: 'desc',
         start_date: formattedStartDate,
         end_date: formattedEndDate,
-        search: searchKeyword,
+        search: searchText,
       }),
     retry: false,
     keepPreviousData: true,
@@ -100,9 +103,10 @@ export default function PendapatanParkirMember() {
 
     // Hanya reset page kalau tanggal bener-bener berubah
     if (
-      format(prevDates.current.start, 'MM-dd-yyyy') !==
-        format(start, 'MM-dd-yyyy') ||
-      format(prevDates.current.end, 'MM-dd-yyyy') !== format(end, 'MM-dd-yyyy')
+      format(prevDates.current.start, strings.formatDate) !==
+        format(start, strings.formatDate) ||
+      format(prevDates.current.end, strings.formatDate) !==
+        format(end, strings.formatDate)
     ) {
       prevDates.current = { start, end };
       setResetPage(true);
@@ -133,7 +137,7 @@ export default function PendapatanParkirMember() {
 
   const handleSearch = (query) => {
     // console.log('Hasil pencarian:', query);
-    setSearchKeyword(query); // Simpan kata kunci
+    setSearchText(query.searchText); // Simpan kata kunci
     setCurrentPage(1); // Reset ke halaman pertama
   };
 
@@ -162,23 +166,36 @@ export default function PendapatanParkirMember() {
             nopol: row.nopol || <i>*empty</i>,
             namaMember: row.nama_member || <i>*empty</i>,
             tarifAsli:
-              row.tarif_asli != null ? (
-                `Rp ${parseInt(row.tarif_asli, 10).toLocaleString('id-ID')}`
+              row.id_data_member == null ? (
+                row.tarif_asli != null && row.tarif_asli !== '' ? (
+                  formatRupiah(
+                    typeof row.tarif_asli === 'string'
+                      ? parseInt(row.tarif_asli)
+                      : row.tarif_asli
+                  )
+                ) : (
+                  <EvoEmpty />
+                )
               ) : (
-                <i>*empty</i>
+                'Rp. 0'
               ),
             namaVoucher: row.nama_voucher || <i>-</i>,
             potonganVoucher:
-              row.potongan_voucher != null ? (
-                `Rp ${potonganVoucherInt.toLocaleString('id-ID')}`
+              row.id_data_member == null ? (
+                row.potongan_voucher != null ? (
+                  `Rp ${potonganVoucherInt.toLocaleString('id-ID')}`
+                ) : (
+                  <i>-</i>
+                )
               ) : (
-                <i>-</i>
+                'Rp. 0'
               ),
-            tarifDibayar: (
-              <span>{`Rp ${tarifDibayarInt.toLocaleString('id-ID')}`}</span>
-            ),
-            //row.tarifDibayar || <i>*empty</i>
-            // tarifDibayar: tarifDibayarInt,
+            tarifDibayar:
+              row.id_data_member == null ? (
+                <span>{`Rp ${tarifDibayarInt.toLocaleString('id-ID')}`}</span>
+              ) : (
+                'Rp. 0'
+              ),
             pembayaran: row.metode_pembayaran || <i>*empty</i>,
           };
         })
@@ -207,7 +224,7 @@ export default function PendapatanParkirMember() {
         />
       )}
       <EvoCardSection className="!p-0 !bg-transparent !shadow-none">
-        <EvoTitleSection
+         <EvoTitleSection
           title={titleSection}
           onExportPDF={
             // hakAksesMDPe.read == true
@@ -254,7 +271,8 @@ export default function PendapatanParkirMember() {
         {/* )} */}
         <EvoSearchTabel
           placeholder="Ketik nomor tiket..."
-          onSearch={(data) => console.log('Hasil pencarian:', data)}
+          buttonText="Pencarian"
+          onSearch={handleSearch}
         />
 
         <div className="relative">

@@ -35,6 +35,9 @@ import EvoNotifCard from '@/components/EvoNotifCard';
 import EvoLoading from '@/components/EvoLoading';
 import { format } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
+import strings from '@/utils/strings';
+import numbers from '@/utils/numbers';
+import EvoEmpty from '@/components/EvoEmpty';
 
 const titleSection = 'Pembatalan Transaksi';
 
@@ -57,32 +60,38 @@ export default function AuditTransaksiPembatalanTransaksi() {
   const [notifMessage, setNotifMessage] = useState('');
   const [notifType, setNotifType] = useState('success');
 
-  const formatDate = (date) => format(date, 'dd-MM-yyyy');
+  const formatDate = (date) => format(date, strings.formatDate);
 
-  const formattedStartDate = format(start_date, 'MM-dd-yyyy');
-  const formattedEndDate = format(end_date, 'MM-dd-yyyy');
+  const formattedStartDate = format(start_date, strings.formatDate);
+  const formattedEndDate = format(end_date, strings.formatDate);
 
-  const [searchKeyword, setSearchKeyword] = useState('');
+  const [searchText, setSearchText] = useState('');
 
   const {
     data: laporanAuditTransaksiPembatalanTransaksi,
     error,
     isLoading,
   } = useQuery({
-    queryKey: ['laporanAuditTransaksiPembatalanTransaksi', currentPage],
+    queryKey: [
+      'laporanAuditTransaksiPembatalanTransaksi',
+      currentPage,
+      formattedStartDate,
+      formattedEndDate,
+      searchText,
+    ],
     queryFn: () =>
       fetchApiAuditTransaksiPembatalanTransaksi({
-        limit: 13,
+        limit: numbers.apiNumLimit,
         page: currentPage,
         formattedStartDate,
         formattedEndDate,
-        searchKeyword,
+        searchText,
         // offset: (currentPage - 1) * 5,
         // sortBy: 'id',
         sortOrder: 'desc',
         start_date: formattedStartDate,
         end_date: formattedEndDate,
-        search: searchKeyword,
+        search: searchText,
       }),
     retry: false,
     keepPreviousData: true,
@@ -96,9 +105,10 @@ export default function AuditTransaksiPembatalanTransaksi() {
 
     // Hanya reset page kalau tanggal bener-bener berubah
     if (
-      format(prevDates.current.start, 'MM-dd-yyyy') !==
-        format(start, 'MM-dd-yyyy') ||
-      format(prevDates.current.end, 'MM-dd-yyyy') !== format(end, 'MM-dd-yyyy')
+      format(prevDates.current.start, strings.formatDate) !==
+        format(start, strings.formatDate) ||
+      format(prevDates.current.end, strings.formatDate) !==
+        format(end, strings.formatDate)
     ) {
       prevDates.current = { start, end };
       setResetPage(true);
@@ -129,14 +139,13 @@ export default function AuditTransaksiPembatalanTransaksi() {
 
   const handleSearch = (query) => {
     // console.log('Hasil pencarian:', query);
-    setSearchKeyword(query); // Simpan kata kunci
+    setSearchText(query.searchText); // Simpan kata kunci
     setCurrentPage(1); // Reset ke halaman pertama
-    
   };
 
   const formatRupiah = (value) => {
     if (value === null || value === undefined) {
-      return <i>*empty</i>;
+      return <i><EvoEmpty /></i>;
     }
 
     // Pastikan angka 0 tetap diformat sebagai Rp. 0
@@ -148,19 +157,19 @@ export default function AuditTransaksiPembatalanTransaksi() {
       }).format(Number(value));
     }
 
-    return <i>*empty</i>;
+    return <i><EvoEmpty /></i>;
   };
 
   const rows =
     laporanAuditTransaksiPembatalanTransaksi?.data?.length > 0
       ? laporanAuditTransaksiPembatalanTransaksi.data.map((row, index) => ({
           no: index + 1,
-          // noTiket: <b>{row.noTiket != null ? row.noTiket : <i>*empty</i>}</b>,
+          // noTiket: <b>{row.noTiket != null ? row.noTiket : <i><EvoEmpty /></i>}</b>,
 
-          // id: row.id ||<i>*empty</i>,
-          pos: row.pos || <i>*empty</i>,
-          petugas: row.nama_petugas || <i>*empty</i>,
-          qty: row.qty_transaksi_dibatalkan + 'transaksi' || <i>*empty</i>,
+          // id: row.id ||<i><EvoEmpty /></i>,
+          pos: row.pos || <i><EvoEmpty /></i>,
+          petugas: row.nama_petugas || <i><EvoEmpty /></i>,
+          qty: row.qty_transaksi_dibatalkan + ' transaksi' || <i><EvoEmpty /></i>,
           totalNominal: formatRupiah(row.total_nominal_pembatalan),
         }))
       : [];
@@ -220,7 +229,8 @@ export default function AuditTransaksiPembatalanTransaksi() {
           // isFilter={true}
           // FilterComponent={FilterLapAudTranPembatalanTransaksi}
           placeholder="Ketik nomor polisi..."
-          onSearch={(data) => console.log('Hasil pencarian:', data)}
+          buttonText="Pencarian"
+          onSearch={handleSearch}
         />
 
         <div className="relative">

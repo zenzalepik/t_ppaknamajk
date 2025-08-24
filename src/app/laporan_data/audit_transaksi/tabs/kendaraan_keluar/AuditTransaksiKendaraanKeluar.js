@@ -26,6 +26,10 @@ import EvoNotifCard from '@/components/EvoNotifCard';
 import EvoLoading from '@/components/EvoLoading';
 import { format } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
+import strings from '@/utils/strings';
+import numbers from '@/utils/numbers';
+import { formatRupiah } from '@/helpers/formatRupiah';
+import formatTimeStampDDMMYYYY from '@/helpers/formatTimeStampDDMMYYYY';
 
 const titleSection = 'Kendaraan Keluar';
 
@@ -47,12 +51,12 @@ export default function AuditTransaksiKendaraanKeluar() {
   const [notifMessage, setNotifMessage] = useState('');
   const [notifType, setNotifType] = useState('success');
 
-  const formatDate = (date) => format(date, 'dd-MM-yyyy');
+  const formatDate = (date) => format(date, strings.formatDate);
 
-  const formattedStartDate = format(start_date, 'MM-dd-yyyy');
-  const formattedEndDate = format(end_date, 'MM-dd-yyyy');
+  const formattedStartDate = format(start_date, strings.formatDate);
+  const formattedEndDate = format(end_date, strings.formatDate);
 
-  const [searchKeyword, setSearchKeyword] = useState('');
+  const [searchText, setSearchText] = useState('');
 
   const {
     data: laporanAuditTransaksiKendaraanKeluar,
@@ -64,18 +68,18 @@ export default function AuditTransaksiKendaraanKeluar() {
       currentPage,
       formattedStartDate,
       formattedEndDate,
-      searchKeyword,
+      searchText,
     ],
     queryFn: () =>
       fetchApiAuditTransaksiKendaraanKeluar({
-        limit: 13,
+        limit: numbers.apiNumLimit,
         page: currentPage,
         // offset: (currentPage - 1) * 5,
-        sortBy: 'id',
+        // sortBy: 'id',
         sortOrder: 'desc',
         start_date: formattedStartDate,
         end_date: formattedEndDate,
-        search: searchKeyword,
+        search: searchText,
       }),
     retry: false,
     keepPreviousData: true,
@@ -89,9 +93,10 @@ export default function AuditTransaksiKendaraanKeluar() {
 
     // Hanya reset page kalau tanggal bener-bener berubah
     if (
-      format(prevDates.current.start, 'MM-dd-yyyy') !==
-        format(start, 'MM-dd-yyyy') ||
-      format(prevDates.current.end, 'MM-dd-yyyy') !== format(end, 'MM-dd-yyyy')
+      format(prevDates.current.start, strings.formatDate) !==
+        format(start, strings.formatDate) ||
+      format(prevDates.current.end, strings.formatDate) !==
+        format(end, strings.formatDate)
     ) {
       prevDates.current = { start, end };
       setResetPage(true);
@@ -122,49 +127,59 @@ export default function AuditTransaksiKendaraanKeluar() {
 
   const handleSearch = (query) => {
     // console.log('Hasil pencarian:', query);
-    setSearchKeyword(query); // Simpan kata kunci
+    setSearchText(query.searchText); // Simpan kata kunci
     setCurrentPage(1); // Reset ke halaman pertama
   };
 
   const rows =
     laporanAuditTransaksiKendaraanKeluar?.data?.length > 0
       ? laporanAuditTransaksiKendaraanKeluar.data.map((row, index) => {
-          const tarifAsliInt = parseInt(row.tarif_asli ?? 0, 10);
-          const potonganVoucherInt = parseInt(row.potongan_voucher ?? 0, 10);
-          const tarifDibayarInt = tarifAsliInt - potonganVoucherInt;
-
           return {
             no: index + 1,
-            // noTiket: <b>{row.noTiket != null ? row.noTiket : <i>*empty</i>}</b>,
-            // id: row.id || <i>*empty</i>,
-            tanggal: row.tanggal ? (
-              format(new Date(row.tanggal), 'dd MMMM yyyy, HH:mm', {
-                locale: localeId,
-              })
-            ) : (
-              <i>*empty</i>
-            ),
-            // kategori: row.kategori || <i>*empty</i>,
-            idTransaksi: row.no_tiket || <i>*empty</i>,
-            nopol: row.nopol || <i>*empty</i>,
-            namaMember: row.nama_member || <i>-</i>,
-            tarifAsli:
-              row.tarif_asli != null ? (
-                `Rp ${parseInt(row.tarif_asli, 10).toLocaleString('id-ID')}`
+            nopol: <b>{row.nomor_polisi || <EvoEmpty />}</b>,
+            jumlahKeluar: row.jumlah_keluar || <EvoEmpty />,
+            frekuensiPerHari: row.frekuensi_per_hari || <EvoEmpty />,
+            riwayatTanggalKeluar:
+             Array.isArray(row.riwayat_tanggal_keluar) && row.riwayat_tanggal_keluar.length > 0 ? (
+    <ul className="list-disc pl-6">
+      {row.riwayat_tanggal_keluar.map((tgl, i) => (
+        <li key={i}>{formatTimeStampDDMMYYYY(tgl)}</li>
+      ))}
+    </ul>
+  ) : (
+    <EvoEmpty />
+  ),
+            riwayatNomorTiket:  Array.isArray(row.riwayat_nomor_tiket) && row.riwayat_nomor_tiket.length > 0 ? (
+    <ul className="list-disc pl-6">
+      {row.riwayat_nomor_tiket.map((tiket, i) => (
+        <li key={i}>{tiket}</li>
+      ))}
+    </ul>
+  ) : (
+    <EvoEmpty />
+  ),
+            frekuensiPerShift: row.frekuensi_per_shift || <EvoEmpty />,
+            terakhirKeluar: formatTimeStampDDMMYYYY(row.terakhir_keluar) || <EvoEmpty />,
+            pintuKeluarTerakhir: row.pintu_keluar_terakhir || <EvoEmpty />,
+            petugasTerakhir: row.nama_petugas_terakhir || <EvoEmpty />,
+            totalBiayaParkir:
+              row.total_biaya_parkir != null ? (
+                formatRupiah(row.total_biaya_parkir)
               ) : (
-                <i>*empty</i>
+                <EvoEmpty />
               ),
-            namaVoucher: row.nama_voucher || <i>-</i>,
-            potonganVoucher:
-              row.potongan_voucher != null ? (
-                `Rp ${potonganVoucherInt.toLocaleString('id-ID')}`
+            totalDiskonVoucher:
+              row.total_diskon_voucher != null ? (
+                formatRupiah(row.total_diskon_voucher)
               ) : (
-                <i>-</i>
+                <EvoEmpty />
               ),
-            tarifDibayar: (
-              <span>{`Rp ${tarifDibayarInt.toLocaleString('id-ID')}`}</span>
-            ),
-            pembayaran: row.jenis_pembayaran || <i>*empty</i>,
+            totalBiayaDikenakan:
+              row.total_biaya_parkir != null ? (
+                formatRupiah(row.total_biaya_dikenakan)
+              ) : (
+                <EvoEmpty />
+              ),
           };
         })
       : [];
@@ -224,7 +239,8 @@ export default function AuditTransaksiKendaraanKeluar() {
           // isFilter={true}
           // FilterComponent={FilterLapAudTranKendaraanKeluar}
           placeholder="Ketik nomor polisi..."
-          onSearch={(data) => console.log('Hasil pencarian:', data)}
+          buttonText="Pencarian"
+          onSearch={handleSearch}
         />
 
         <div className="relative">

@@ -10,6 +10,7 @@ export const fetchApiKendaraanContentOut = async ({
   sortOrder = 'asc',
   start_date,   // <-- tambahkan
   end_date,     // <-- tambahkan
+  search = '',
 } = {}) => {
   const queryParams = new URLSearchParams({
     limit: limit.toString(),
@@ -25,7 +26,9 @@ export const fetchApiKendaraanContentOut = async ({
   if (start_date) queryParams.append('start_date', start_date);
   if (end_date) queryParams.append('end_date', end_date); 
 
-  console.log(queryParams.toString());
+  if (search) queryParams.set('search', search);
+
+  console.log(`/laporan-data/kendaraan/kendaraan-out?${queryParams.toString()}`);
   
   return await fetchWithAuth({
     method: 'get',

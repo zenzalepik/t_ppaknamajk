@@ -8,6 +8,7 @@ export const tableDataTransaksiBatalLaporan = {
     { label: 'Pintu Masuk' },
     { label: 'Tanggal Pembatalan' },
     { label: 'Alasan Pembatalan' },
+    { label: 'Penjelasan Pembatalan' },
     { label: 'User' },
   ],
   rows: [
@@ -18,6 +19,7 @@ export const tableDataTransaksiBatalLaporan = {
       pintuMasuk: 'Gerbang 1',
       tanggalPembatalan: '2025-04-23 16:10',
       alasanPembatalan: 'Kendaraan salah masuk',
+      penjelasanPembatalan:'',
       user: 'Rangga',
     },
     {
@@ -27,6 +29,7 @@ export const tableDataTransaksiBatalLaporan = {
       pintuMasuk: 'Gerbang 3',
       tanggalPembatalan: '2025-04-23 11:00',
       alasanPembatalan: 'Input manual salah',
+      penjelasanPembatalan:'',
       user: 'Fauzan',
     },
     {
@@ -36,6 +39,7 @@ export const tableDataTransaksiBatalLaporan = {
       pintuMasuk: 'Gerbang 2',
       tanggalPembatalan: '2025-04-23 08:45',
       alasanPembatalan: 'Transaksi ganda',
+      penjelasanPembatalan:'',
       user: 'Indra',
     },
   ],

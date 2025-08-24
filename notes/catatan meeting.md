@@ -8,15 +8,15 @@
     c. modul khusus untuk absen shift
     d. modul (Simpel untuk) Master Data > karyawan isinya (Nama karyawan, ktp, telphone, alamat, foto profil, email)
 
-2. format tanggal diganti ke dd-MM-yyyy
+<!-- 2. format tanggal diganti ke dd-MM-yyyy -->
 
-3. getAllLaporanTransaksiBatal
+<!-- 3. getAllLaporanTransaksiBatal -->
 
 <!-- 4. motor, mobil, truk, bus -->
 
 <!-- 5. data seeder untu id tipe kendaraan -->
 
-6. target revisi front end, hari Rabu
+<!-- 6. target revisi front end, hari Rabu -->
 
 <!-- 7. revisi default tipe transaksi. [tunai, bank, qris, member]. -->
 
