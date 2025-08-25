@@ -4,12 +4,21 @@ const nextConfig = {
     serverActions: {},
   },
 
-    images: {
+  //   images: {
+  //   remotePatterns: [
+  //     {
+  //       protocol: 'http',
+  //       hostname: 'localhost',
+  //       port: '4000',
+  //       pathname: '/assets/**',
+  //     },
+  //   ],
+  // },
+   images: {
     remotePatterns: [
       {
-        protocol: 'http',
-        hostname: 'localhost',
-        port: '4000',
+        protocol: 'https',
+        hostname: 'dev-be-parking.evosist.com',
         pathname: '/assets/**',
       },
     ],
