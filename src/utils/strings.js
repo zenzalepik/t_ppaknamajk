@@ -26,11 +26,11 @@ const strings = {
   // apiUrl: 'http://localhost:4000',
   // apiUrlDummy: 'http://localhost:3001',
 
-  apiUrl: 'https://c1fa7d92419c.ngrok-free.app',
-  apiUrlDummy: 'https://api-dummy-evolusipark.onrender.com',
-//
+  apiUrl: 'https://dev-be-parking.evosist.com',
+  // apiUrlDummy: '',
+
   // apiUrl: 'https://evolusipark-backend.onrender.com',
-  // apiUrlDummy: 'https://api-dummy-evolusipark.onrender.com',
+  apiUrlDummy: 'https://api-dummy-evolusipark.onrender.com',
 
   // apiUrl: process.env.NEXT_PUBLIC_API_URL,
   // apiUrlDummy: 'https://api-dummy-evolusipark.onrender.com',

@@ -6,6 +6,7 @@
   "description": "Aplikasi sistem parkir dengan dukungan desktop dan web",
   "author": "Evolusi Sistem Developer",
   "scripts": {
+    "json-server":"json-server --watch json_server_api/api_db_evolusi_park.json --port 3001",
     "prepare:standalone": "xcopy public .next\\standalone\\public /E /I /Y && copy .env .next\\standalone\\",
     "compress:exe": "call compress-safe.bat",
     "dev": "cross-env NODE_ENV=development next dev",

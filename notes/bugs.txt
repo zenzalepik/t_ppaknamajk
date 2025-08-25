@@ -1,0 +1,5 @@
+1. is_manual di tambah transaksi tunai terset default true
+2. hasil transaksi bank tidak muncul di riwayat transaksi
+3. filter date belum berjalan riwayat transaksi
+4. belum ada notif habis tidaknya masa periode member
+5. 
