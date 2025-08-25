@@ -23,8 +23,12 @@ const strings = {
   },
   userName: 'User',
 
-  apiUrl: 'http://localhost:4000',
-  apiUrlDummy: 'http://localhost:3001',
+  // apiUrl: 'http://localhost:4000',
+  // apiUrlDummy: 'http://localhost:3001',
+
+  apiUrl: 'https://c1fa7d92419c.ngrok-free.app',
+  apiUrlDummy: 'https://api-dummy-evolusipark.onrender.com',
+
   // apiUrl: 'https://evolusipark-backend.onrender.com',
   // apiUrlDummy: 'https://api-dummy-evolusipark.onrender.com',
 
