@@ -28,7 +28,7 @@ const strings = {
 
   apiUrl: 'https://c1fa7d92419c.ngrok-free.app',
   apiUrlDummy: 'https://api-dummy-evolusipark.onrender.com',
-
+//
   // apiUrl: 'https://evolusipark-backend.onrender.com',
   // apiUrlDummy: 'https://api-dummy-evolusipark.onrender.com',
 
