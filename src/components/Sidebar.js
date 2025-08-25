@@ -280,7 +280,7 @@ export default function Sidebar() {
           : '!w-56'
       } h-screen flex flex-col justify-between transition-all duration-300 ease-in-out `}
     >
-      // <EvoDebugOverlay /> 
+      {/* <EvoDebugOverlay />  */}
       <div className="p-3">
         <div className="flex items-center mb-8">
           <div className={`${isCollapsed ? 'p-0' : 'p-2'}`}>
