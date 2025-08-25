@@ -30,6 +30,7 @@ import strings from '@/utils/strings';
 import numbers from '@/utils/numbers';
 import { formatRupiah } from '@/helpers/formatRupiah';
 import formatTimeStampDDMMYYYY from '@/helpers/formatTimeStampDDMMYYYY';
+import EvoEmpty from '@/components/EvoEmpty';
 
 const titleSection = 'Kendaraan Keluar';
 

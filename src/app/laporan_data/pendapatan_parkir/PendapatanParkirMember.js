@@ -39,6 +39,7 @@ import { id as localeId } from 'date-fns/locale';
 import strings from '@/utils/strings';
 import numbers from '@/utils/numbers';
 import { formatRupiah } from '@/helpers/formatRupiah';
+import EvoEmpty from '@/components/EvoEmpty';
 
 const titleSection = 'Pendapatan Parkir Member';
 
